@@ -1,0 +1,8 @@
+Flask==0.9
+Flask-WTF==0.8.2
+Flask-MongoKit==0.6
+gunicorn==0.16.1
+redis==2.7.2
+rq==0.3.7
+rq-dashboard==0.3.1
+
