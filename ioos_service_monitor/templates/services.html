@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block page %}
+
+    <table class="table table-striped table-bordered table-condensed">
+        <thead>
+            <tr>
+                <th>status</th>
+                <th>name</th>
+                <th>url</th>
+                <th>last updated (utc)</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {%- for service in services %}
+            <tr>
+                <td>-</td>
+                <td>{{ service.name }}</td>
+                <td>{{ service.url }}</td>
+                <td>{{ service.updated | datetimeformat }}</td>
+                <td>
+                  <a class="btn" href="{{ url_for('show_service', service_id=service._id) }}">View</a>
+                  <form method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
+                    <input type="submit" class="btn btn-danger" value="Delete" />
+                    <!--<a href="{{ url_for('delete_service', service_id=service._id) }}">Delete</a>-->
+                  </form>
+                </td>
+            </tr>
+        {%- endfor %}
+         </tbody>
+    </table>
+
+    <div>
+      <form class="form-horizontal" method="POST" action="{{ url_for('add_service') }}">
+        {{ form.hidden_tag() }}
+
+        {% for field in form %}
+          {% if field.name != "csrf_token" %}
+          <div class="control-group">
+            <label class="control-label" for="{{ field.name }}">{{ field.label }}</label>
+            <div class="controls">
+              <input name="{{ field.name }}" />
+              {% if field.description %}
+                <span class="help-block">{{ field.description }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="control-group">
+          <div class="controls">
+            <button type="submit" class="btn btn-primary">Add Service</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+{% endblock %}

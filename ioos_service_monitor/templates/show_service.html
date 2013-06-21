@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block page %}
+
+<h1>{{ service.name }}</h1>
+<h2>{{ service.url }}</h2>
+
+<hr />
+
+<div class="row">
+  <dl class="dl-horizontal span8">
+    {% for key, value in service|dictsort %}
+    <dt>{{ key }} </dt>
+    <dd>{{ value }}</dd>
+    {% endfor %}
+  </dl>
+</div>
+
+{% endblock %}
