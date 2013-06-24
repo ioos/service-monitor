@@ -11,6 +11,8 @@ app = Flask(__name__)
 app.config.from_object('ioos_service_monitor.defaults')
 app.config.from_envvar('APPLICATION_SETTINGS', silent=True)
 
+import sys
+
 # Setup RQ Dashboard
 from rq_dashboard import RQDashboard
 RQDashboard(app)
@@ -37,9 +39,9 @@ if app.config.get('LOG_FILE') == True:
 
 # Create the Redis connection
 import redis
-from rq import Queue
+from rq_scheduler import Scheduler
 redis_connection = redis.from_url(app.config.get("REDIS_URI"))
-stats_queue = Queue('stats', connection=redis_connection, default_timeout=604800) # 1 week
+scheduler = Scheduler('stats', connection=redis_connection)
 
 # Create the database connection
 db = MongoKit(app)
