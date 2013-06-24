@@ -11,7 +11,7 @@
   <dl class="dl-horizontal span8">
     {% for key, value in service|dictsort %}
     <dt>{{ key }} </dt>
-    <dd>{{ value }}</dd>
+    <dd>{{ value or '&nbsp;'|safe }}</dd>
     {% endfor %}
   </dl>
 </div>

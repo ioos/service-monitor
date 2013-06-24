@@ -21,6 +21,8 @@
                 <td>{{ service.updated | datetimeformat }}</td>
                 <td>
                   <a class="btn" href="{{ url_for('show_service', service_id=service._id) }}">View</a>
+                  <a class="btn" href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a>
+                  <a class="btn" href="{{ url_for('start_monitoring_service', service_id=service._id) }}">Start Monitoring</a>
                   <form method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
                     <input type="submit" class="btn btn-danger" value="Delete" />
                     <!--<a href="{{ url_for('delete_service', service_id=service._id) }}">Delete</a>-->
@@ -40,7 +42,7 @@
           <div class="control-group">
             <label class="control-label" for="{{ field.name }}">{{ field.label }}</label>
             <div class="controls">
-              <input name="{{ field.name }}" />
+              {{ field() }}
               {% if field.description %}
                 <span class="help-block">{{ field.description }}</span>
               {% endif %}

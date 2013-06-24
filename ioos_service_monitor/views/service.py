@@ -1,22 +1,26 @@
 from flask import render_template, redirect, url_for, request, flash, jsonify
-from ioos_service_monitor import app, db
+from ioos_service_monitor import app, db, scheduler
 import json
+from datetime import datetime
 #from ioos_service_monitor.models import remove_mongo_keys
 #from ioos_service_monitor.views.helpers import requires_auth
-#from ioos_service_monitor.tasks.dataset import calc
-#from rq import cancel_job
+from ioos_service_monitor.tasks.stat import ping_service_task
 from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField
+from wtforms import TextField, IntegerField, SelectField
+from ioos_service_monitor.models.stat import Stat
 
 class ServiceForm(Form):
     name               = TextField(u'Name')
     url                = TextField(u'URL')
     service_id         = TextField(u'Service ID')
-    service_type       = TextField(u'Service Type')
+    service_type       = SelectField(u'Service Type', choices=[(u'WMS', u'WMS'),
+                                                               (u'DAP', u'DAP'),
+                                                               (u'WCS', u'WCS'),
+                                                               (u'SOS', u'SOS')])
     data_provider      = TextField(u'Data Provider')
     geophysical_params = TextField(u'Geophysical Parameters')
     contact            = TextField(u'Contact Emails', description="A list of emails separated by commas")
-    interval           = IntegerField(u'Update Interval', description="In MS")
+    interval           = IntegerField(u'Update Interval', description="In seconds")
 
 @app.route('/services/', methods=['GET'])
 def services():
@@ -51,3 +55,24 @@ def delete_service(service_id):
     flash("Deleted service %s" % service.name)
     return redirect(url_for('services'))
 
+@app.route('/services/<ObjectId:service_id>/ping', methods=['GET'])
+def ping_service(service_id):
+    st = Stat()
+    st.service_id = service_id
+
+    return st.ping_service()
+
+@app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['GET'])
+def start_monitoring_service(service_id):
+    s = db.Service.find_one({'_id':service_id})
+    assert s is not None
+
+    scheduler.schedule(scheduled_time=datetime.now(),
+                       func=ping_service_task,
+                       args=(unicode(service_id),),
+                       interval=s.interval,
+                       repeat=None,
+                       result_ttl=s.interval * 2)
+
+    flash("Scheduled monitoring for '%s' service" % s.name)
+    return redirect(url_for('services'))
