@@ -1,7 +1,7 @@
 import os
 import urlparse
 
-DEBUG = True
+DEBUG = False
 TESTING = False
 LOG_FILE = True
 
