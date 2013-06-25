@@ -16,4 +16,29 @@
   </dl>
 </div>
 
+<table>
+  <thead>
+    <tr>
+      <th>Response Time (ms)</th>
+      <th>Status</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in stats %}
+      <tr>
+        <td>{{ s.response_time }}</td>
+        <td>{{ s.operational_status }}</td>
+        <td>{{ s.created }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td>{{ avg_response_time }}</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+  </tfoot>
+</table>
+
 {% endblock %}
