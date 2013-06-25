@@ -1,6 +1,7 @@
 from flask import render_template, redirect, url_for, request, flash, jsonify
 from ioos_service_monitor import app, db, scheduler
 import json
+import urlparse
 from datetime import datetime, timedelta
 #from ioos_service_monitor.models import remove_mongo_keys
 #from ioos_service_monitor.views.helpers import requires_auth
@@ -49,6 +50,8 @@ def add_service():
     service = db.Service()
     #if f.validate():
     f.populate_obj(service)
+    url = urlparse.urlparse(service.url)
+    service.tld = url.hostname
     service.save()
 
     flash("Service '%s' Registered" % service.name, 'success')

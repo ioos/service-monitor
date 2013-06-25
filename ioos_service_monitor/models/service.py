@@ -11,6 +11,7 @@ class Service(Document):
     structure = {
         'name'               : unicode, # friendly name of the service
         'url'                : unicode, # url where the service resides
+        'tld'                : unicode, # top level domain/ip address for grouping purposes
         'service_id'         : unicode, # id of the service
         'service_type'       : unicode, # service type
         'data_provider'      : unicode, # who provides the data
