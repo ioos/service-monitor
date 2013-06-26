@@ -23,11 +23,8 @@ class Stat(BaseDocument):
     default_values = {
         'created': datetime.utcnow
     }
-
+    
     def ping_service(self):
-        from ioos_service_monitor.defaults import MONGODB_DATABASE
-        print db.connected, MONGODB_DATABASE
-
         s = db.Service.find_one({'_id':self.service_id})
         assert s is not None
 
