@@ -23,11 +23,8 @@ class Stat(BaseDocument):
     default_values = {
         'created': datetime.utcnow
     }
-
+    
     def ping_service(self):
-        from ioos_service_monitor.defaults import MONGODB_DATABASE
-        print db.connected, MONGODB_DATABASE
-
         s = db.Service.find_one({'_id':self.service_id})
         assert s is not None
 
@@ -61,10 +58,10 @@ class Stat(BaseDocument):
             }
         """ % num_samples)
 
-        res = self.raw_collection().map_reduce(map_func, red_func, "aggregate_stats_by_tld")
-        retval = {a[u'_id']:{'response_time':sum([b['response_time'] for b in a['value']['a']])/float(len(a['value']['a'])),
-                             'operational_status':sum([b['operational_status'] for b in a['value']['a']])/float(len(a['value']['a'])),
-                             'created':max([b['created'] for b in a['value']['a']])} for a in res.find()}
+        res = db["services"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
+        retval = {a[u'_id']:{'response_time':sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+                             'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+                             'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
         return retval
 
     @classmethod
@@ -107,8 +104,8 @@ class Stat(BaseDocument):
             }
         """)
 
-        res = self.raw_collection().map_reduce(map_func, red_func, "aggregate_stats_by_tld")
-        retval = {a[u'_id']:{'response_time':sum([b['response_time'] for b in a['value']['a']])/float(len(a['value']['a'])),
-                             'operational_status':sum([b['operational_status'] for b in a['value']['a']])/float(len(a['value']['a'])),
-                             'created':max([b['created'] for b in a['value']['a']])} for a in res.find()}
+        res = db["services"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
+        retval = {a[u'_id']:{'response_time':sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+                             'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+                             'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
         return retval
