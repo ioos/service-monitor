@@ -72,7 +72,7 @@ def services(filter_provider, filter_type):
                 tld_stats[k]['ok'] += 1
 
     # get list of unique providers in system
-    providers = db.Service.raw_collection().distinct('data_provider')
+    providers = db["services"].distinct('data_provider')
 
     return render_template('services.html', services=services, form=f, tld_stats=tld_stats, providers=providers, filters=filters)
 
