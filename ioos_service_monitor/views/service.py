@@ -9,6 +9,7 @@ from ioos_service_monitor.tasks.stat import ping_service_task
 from flask.ext.wtf import Form
 from wtforms import TextField, IntegerField, SelectField
 from ioos_service_monitor.models.stat import Stat
+from pymongo import DESCENDING
 
 class ServiceForm(Form):
     name               = TextField(u'Name')
@@ -68,15 +69,9 @@ def status_icon_helper(status_val):
 @app.route('/services/<ObjectId:service_id>', methods=['GET'])
 def show_service(service_id):
     service = db.Service.find_one({'_id':service_id})
-    stats = db.Stat.find({'service_id':service_id})
-    raw_db = db.connection[app.config.get('MONGODB_DATABASE')][db.Stat.__collection__]
-    agg_stats_query = [{"$match":{"service_id":service_id}},
-                       {"$group":{"_id":None, "avg":{"$avg":"$response_time"}}}]
-    avg_response_time = round(raw_db.aggregate(agg_stats_query)['result'][0]['avg'], 2)
+    stats = db.Stat.find({'service_id':service_id}).sort('created', DESCENDING).limit(15)
 
-    #asq_3mo = agg_stats_query[:]
-    #asq_3mo[0]['$match'].update({"created": {"$gte": datetime.utcnow() - timedelta(days=92)}})
-    #avg_3mo = round(raw_db.aggregate(asq_3mo)['result'][0]['avg'])
+    avg_response_time = service.response_time(15)
 
     return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time)
 
