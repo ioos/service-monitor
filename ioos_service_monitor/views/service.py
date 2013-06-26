@@ -26,8 +26,44 @@ class ServiceForm(Form):
 @app.route('/services/', methods=['GET'])
 def services():
     f = ServiceForm()
-    services = db.Service.find()
-    return render_template('services.html', services=services, form=f)
+    services = list(db.Service.find())
+    latest_stats = db.Stat.latest_stats_by_service(1)
+    last_weekly_stats = db.Stat.latest_stats_by_service_by_time(time_delta=timedelta(days=7))
+
+    for s in services:
+        if s._id in latest_stats:
+            s.last_operational_status = latest_stats[s._id]['operational_status']
+            s.last_response_time      = latest_stats[s._id]['response_time']
+            s.last_update             = latest_stats[s._id]['created']
+        else:
+            s.last_operational_status = 0
+            s.last_response_time      = None
+            s.last_update             = None
+
+        if s._id in last_weekly_stats:
+            s.avg_operational_status  = last_weekly_stats[s._id]['operational_status']
+            s.avg_response_time       = last_weekly_stats[s._id]['response_time']
+        else:
+            s.avg_operational_status  = 0
+            s.avg_response_time       = None
+
+    # get TLD grouped statistics
+    tld_stats = {}
+    tld_groups = db.Service.group_by_tld()
+    for k, v in tld_groups.iteritems():
+        tld_stats[k] = {'ok':0, 'total':0}
+        for sid in v:
+            tld_stats[k]['total'] += 1
+            if sid in latest_stats and int(latest_stats[sid]['operational_status']) == 1:
+                tld_stats[k]['ok'] += 1
+
+    return render_template('services.html', services=services, form=f, tld_stats=tld_stats)
+
+@app.template_filter('status_icon')
+def status_icon_helper(status_val):
+    if status_val:
+        return "<i class=\"icon-ok\"></i>"
+    return "<i class=\"icon-exclamation-sign\"></i>"
 
 @app.route('/services/<ObjectId:service_id>', methods=['GET'])
 def show_service(service_id):

@@ -5,6 +5,14 @@
 <h1>{{ service.name }}</h1>
 <h2>{{ service.url }}</h2>
 
+<a class="btn" href="{{ url_for('show_service', service_id=service._id) }}">View</a>
+<a class="btn" href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a>
+<a class="btn" href="{{ url_for('start_monitoring_service', service_id=service._id) }}">Start Monitoring</a>
+<form method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
+  <input type="submit" class="btn btn-danger" value="Delete" />
+  <!--<a href="{{ url_for('delete_service', service_id=service._id) }}">Delete</a>-->
+</form>
+
 <hr />
 
 <div class="row">
