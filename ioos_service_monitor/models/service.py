@@ -1,6 +1,7 @@
 from datetime import datetime
-from ioos_service_monitor import app, db
+from ioos_service_monitor import app, db, scheduler
 from ioos_service_monitor.models.base_document import BaseDocument
+from ioos_service_monitor.tasks.stat import ping_service_task
 
 @db.register
 class Service(BaseDocument):
@@ -18,6 +19,7 @@ class Service(BaseDocument):
         'geophysical_params' : unicode, #
         'contact'            : unicode, # comma separated list of email addresses to contact when down
         'interval'           : int,     # interval (in s) between stat retrievals
+        'job_id'             : unicode, # id of continuous ping job (scheduled)
         'created'            : datetime,
         'updated'            : datetime,
     }
@@ -59,4 +61,44 @@ class Service(BaseDocument):
             return retval[0]['rt']
 
         return None
+
+    def schedule_ping(self):
+        """
+        Starts a continuous ping job via the rq scheduler.
+        Cancels any existing job it can find regarding this service.
+
+        If self.interval is 0 or not set, does nothing.
+        """
+
+        self.cancel_ping()
+
+        if not self.interval:
+            return None
+
+        job = scheduler.schedule(scheduled_time=datetime.now(),
+                                 func=ping_service_task,
+                                 args=(unicode(self._id),),
+                                 interval=self.interval,
+                                 repeat=None,
+                                 result_ttl=self.interval * 2)
+
+        self.job_id = unicode(job.id)
+        self.save()
+
+        return job.id
+
+    def cancel_ping(self):
+        """
+        Cancels any scheduled ping job for this service.
+        """
+        if self.job_id:
+            scheduler.cancel(self.job_id)
+
+            self.job_id = None
+            self.save()
+
+        # "full nuclear" - make sure there are no other scheduled jobs that are for this service
+        for job in scheduler.get_jobs():
+            if job.args and isinstance(job.args, tuple) and len(job.args) == 1 and job.args[0] == unicode(self._id):
+                scheduler.cancel(job.id)
 

@@ -5,7 +5,6 @@ import urlparse
 from datetime import datetime, timedelta
 #from ioos_service_monitor.models import remove_mongo_keys
 #from ioos_service_monitor.views.helpers import requires_auth
-from ioos_service_monitor.tasks.stat import ping_service_task
 from flask.ext.wtf import Form
 from wtforms import TextField, IntegerField, SelectField
 from ioos_service_monitor.models.stat import Stat
@@ -101,11 +100,10 @@ def add_service():
     service.tld = url.hostname
     service.save()
 
+    service.schedule_ping()
+
     flash("Service '%s' Registered" % service.name, 'success')
     return redirect(url_for('services'))
-    #job = service_queue.enqueue_call(func=calc, args=(unicode(service['_id']),))
-    #service.task_id = unicode(job.id)
-    #service.save()
 
 @app.route('/services/<ObjectId:service_id>', methods=['POST'])
 def edit_service_submit(service_id):
@@ -119,7 +117,7 @@ def edit_service_submit(service_id):
     service.tld = url.hostname
     service.save()
 
-    #@TODO: scheduled task redo
+    service.schedule_ping()
 
     flash("Service '%s' updated" % service.name, 'success')
     return redirect(url_for('show_service', service_id=service_id))
@@ -144,14 +142,19 @@ def start_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    scheduler.schedule(scheduled_time=datetime.now(),
-                       func=ping_service_task,
-                       args=(unicode(service_id),),
-                       interval=s.interval,
-                       repeat=None,
-                       result_ttl=s.interval * 2)
+    s.schedule_ping()
 
     flash("Scheduled monitoring for '%s' service" % s.name)
+    return redirect(url_for('services'))
+
+@app.route('/services/<ObjectId:service_id>/stop_monitoring', methods=['GET'])
+def stop_monitoring_service(service_id):
+    s = db.Service.find_one({'_id':service_id})
+    assert s is not None
+
+    s.cancel_ping()
+
+    flash("Stopped monitoring for '%s' service" % s.name)
     return redirect(url_for('services'))
 
 @app.route('/services/<ObjectId:service_id>/edit', methods=['GET'])

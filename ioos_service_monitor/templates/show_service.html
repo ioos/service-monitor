@@ -6,7 +6,11 @@
 
 <a class="btn btn-warning" href="{{ url_for('edit_service', service_id=service._id) }}">Edit</a>
 <a class="btn" href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a>
+{% if not service.job_id %}
 <a class="btn" href="{{ url_for('start_monitoring_service', service_id=service._id) }}">Start Monitoring</a>
+{% else %}
+<a class="btn btn-success" href="{{ url_for('stop_monitoring_service', service_id=service._id) }}">Stop Monitoring</a>
+{% endif %}
 <form class="form-inline" method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
   <input type="submit" class="btn btn-danger" value="Delete" />
 </form>
