@@ -24,11 +24,20 @@ class ServiceForm(Form):
     contact            = TextField(u'Contact Emails', description="A list of emails separated by commas")
     interval           = IntegerField(u'Update Interval', description="In seconds")
 
-@app.route('/services/', methods=['GET'])
-def services():
-    f = ServiceForm()
-    services = list(db.Service.find())
-    latest_stats = db.Stat.latest_stats_by_service(1)
+@app.route('/services/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
+@app.route('/services/filter/<filter_provider>/<filter_type>', methods=['GET'])
+def services(filter_provider, filter_type):
+    filters = {}
+
+    if filter_provider is not None and filter_provider != "null":
+        filters['data_provider'] = filter_provider
+
+    if filter_type is not None and filter_type != "null":
+        filters['service_type'] = filter_type
+
+    f                 = ServiceForm()
+    services          = list(db.Service.find(filters))
+    latest_stats      = db.Stat.latest_stats_by_service(1)
     last_weekly_stats = db.Stat.latest_stats_by_service_by_time(time_delta=timedelta(days=7))
 
     for s in services:
@@ -50,7 +59,11 @@ def services():
 
     # get TLD grouped statistics
     tld_stats = {}
-    tld_groups = db.Service.group_by_tld()
+    filter_ids = None
+    if len(filters):
+        filter_ids = [s._id for s in services]
+
+    tld_groups = db.Service.group_by_tld(filter_ids)
     for k, v in tld_groups.iteritems():
         tld_stats[k] = {'ok':0, 'total':0}
         for sid in v:
@@ -58,7 +71,10 @@ def services():
             if sid in latest_stats and int(latest_stats[sid]['operational_status']) == 1:
                 tld_stats[k]['ok'] += 1
 
-    return render_template('services.html', services=services, form=f, tld_stats=tld_stats)
+    # get list of unique providers in system
+    providers = db.Service.raw_collection().distinct('data_provider')
+
+    return render_template('services.html', services=services, form=f, tld_stats=tld_stats, providers=providers, filters=filters)
 
 @app.template_filter('status_icon')
 def status_icon_helper(status_val):

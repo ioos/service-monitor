@@ -2,6 +2,30 @@
 
 {% block page %}
 
+    <h3><a href="{{ url_for('services') }}">Services</a></h3>
+
+    <div>
+      <span>
+        By Provider:
+        <select name="filter-provider">
+          <option value="null">-</option>
+          {%- for provider in providers|sort %}
+          <option>{{ provider }}</option>
+          {%- endfor %}
+        </select>
+      </span>
+      <span>
+        By Type:
+        <select name="filter-type">
+          <option value="null">-</option>
+          <option>WMS</option>
+          <option>DAP</option>
+          <option>WCS</option>
+          <option>SOS</option>
+        </select>
+      </span>
+    </div>
+
     <table class="table table-striped table-bordered table-condensed">
         <thead>
             <tr>
@@ -35,6 +59,8 @@
         {%- endfor %}
     </table>
 
+    <h4>Add Service</h4>
+
     <div>
       <form class="form-horizontal" method="POST" action="{{ url_for('add_service') }}">
         {{ form.hidden_tag() }}
@@ -60,5 +86,32 @@
         </div>
       </form>
     </div>
+
+    <script type="text/javascript">
+      $(function() {
+
+        {% if 'data_provider' in filters %}
+          $('select[name="filter-provider"]').val('{{ filters['data_provider'] }}');
+        {% endif %}
+
+        {% if 'service_type' in filters %}
+          $('select[name="filter-type"]').val('{{ filters['service_type'] }}');
+        {% endif %}
+
+        $('select[name^="filter"]').change(function() {
+          var provVal = $('select[name="filter-provider"]').val();
+          var typeVal = $('select[name="filter-type"]').val();
+          if (provVal == "null" && typeVal == "null") {
+            window.location = "{{ url_for("services") }}";
+            return;
+          }
+          var url = '{{ url_for("services") }}filter/';
+          url += provVal + "/";
+          url += typeVal;
+
+          window.location = url;
+        });
+      });
+    </script>
 
 {% endblock %}

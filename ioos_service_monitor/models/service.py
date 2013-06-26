@@ -27,8 +27,12 @@ class Service(BaseDocument):
     }
 
     @classmethod
-    def group_by_tld(cls):
-        by_tld = cls.aggregate({'$group':{'_id':'$tld', 'ids':{'$addToSet':'$_id'}}})
+    def group_by_tld(cls, filter_ids=None):
+        query = [{'$group':{'_id':'$tld', 'ids':{'$addToSet':'$_id'}}}]
+        if filter_ids is not None:
+            query.insert(0, {'$match':{'_id':{'$in':filter_ids}}})
+
+        by_tld = cls.aggregate(query)
         return {a['_id']:a['ids'] for a in by_tld}
 
     def operational_status(self, num_samples=1):
