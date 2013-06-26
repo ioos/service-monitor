@@ -2,10 +2,9 @@
 
 {% block page %}
 
-<h1>{{ service.name }}</h1>
-<h2>{{ service.url }}</h2>
+<h3><a href="{{ url_for('services') }}">Services</a> &#187; {{ service.name }}</h3>
 
-<a class="btn" href="{{ url_for('show_service', service_id=service._id) }}">View</a>
+<a class="btn btn-warning" href="{{ url_for('edit_service', service_id=service._id) }}">Edit</a>
 <a class="btn" href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a>
 <a class="btn" href="{{ url_for('start_monitoring_service', service_id=service._id) }}">Start Monitoring</a>
 <form class="form-inline" method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">

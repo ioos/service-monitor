@@ -107,6 +107,23 @@ def add_service():
     #service.task_id = unicode(job.id)
     #service.save()
 
+@app.route('/services/<ObjectId:service_id>', methods=['POST'])
+def edit_service_submit(service_id):
+    f = ServiceForm()
+    service = db.Service.find_one({'_id':service_id})
+
+    #@TODO: validation
+    f.populate_obj(service)
+
+    url = urlparse.urlparse(service.url)
+    service.tld = url.hostname
+    service.save()
+
+    #@TODO: scheduled task redo
+
+    flash("Service '%s' updated" % service.name, 'success')
+    return redirect(url_for('show_service', service_id=service_id))
+
 @app.route('/services/<ObjectId:service_id>/delete', methods=['POST'])
 def delete_service(service_id):
     service = db.Service.find_one( { '_id' : service_id } )
@@ -136,3 +153,10 @@ def start_monitoring_service(service_id):
 
     flash("Scheduled monitoring for '%s' service" % s.name)
     return redirect(url_for('services'))
+
+@app.route('/services/<ObjectId:service_id>/edit', methods=['GET'])
+def edit_service(service_id):
+    service = db.Service.find_one({'_id':service_id})
+    f = ServiceForm(obj=service)
+    return render_template('edit_service.html', service=service, form=f)
+
