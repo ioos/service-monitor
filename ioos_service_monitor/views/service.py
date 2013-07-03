@@ -1,15 +1,16 @@
-from flask import render_template, redirect, url_for, request, flash, jsonify
-from ioos_service_monitor import app, db, scheduler
 import json
 import urlparse
 from datetime import datetime, timedelta
-#from ioos_service_monitor.models import remove_mongo_keys
-#from ioos_service_monitor.views.helpers import requires_auth
-from ioos_service_monitor.tasks.stat import ping_service_task
-from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField, SelectField
-from ioos_service_monitor.models.stat import Stat
+
 from pymongo import DESCENDING
+from flask.ext.wtf import Form
+from flask import render_template, redirect, url_for, request, flash, jsonify
+from wtforms import TextField, IntegerField, SelectField
+
+from ioos_service_monitor import app, db, scheduler
+from ioos_service_monitor.models.stat import Stat
+from ioos_service_monitor.tasks.stat import ping_service_task
+from ioos_service_monitor.tasks.reindex_services import reindex_services
 
 class ServiceForm(Form):
     name               = TextField(u'Name')
@@ -136,3 +137,22 @@ def start_monitoring_service(service_id):
 
     flash("Scheduled monitoring for '%s' service" % s.name)
     return redirect(url_for('services'))
+
+
+@app.route('/services/reindex', methods=['GET'])
+def reindex():
+    jobs = scheduler.get_jobs()
+
+    for job in jobs:
+        if job.func == reindex_services or job.description == "ioos_service_monitor.views.services.reindex()":
+           scheduler.cancel(job)
+    
+    scheduler.schedule(
+        scheduled_time=datetime.now(),  # Time for first execution
+        func=reindex_services,          # Function to be queued
+        interval=21600,                 # Time before the function is called again, in seconds
+        repeat=None,                    # Repeat this number of times (None means repeat forever)
+        result_ttl=40000                # How long to keep the results
+    )
+
+    return jsonify({"message" : "scheduled"})
