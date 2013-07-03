@@ -58,7 +58,7 @@ class Stat(BaseDocument):
             }
         """ % num_samples)
 
-        res = db["services"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
+        res = db["stats"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
         retval = {a[u'_id']:{'response_time':sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
                              'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
                              'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
