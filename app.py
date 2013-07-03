@@ -1,3 +1,5 @@
 from ioos_service_monitor import app
-if __name__ == '__main__':
-    app.run()
+import os
+
+if os.environ.get('APPLICATION_SETTINGS') == 'development.py':
+    app.run(host="0.0.0.0", port=3000, debug=True)
