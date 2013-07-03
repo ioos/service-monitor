@@ -31,7 +31,7 @@ class Stat(BaseDocument):
         r = requests.get(s.url)
 
         self.response_time = r.elapsed.microseconds / 1000
-        self.operational_status = 1 if r.status_code == 200 else 0
+        self.operational_status = 1 if r.status_code in [200,400] else 0
 
         return str(self)
 
