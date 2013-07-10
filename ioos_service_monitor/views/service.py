@@ -45,10 +45,12 @@ def services(filter_provider, filter_type):
         if s._id in latest_stats:
             s.last_operational_status = latest_stats[s._id]['operational_status']
             s.last_response_time      = latest_stats[s._id]['response_time']
+            s.last_response_code      = latest_stats[s._id]['response_code']
             s.last_update             = latest_stats[s._id]['created']
         else:
             s.last_operational_status = 0
             s.last_response_time      = None
+            s.last_response_code      = None
             s.last_update             = None
 
         if s._id in last_weekly_stats:

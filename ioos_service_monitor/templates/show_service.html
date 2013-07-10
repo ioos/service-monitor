@@ -27,6 +27,7 @@
   <thead>
     <tr>
       <th>Response Time (ms)</th>
+      <th>Response Code</th>
       <th>Status</th>
       <th>Timestamp</th>
     </tr>
@@ -35,6 +36,7 @@
     {% for s in stats %}
       <tr>
         <td>{{ s.response_time }}</td>
+        <td>{{ s.response_code }}</td>
         <td>{{ s.operational_status }}</td>
         <td>{{ s.created }}</td>
       </tr>

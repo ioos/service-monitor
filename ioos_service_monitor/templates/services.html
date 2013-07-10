@@ -26,30 +26,32 @@
       </span>
     </div>
 
-    <table class="table table-striped table-bordered table-condensed">
+    <table class="table table-striped table-bordered table-condensed" style="font-size: 11px;">
         <thead>
             <tr>
+                <th>provider</th>
+                <th>type</th>                
                 <th>name</th>
-                <th>type</th>
-                <th>url</th>
-                <th>last updated (utc)</th>
-                <th>response time (ms)</th>
-                <th>weekly avg response time (ms)</th>
+                <th>updated (utc)</th>
+                <th>code</th>
+                <th>time (ms)</th>
+                <th>weekly avg (ms)</th>
                 <th>status</th>
             </tr>
         </thead>
         {%- for service_group in services|groupby('tld') %}
         <tbody>
             <tr class="info">
-              <td colspan="6">{{ service_group.grouper }}</td>
+              <td colspan="7">{{ service_group.grouper }}</td>
               <td>{{ tld_stats[service_group.grouper]['ok'] }}/{{ tld_stats[service_group.grouper]['total'] }}</td>
             </tr>
             {%- for service in service_group.list %}
             <tr>
-                <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name }}</a></td>
-                <td>{{ service.service_type }}</td>
-                <td><a href="{{ service.url }}">{{ service.url }}</a></td>
+                <td>{{ service.data_provider }}</td>
+                <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>                
+                <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
                 <td>{{ service.last_update | datetimeformat }}</td>
+                <td>{{ service.last_response_code }}</td>
                 <td>{{ service.last_response_time }}</td>
                 <td>{{ service.avg_response_time | float | round }}</td>
                 <td>{{ service.last_operational_status | status_icon | safe }}</td>
