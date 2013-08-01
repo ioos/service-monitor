@@ -1,14 +1,15 @@
-from flask import render_template, redirect, url_for, request, flash, jsonify
-from ioos_service_monitor import app, db, scheduler
 import json
 import urlparse
 from datetime import datetime, timedelta
-#from ioos_service_monitor.models import remove_mongo_keys
-#from ioos_service_monitor.views.helpers import requires_auth
-from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField, SelectField
-from ioos_service_monitor.models.stat import Stat
 from pymongo import DESCENDING
+from flask.ext.wtf import Form
+from flask import render_template, redirect, url_for, request, flash, jsonify
+from wtforms import TextField, IntegerField, SelectField
+
+from ioos_service_monitor import app, db, scheduler
+from ioos_service_monitor.models.stat import Stat
+from ioos_service_monitor.tasks.stat import ping_service_task
+from ioos_service_monitor.tasks.reindex_services import reindex_services
 
 class ServiceForm(Form):
     name               = TextField(u'Name')
@@ -43,10 +44,12 @@ def services(filter_provider, filter_type):
         if s._id in latest_stats:
             s.last_operational_status = latest_stats[s._id]['operational_status']
             s.last_response_time      = latest_stats[s._id]['response_time']
+            s.last_response_code      = latest_stats[s._id]['response_code']
             s.last_update             = latest_stats[s._id]['created']
         else:
             s.last_operational_status = 0
             s.last_response_time      = None
+            s.last_response_code      = None
             s.last_update             = None
 
         if s._id in last_weekly_stats:
@@ -163,3 +166,20 @@ def edit_service(service_id):
     f = ServiceForm(obj=service)
     return render_template('edit_service.html', service=service, form=f)
 
+@app.route('/services/reindex', methods=['GET'])
+def reindex():
+    jobs = scheduler.get_jobs()
+
+    for job in jobs:
+        if job.func == reindex_services or job.description == "ioos_service_monitor.views.services.reindex()":
+           scheduler.cancel(job)
+    
+    scheduler.schedule(
+        scheduled_time=datetime.now(),  # Time for first execution
+        func=reindex_services,          # Function to be queued
+        interval=21600,                 # Time before the function is called again, in seconds
+        repeat=None,                    # Repeat this number of times (None means repeat forever)
+        result_ttl=40000                # How long to keep the results
+    )
+
+    return jsonify({"message" : "scheduled"})

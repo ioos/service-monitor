@@ -15,6 +15,7 @@ class Stat(BaseDocument):
     structure = {
         'service_id'         : ObjectId, # reference to service this statistic is for
         'response_time'      : int,      # response time in ms
+        'response_code'      : int,
         'operational_status' : int,      # 1: online 0: offline
         'created'            : datetime,
         'updated'            : datetime,
@@ -31,7 +32,8 @@ class Stat(BaseDocument):
         r = requests.get(s.url)
 
         self.response_time = r.elapsed.microseconds / 1000
-        self.operational_status = 1 if r.status_code == 200 else 0
+        self.response_code = r.status_code
+        self.operational_status = 1 if r.status_code in [200,400] else 0
 
         return str(self)
 
@@ -58,8 +60,9 @@ class Stat(BaseDocument):
             }
         """ % num_samples)
 
-        res = db["services"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
+        res = db["stats"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
         retval = {a[u'_id']:{'response_time':sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+                             'response_code': [b.get('response_code', None) for b in a['value']['a']][-1],
                              'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
                              'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
         return retval
@@ -104,8 +107,9 @@ class Stat(BaseDocument):
             }
         """)
 
-        res = db["services"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
-        retval = {a[u'_id']:{'response_time':sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+        res = db["stats"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
+        retval = {a[u'_id']:{'response_time': sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
+                             'response_code':None,
                              'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
                              'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
         return retval

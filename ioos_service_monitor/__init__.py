@@ -1,9 +1,7 @@
 import os
+import datetime
 
 from flask import Flask
-from flask.ext.mongokit import MongoKit
-
-import datetime
 
 # Create application object
 app = Flask(__name__)
@@ -29,10 +27,15 @@ if app.config.get('LOG_FILE') == True:
 import redis
 from rq_scheduler import Scheduler
 redis_connection = redis.from_url(app.config.get("REDIS_URI"))
-scheduler = Scheduler('stats', connection=redis_connection)
+scheduler = Scheduler('default', connection=redis_connection)
 
 # Create the database connection
+from flask.ext.mongokit import MongoKit
 db = MongoKit(app)
+
+# Create the Flask-Mail object
+from flask.ext.mail import Mail
+mail = Mail(app)
 
 # Create datetime jinja2 filter
 def datetimeformat(value, format='%a, %b %d %Y at %I:%M%p'):
@@ -63,4 +66,3 @@ def slugify(value):
 import ioos_service_monitor.views
 import ioos_service_monitor.models
 import ioos_service_monitor.tasks
-
