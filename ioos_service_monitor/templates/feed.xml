@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<feed xmlns="http://www.w3.org/2005/Atom">
+  {% for service in services %}
+    <entry>
+      <id>{{ service._id }}</id>
+      <title>{{ service.name }}</title>
+      <serviceType>{{ service.service_type | lower }}</serviceType>
+      <serviceUrl>{{ service.url }}</serviceUrl>
+      <emailAddress>{{ service.contact.split(',')[0] }}</emailAddress>
+    </entry>
+  {%- endfor %}
+</feed>
+

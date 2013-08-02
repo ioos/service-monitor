@@ -3,7 +3,7 @@ import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
-from flask import render_template, redirect, url_for, request, flash, jsonify
+from flask import render_template, redirect, url_for, request, flash, jsonify, Response
 from wtforms import TextField, IntegerField, SelectField
 
 from ioos_service_monitor import app, db, scheduler
@@ -183,3 +183,9 @@ def reindex():
     )
 
     return jsonify({"message" : "scheduled"})
+
+@app.route('/services/feed.xml', methods=['GET'])
+def atom_feed():
+    services = list(db.Service.find({'service_type': {'$ne':'DAP'}}))
+    return Response(render_template('feed.xml', services=services), mimetype='text/xml')
+
