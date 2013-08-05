@@ -1,11 +1,15 @@
 from datetime import datetime
 from urlparse import urlparse
 
+import requests
+import xml.etree.ElementTree as ET
+
 from owslib import fes, csw
+from owslib.util import nspath_eval
+from owslib.namespaces import Namespaces
 
 from ioos_service_monitor import app,db
 
-from owslib.etree import etree
 
 def reindex_services():
     region_map =    {   'AOOS'      :   '1E96581F-6B73-45AD-9F9F-2CC3FED76EE6',
@@ -26,6 +30,9 @@ def reindex_services():
     endpoint = 'http://www.ngdc.noaa.gov/geoportal/csw' # NGDC Geoportal
 
     c = csw.CatalogueServiceWeb(endpoint, timeout=60)
+    c2 = csw.CatalogueServiceWeb(endpoint, timeout=60)
+
+    ns = Namespaces()
 
     with app.app_context():
         for region,uuid in region_map.iteritems():
@@ -35,10 +42,29 @@ def reindex_services():
             # Make CSW request
             c.getrecords2([uuid_filter], esn='full')
 
-            for name,record in c.records.iteritems():
+            for name, record in c.records.iteritems():
+
+                # @TODO: unfortunately CSW does not provide us with contact info, so
+                # we must request it manually
+                contact_email = None
+
+                iso_ref = [x['url'] for x in record.references if x['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document']
+                if len(iso_ref):
+                    r = requests.get(iso_ref[0])
+                    r.raise_for_status()
+
+                    node = ET.fromstring(r.content)
+
+                    safe = nspath_eval("gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString", ns.get_namespaces())
+                    contact_node = node.find(".//" + safe)
+
+                    if contact_node is not None:
+                        contact_email = contact_node.text
+                        if " or " in contact_email:
+                            contact_email = ",".join(contact_email.split(" or "))
 
                 for ref in record.references:
-                    
+
                     # We are only interested in the 'services'
                     if ref["scheme"] in services.values():
                         url = unicode(ref["url"])
@@ -54,5 +80,6 @@ def reindex_services():
                         s.interval          = 3600 # 1 hour
                         s.tld               = unicode(urlparse(url).netloc)
                         s.updated           = datetime.utcnow()
+                        s.contact           = unicode(contact_email)
                         s.save()
-                        
+
