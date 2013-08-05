@@ -186,6 +186,22 @@ def reindex():
 
 @app.route('/services/feed.xml', methods=['GET'])
 def atom_feed():
-    services = list(db.Service.find({'service_type': {'$ne':'DAP'}}))
+    services = db.Service.find({'service_type': {'$ne':'DAP'}})
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
+
+@app.route('/services/schedule_all', methods=['GET'])
+def schedule_all():
+    services = db.Service.find({'job_id':None})
+    map(lambda x: x.schedule_ping(), services)
+
+    flash("Scheduled %d pings" % services.count())
+    return redirect(url_for('services'))
+
+@app.route('/services/stop_all', methods=['GET'])
+def stop_all():
+    services = db.Service.find({'job_id': {'$ne':None}})
+    map(lambda x: x.cancel_ping(), services)
+
+    flash("Stopped %d pings" % services.count())
+    return redirect(url_for('services'))
 
