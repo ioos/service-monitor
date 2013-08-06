@@ -1,0 +1,54 @@
+{% extends "email.html" %}
+
+{% block title %}
+Service Status Changed ({{"UP" if status else "DOWN"}}): {{ service.name }} ({{ service.service_type }})
+{% endblock %}
+
+{% block page %}
+  <p>
+    You are receiving this email because the operational status of the service has changed.
+    It is now {{"DOWN" if status == 0 else "UP"}}.
+
+  </p>
+
+  <table class="table table-bordered table-striped" align="center">
+    <tr>
+      <td width="160" valign="top">Name:</td>
+      <td width="400" valign="top">{{ service.name }}</td>
+    </tr>
+    <tr>
+      <td valign="top">URL:</td>
+      <td width="400" valign="top">{{ service.url }}</td>
+    </tr>
+    <tr>
+      <td valign="top">Type:</td>
+      <td width="400" valign="top">{{ service.service_type }}</td>
+    </tr>
+    <tr>
+      <td valign="top">Last Accessed:</td>
+      <td width="400" valign="top">{{ stat.created | datetimeformat }}</td>
+    </tr>
+    <tr>
+      <td valign="top">Last Ping:</td>
+      <td width="400" valign="top">{{ stat.response_time }}</td>
+    </tr>
+    <tr>
+      <td valign="top">Last Status:</td>
+      <td width="400" valign="top">{{ stat.response_code }}</td>
+    </tr>
+    {% if status == 0 %}
+    <tr>
+      <td valign="top">Last Successful Access:</td>
+      <td width="400" valign="top">{{ last_success_stat.created | datetimeformat }}</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  {% if status == 0 %}
+  <p>
+    We will keep checking the service and you will be notified when its status changes.
+  </p>
+  {% endif %}
+
+{% endblock %}
+

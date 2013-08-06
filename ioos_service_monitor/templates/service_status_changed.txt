@@ -1,0 +1,15 @@
+You are receiving this email because the operational status of the service has 
+changed. It is now {{"DOWN" if status == 0 else "UP"}}.
+
+                  Name: {{ service.name }}
+                   URL: {{ service.url }}
+                  Type: {{ service.service_type }}
+         Last Accessed: {{ stat.created | datetimeformat }}
+             Last Ping: {{ stat.response_time }}
+           Last Status: {{ stat.response_code }}
+{% if status == 0 %}
+Last Successful Access: {{ last_success_stat.created | datetimeformat }}
+
+We will keep checking the service and you will be notified when its status changes.
+{% endif %}
+
