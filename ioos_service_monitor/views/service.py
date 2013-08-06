@@ -135,10 +135,14 @@ def delete_service(service_id):
 
 @app.route('/services/<ObjectId:service_id>/ping', methods=['GET'])
 def ping_service(service_id):
-    st = Stat()
+    st = db.Stat()
     st.service_id = service_id
 
-    return st.ping_service()
+    ret = st.ping_service()
+
+    st.save()
+    flash("Ping returned: %s" % ret)
+    return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['GET'])
 def start_monitoring_service(service_id):
@@ -148,7 +152,7 @@ def start_monitoring_service(service_id):
     s.schedule_ping()
 
     flash("Scheduled monitoring for '%s' service" % s.name)
-    return redirect(url_for('services'))
+    return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/stop_monitoring', methods=['GET'])
 def stop_monitoring_service(service_id):
@@ -158,7 +162,7 @@ def stop_monitoring_service(service_id):
     s.cancel_ping()
 
     flash("Stopped monitoring for '%s' service" % s.name)
-    return redirect(url_for('services'))
+    return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/edit', methods=['GET'])
 def edit_service(service_id):
