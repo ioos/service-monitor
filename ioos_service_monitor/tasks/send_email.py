@@ -3,7 +3,6 @@ from ioos_service_monitor import db, app, mail
 from flask import render_template
 from collections import defaultdict
 from datetime import datetime, timedelta
-import itertools
 
 def send(subject, recipients, cc_recipients, text_body, html_body):
     # sender comes from MAIL_DEFAULT_SENDER in env
@@ -75,17 +74,12 @@ def send_daily_report_email(end_time=None, start_time=None):
                                         start_time=start_time,
                                         end_time=end_time)
 
-        to_addresses = ["ioos-dmac@asa.flowdock.com"]
-        if app.config.get('DEBUG') == False:
-            to_addresses = list(itertools.chain.from_iterable([x.contact.split(",") for x in services if x.contact is not None and x.contact != "None"]))
-
-        cc_addresses = ["ioos.catalog@noaa.gov"] if app.config.get('DEBUG') == False else None
-
-        subject = "Service Daily Downtime Report"
+        to_addresses = ["ioos.catalog@noaa.gov"] if app.config.get('DEBUG') == False else ["ioos-dmac@asa.flowdock.com"]
+        subject      = "Service Daily Downtime Report"
 
         send(subject,
              to_addresses,
-             cc_addresses,
+             None,
              text_template,
              html_template)
 
