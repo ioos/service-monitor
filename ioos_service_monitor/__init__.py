@@ -51,6 +51,15 @@ def timedeltaformat(starting, ending):
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['timedeltaformat'] = timedeltaformat
 
+# pad/truncate filter (for making text tables)
+def padfit(value, size):
+    if len(value) <= size:
+        return value.ljust(size)
+
+    return value[0:(size-3)] + "..."
+
+app.jinja_env.filters['padfit'] = padfit
+
 def slugify(value):
     """
     Normalizes string, removes non-alpha characters, and converts spaces to hyphens.

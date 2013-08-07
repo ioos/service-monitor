@@ -7,6 +7,7 @@ LOG_FILE = True
 
 WEB_PASSWORD = os.environ.get("WEB_PASSWORD")
 SECRET_KEY = os.environ.get("SECRET_KEY")
+SERVER_NAME = os.environ.get("SERVER_NAME", None)
 
 # Database
 MONGO_URI = os.environ.get('MONGO_URI')

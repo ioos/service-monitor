@@ -1,0 +1,8 @@
+The following services experienced failures during the period of
+{{ start_time | datetimeformat }} to {{ end_time | datetimeformat }}.
+
+{{ "provider" | padfit(12) }} {{ "type" | padfit(5) }} {{ "name" | padfit(40) }} {{ "failures/total" | padfit(15) }} {{ "current" |padfit(8) }} details
+{%- for service in services %}
+{{ service.data_provider | padfit(12) }} {{ service.service_type | padfit(5) }} {{ service.name | padfit(40) }} {{ "%s/%s"|format(failed_services[service._id][0], failed_services[service._id][1])|padfit(15) }} {{ "UP"|padfit(8) if failed_services[service._id][2] else "DOWN" | padfit(8) }} {{ url_for('show_service', service_id=service._id) }}
+{%- endfor %}
+

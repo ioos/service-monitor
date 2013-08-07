@@ -1,0 +1,37 @@
+{% extends "email.html" %}
+
+{% block page %}
+
+<p>The following services experienced failures during the period of <strong>{{ start_time | datetimeformat }}</strong> to <strong>{{ end_time | datetimeformat }}</strong>.</p>
+
+<table class="table table-striped table-bordered table-condensed" style="font-size:11px">
+  <thead>
+    <tr>
+      <th>provider</th>
+      <th>type</th>
+      <th>name</th>
+      <th>failures/total</th>
+      <th>current</th>
+      <th>details</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%- for service_group in services|groupby('tld') %}
+      <tr class="info">
+        <td colspan="6">{{ service_group.grouper }}</td>
+      </tr>
+      {%- for service in service_group.list %}
+        <tr>
+          <td>{{ service.data_provider }}</td>
+          <td>{{ service.service_type }}</td>
+          <td>{{ service.name }}</td>
+          <td>{{ failed_services[service._id][0] }}/{{ failed_services[service._id][1] }}</td>
+          <td class="{{ "error" if not failed_services[service._id][2] else "success" }}">{{ "UP" if failed_services[service._id][2] else "DOWN" }}</td>
+          <td><a href="{{ url_for('show_service', service_id=service._id) }}">details</a></td>
+        </tr>
+      {%- endfor %}
+    {%- endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
