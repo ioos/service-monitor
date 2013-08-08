@@ -86,10 +86,15 @@ def status_icon_helper(status_val):
 
 @app.route('/services/<ObjectId:service_id>', methods=['GET'])
 def show_service(service_id):
-    service = db.Service.find_one({'_id':service_id})
-    stats = db.Stat.find({'service_id':service_id}).sort('created', DESCENDING).limit(15)
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
 
-    avg_response_time = service.response_time(15)
+    service = db.Service.find_one({'_id':service_id})
+    stats = list(db.Stat.find({'service_id':service_id,
+                          'created':{'$lte':now,
+                                     '$gte':week_ago}}).sort('created', DESCENDING))
+
+    avg_response_time = sum([x.response_time for x in stats]) / len(stats) if len(stats) else 0
 
     return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time)
 
