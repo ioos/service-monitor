@@ -2,7 +2,6 @@ import urlparse
 
 DEBUG = True
 TESTING = True
-LOG_FILE = True
 
 # Database
 MONGO_URI = "mongodb://localhost:27017/ioos_service_monitor_testing"
