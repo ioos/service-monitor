@@ -195,7 +195,12 @@ def reindex():
 
 @app.route('/services/feed.xml', methods=['GET'])
 def atom_feed():
-    services = db.Service.find({'service_type': {'$ne':'DAP'}})
+    services = list(db.Service.find({'service_type': {'$ne':'DAP'}}))
+
+    for s in services:
+        if s.contact is None or s.contact != "":
+            s.contact = app.config.get("MAIL_DEFAULT_TO")
+
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
 
 @app.route('/services/schedule_all', methods=['GET'])

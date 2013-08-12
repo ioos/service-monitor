@@ -58,7 +58,7 @@ def reindex_services():
                     safe = nspath_eval("gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString", ns.get_namespaces())
                     contact_node = node.find(".//" + safe)
 
-                    if contact_node is not None:
+                    if contact_node is not None and contact_node.text != "":
                         contact_email = contact_node.text
                         if " or " in contact_email:
                             contact_email = ",".join(contact_email.split(" or "))

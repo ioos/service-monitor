@@ -23,11 +23,11 @@ def send_service_down_email(service_id):
         text_template = render_template("service_status_changed.txt", **kwargs)
         html_template = render_template("service_status_changed.html", **kwargs)
 
-        to_addresses = ["ioos-dmac@asa.flowdock.com"]
-        if app.config.get('DEBUG') == False and kwargs['service'].contact is not None:
+        to_addresses = app.config.get("MAIL_DEFAULT_TO")
+        if app.config.get('MAILER_DEBUG') == False and kwargs['service'].contact is not None:
             to_addresses = kwargs['service'].contact.split(",")
 
-        cc_addresses = ["ioos.catalog@noaa.gov"] if app.config.get('DEBUG') == False else None
+        cc_addresses = [app.config.get("MAIL_DEFAULT_LIST")] if app.config.get('MAILER_DEBUG') == False else None
 
         send(subject,
              to_addresses,
@@ -74,7 +74,7 @@ def send_daily_report_email(end_time=None, start_time=None):
                                         start_time=start_time,
                                         end_time=end_time)
 
-        to_addresses = ["ioos.catalog@noaa.gov"] if app.config.get('DEBUG') == False else ["ioos-dmac@asa.flowdock.com"]
+        to_addresses = [app.config.get("MAIL_DEFAULT_LIST")] if app.config.get('MAILER_DEBUG') == False else [app.config.get("MAIL_DEFAULT_TO")]
         subject      = "Service Daily Downtime Report"
 
         send(subject,
