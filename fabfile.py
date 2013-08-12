@@ -36,6 +36,7 @@ def deploy():
     monitoring()
     with cd(code_dir):
         run("git pull origin master")
+        update_supervisord()
         update_libs()
         start_supervisord()
         run("supervisorctl -c ~/supervisord.conf start all")
