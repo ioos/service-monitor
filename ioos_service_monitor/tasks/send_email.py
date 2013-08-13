@@ -38,11 +38,18 @@ def send_service_down_email(service_id):
 def send_daily_report_email(end_time=None, start_time=None):
     with app.app_context():
 
+
         if end_time is None:
             end_time = datetime.utcnow()
+        if end_time.tzinfo is None:
+            end_time.replace(tzinfo=pytz.utc)
+        end_time = end_time.astimezone(pytz.utc)            
 
         if start_time is None:
             start_time = end_time - timedelta(days=1)
+        if start_time.tzinfo is None:
+            start_time.replace(tzinfo=pytz.utc)
+        start_time = start_time.astimezone(pytz.utc)
 
         service_stats = db.Stat.aggregate([{'$match':{'created':{'$gte':start_time,
                                                                  '$lte':end_time}}},
