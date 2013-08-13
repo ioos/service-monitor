@@ -1,3 +1,4 @@
+from datetime import datetime
 from ioos_service_monitor import app, db, scheduler
 from bson import ObjectId
 from ioos_service_monitor.tasks.send_email import send_service_down_email
