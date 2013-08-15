@@ -19,16 +19,16 @@ def send_service_down_email(service_id):
                   'last_success_stat' : db.Stat.find_one({'service_id':service_id, 'operational_status':1}, sort=[('created',-1)]) }
         kwargs['status'] = kwargs['stat'].operational_status
 
-        subject = "Service Status Alert (%s): %s (%s)" % ("UP" if kwargs['status'] else "DOWN", kwargs['service'].name, kwargs['service'].service_type)
+        subject = "[ioos] Service Status Alert (%s): %s (%s)" % ("UP" if kwargs['status'] else "DOWN", kwargs['service'].name, kwargs['service'].service_type)
 
         text_template = render_template("service_status_changed.txt", **kwargs)
         html_template = render_template("service_status_changed.html", **kwargs)
 
-        to_addresses = app.config.get("MAIL_DEFAULT_TO")
-        if app.config.get('MAILER_DEBUG') == False and kwargs['service'].contact is not None:
-            to_addresses = kwargs['service'].contact.split(",")
-
-        cc_addresses = [app.config.get("MAIL_DEFAULT_LIST")] if app.config.get('MAILER_DEBUG') == False else None
+        to_addresses = [app.config.get("MAIL_DEFAULT_LIST")] if app.config.get('MAILER_DEBUG') == False else [app.config.get("MAIL_DEFAULT_TO")]
+        # Don't send these until Anna updates the ISO document in GeoPortal with the correct service contacts
+        #if app.config.get('MAILER_DEBUG') == False and kwargs['service'].contact is not None:
+        #    to_addresses = kwargs['service'].contact.split(",")        
+        cc_addresses = [app.config.get("MAIL_DEFAULT_TO")]
 
         send(subject,
              to_addresses,
@@ -83,11 +83,12 @@ def send_daily_report_email(end_time=None, start_time=None):
                                         end_time=end_time)
 
         to_addresses = [app.config.get("MAIL_DEFAULT_LIST")] if app.config.get('MAILER_DEBUG') == False else [app.config.get("MAIL_DEFAULT_TO")]
-        subject      = "Service Daily Downtime Report"
+        cc_addresses = [app.config.get("MAIL_DEFAULT_TO")]
+        subject      = "[ioos] Service Daily Downtime Report"
 
         send(subject,
              to_addresses,
-             None,
+             cc_addresses,
              text_template,
              html_template)
 
