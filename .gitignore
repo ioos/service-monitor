@@ -2,4 +2,5 @@
 *.pyc
 .env
 .fab
+logs/*
 
