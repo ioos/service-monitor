@@ -203,6 +203,17 @@ def atom_feed():
 
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
 
+@app.route('/services/devfeed.xml', methods=['GET'])
+def dev_atom_feed():
+    services = list(db.Service.find())
+
+    for s in services:
+        if s.contact is None or s.contact != "":
+            s.contact = app.config.get("MAIL_DEFAULT_TO")
+
+    return Response(render_template('feed.xml', services=services), mimetype='text/xml')
+
+
 @app.route('/services/schedule_all', methods=['GET'])
 def schedule_all():
     services = db.Service.find({'job_id':None})
