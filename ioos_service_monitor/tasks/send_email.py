@@ -3,6 +3,7 @@ from ioos_service_monitor import db, app, mail
 from flask import render_template
 from collections import defaultdict
 from datetime import datetime, timedelta
+import pytz
 
 def send(subject, recipients, cc_recipients, text_body, html_body):
     # sender comes from MAIL_DEFAULT_SENDER in env
