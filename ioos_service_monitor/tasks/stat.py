@@ -9,7 +9,7 @@ def ping_service_task(service_id):
         last_stat = db.Stat.find_one({'service_id':ObjectId(service_id)}, sort=[('created',-1)])
 
         stat = db.Stat()
-        stat.service_id=ObjectId(service_id)
+        stat.service_id = ObjectId(service_id)
         stat.ping_service()
         stat.save()
 
