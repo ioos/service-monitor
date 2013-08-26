@@ -31,7 +31,7 @@ def reindex_services():
 
     endpoint = 'http://www.ngdc.noaa.gov/geoportal/csw' # NGDC Geoportal
 
-    c = csw.CatalogueServiceWeb(endpoint, timeout=60)
+    c = csw.CatalogueServiceWeb(endpoint, timeout=120)
 
     ns = Namespaces()
 
@@ -47,22 +47,23 @@ def reindex_services():
 
                 # @TODO: unfortunately CSW does not provide us with contact info, so
                 # we must request it manually
-                contact_email = None
+                contact_email = ""
+                metadata_url = None
 
                 iso_ref = [x['url'] for x in record.references if x['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document']
                 if len(iso_ref):
-                    r = requests.get(iso_ref[0])
-                    r.raise_for_status()
+                    metadata_url = iso_ref[0]
 
-                    node = ET.fromstring(r.content)
-
-                    safe = nspath_eval("gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString", ns.get_namespaces())
-                    contact_node = node.find(".//" + safe)
-
-                    if contact_node is not None and contact_node.text != "":
-                        contact_email = contact_node.text
-                        if " or " in contact_email:
-                            contact_email = ",".join(contact_email.split(" or "))
+                    # Don't query for contact info right now.  It takes WAY too long.
+                    #r = requests.get(iso_ref[0])
+                    #r.raise_for_status()
+                    #node = ET.fromstring(r.content)
+                    #safe = nspath_eval("gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString", ns.get_namespaces())
+                    #contact_node = node.find(".//" + safe)
+                    #if contact_node is not None and contact_node.text != "":
+                    #    contact_email = contact_node.text
+                    #    if " or " in contact_email:
+                    #        contact_email = ",".join(contact_email.split(" or "))
 
                 for ref in record.references:
 
@@ -82,5 +83,5 @@ def reindex_services():
                         s.tld               = unicode(urlparse(url).netloc)
                         s.updated           = datetime.utcnow()
                         s.contact           = unicode(contact_email)
-                        s.save()
-
+                        s.metadata_url      = unicode(metadata_url)
+                        s.save()    

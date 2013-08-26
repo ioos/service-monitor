@@ -25,8 +25,10 @@ if app.config.get('LOG_FILE') == True:
 
 # Create the Redis connection
 import redis
+from rq import Queue
 from rq_scheduler import Scheduler
 redis_connection = redis.from_url(app.config.get("REDIS_URI"))
+queue = Queue('default', connection=redis_connection)
 scheduler = Scheduler('default', connection=redis_connection)
 
 # Create the database connection

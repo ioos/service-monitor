@@ -5,6 +5,11 @@ Flask-Mail==0.8.2
 gunicorn==0.16.1
 requests==1.2.3
 rq==0.3.8
-rq-scheduler==0.3.6
+
+# Need 'timeout' parameter supported, which is not in the most recent release (0.3.6)
+#rq-scheduler==0.3.6
+git+https://github.com/ui/rq-scheduler.git
+
 rq-dashboard==0.3.1
+OWSLib
 pytz

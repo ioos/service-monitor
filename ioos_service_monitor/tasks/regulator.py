@@ -31,7 +31,7 @@ def regulate():
                 func=send_daily_report_email,   # Function to be queued
                 interval=86400,                 # Time before the function is called again, in seconds (86400 == 1 day)
                 repeat=None,                    # Repeat this number of times (None means repeat forever)
-                result_ttl=100000                # How long to keep the results, in seconds
+                result_ttl=100000               # How long to keep the results, in seconds
             )
 
         # Make sure a service update job is running
@@ -42,7 +42,8 @@ def regulate():
                 func=reindex_services,          # Function to be queued
                 interval=21600,                 # Time before the function is called again, in seconds (21600 == 1/4 of a day)
                 repeat=None,                    # Repeat this number of times (None means repeat forever)
-                result_ttl=40000                # How long to keep the results, in seconds
+                result_ttl=40000,               # How long to keep the results, in seconds
+                timeout=1200                    # Default timeout of 180 seconds may not be enough
             )
 
         # Make sure each service has a ping job
@@ -53,7 +54,7 @@ def regulate():
 
         # Schedule the ones that do not
         for s in services:
-            scheduler.schedule(
+            job = scheduler.schedule(
                 scheduled_time=datetime.now(),  # Time for first execution
                 func=ping_service_task,         # Function to be queued
                 args=(unicode(s._id),),         # Arguments passed into function when executed
@@ -61,5 +62,7 @@ def regulate():
                 repeat=None,                    # Repeat this number of times (None means repeat forever)
                 result_ttl=s.interval * 2       # How long to keep the results, in seconds    
             )
+            s.job_id = unicode(job.id)
+            s.save()
         
     return "Regulated %s reindex jobs and %s ping jobs" % (len(reindex_services_jobs), len(stat_jobs))

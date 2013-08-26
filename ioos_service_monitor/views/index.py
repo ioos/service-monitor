@@ -27,6 +27,12 @@ def serialize_job(job,dt):
         args=job.args,
         meta=job.meta)
 
+@app.route('/jobs/clear', methods=['GET'])
+def clear_jobs():
+    for job in scheduler.get_jobs():
+        scheduler.cancel(job)
+    return jsonify({ "status" : "ok" })
+
 @app.route('/jobs', methods=['GET'])
 def jobs():
     jobs = []

@@ -90,6 +90,7 @@ def show_service(service_id):
     week_ago = now - timedelta(days=7)
 
     service = db.Service.find_one({'_id':service_id})
+
     stats = list(db.Stat.find({'service_id':service_id,
                           'created':{'$lte':now,
                                      '$gte':week_ago}}).sort('created', DESCENDING))
@@ -188,7 +189,8 @@ def reindex():
         func=reindex_services,          # Function to be queued
         interval=21600,                 # Time before the function is called again, in seconds
         repeat=None,                    # Repeat this number of times (None means repeat forever)
-        result_ttl=40000                # How long to keep the results
+        result_ttl=40000,               # How long to keep the results
+        timeout=1200                    # Default timeout of 180 seconds may not be enough
     )
 
     return jsonify({"message" : "scheduled"})
