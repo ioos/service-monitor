@@ -81,7 +81,7 @@ class Service(BaseDocument):
                                  interval=self.interval,
                                  repeat=None,
                                  result_ttl=self.interval * 2)
-        self.job_id = unicode(job.id)
+        self['job_id'] = unicode(job.id)
         self.save()
 
         return job.id
@@ -104,6 +104,6 @@ class Service(BaseDocument):
             except BaseException:
                 pass
         finally:
-            self.job_id = None
+            self['job_id'] = None
             self.save()
 

@@ -62,7 +62,7 @@ def regulate():
                 repeat=None,                    # Repeat this number of times (None means repeat forever)
                 result_ttl=s.interval * 2       # How long to keep the results, in seconds    
             )
-            s.job_id = unicode(job.id)
+            s['job_id'] = unicode(job.id)
             s.save()
         
     return "Regulated %s reindex jobs and %s ping jobs" % (len(reindex_services_jobs), len(stat_jobs))
