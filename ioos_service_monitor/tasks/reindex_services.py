@@ -41,7 +41,7 @@ def reindex_services():
             uuid_filter = fes.PropertyIsEqualTo(propertyname='sys.siteuuid', literal="{%s}" % uuid)
 
             # Make CSW request
-            c.getrecords2([uuid_filter], esn='full')
+            c.getrecords2([uuid_filter], esn='full', maxrecords=999999)
 
             for name, record in c.records.iteritems():
 
