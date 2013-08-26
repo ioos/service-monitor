@@ -34,7 +34,7 @@
     <dt>Geophysical Params</dt>
     <dd>{{ service.geophysical_params }}</dd>
     <dt>Contact(s)</dt>
-    <dd>{{ service.contact }}</dd>
+    <dd>{{ service.contact | default('None',true) }}</dd>
   </dl>
   <dl class="dl-horizontal span4">
     <dt>Monitoring</dt>
