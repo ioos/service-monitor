@@ -211,8 +211,8 @@ def dev_atom_feed():
     services = list(db.Service.find())
 
     for s in services:
-        if s.contact is None or s.contact != "":
-            s.contact = app.config.get("MAIL_DEFAULT_TO")
+        #if s.contact is None or s.contact != "":
+        s.contact = app.config.get("MAIL_DEFAULT_TO")
 
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
 
