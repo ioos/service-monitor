@@ -32,7 +32,6 @@ def reindex_services():
     endpoint = 'http://www.ngdc.noaa.gov/geoportal/csw' # NGDC Geoportal
 
     c = csw.CatalogueServiceWeb(endpoint, timeout=60)
-    c2 = csw.CatalogueServiceWeb(endpoint, timeout=60)
 
     ns = Namespaces()
 
