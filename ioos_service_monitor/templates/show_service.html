@@ -31,10 +31,11 @@
     <dd><a href="{{ url_for("services", filter_provider='null', filter_type=service.service_type) }}">{{ service.service_type }}</a></dd>
     <dt>URL</dt>
     <dd>{{ service.url }}</dd>
-    <dt>Geophysical Params</dt>
-    <dd>{{ service.geophysical_params }}</dd>
     <dt>Contact(s)</dt>
     <dd>{{ service.contact | default('None',true) }}</dd>
+    <dt>Source Metadata URL</dt>
+    <dd>{{ service.metadata_url }}</dd>
+
   </dl>
   <dl class="dl-horizontal span4">
     <dt>Monitoring</dt>
