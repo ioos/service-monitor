@@ -29,11 +29,14 @@ class Stat(BaseDocument):
         s = db.Service.find_one({'_id':self.service_id})
         assert s is not None
 
-        r = requests.get(s.url)
-
-        self.response_time = r.elapsed.microseconds / 1000
-        self.response_code = r.status_code
-        self.operational_status = 1 if r.status_code in [200,400] else 0
+        try:
+          r = requests.get(s.url)
+          self.response_time = r.elapsed.microseconds / 1000
+          self.response_code = r.status_code
+          self.operational_status = 1 if r.status_code in [200,400] else 0
+        except (requests.ConnectionError, requests.HTTPError):
+          self.response_code = -1
+          self.operational_status = 0
 
         return str(self)
 
