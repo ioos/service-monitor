@@ -10,18 +10,19 @@ class Service(BaseDocument):
     use_schemaless = True
 
     structure = {
-        'name'               : unicode, # friendly name of the service
-        'url'                : unicode, # url where the service resides
-        'tld'                : unicode, # top level domain/ip address for grouping purposes
-        'service_id'         : unicode, # id of the service
-        'service_type'       : unicode, # service type
-        'data_provider'      : unicode, # who provides the data
-        'geophysical_params' : unicode, #
-        'contact'            : unicode, # comma separated list of email addresses to contact when down
-        'interval'           : int,     # interval (in s) between stat retrievals
-        'job_id'             : unicode, # id of continuous ping job (scheduled)
-        'created'            : datetime,
-        'updated'            : datetime,
+        'name'                  : unicode, # friendly name of the service
+        'url'                   : unicode, # url where the service resides
+        'tld'                   : unicode, # top level domain/ip address for grouping purposes
+        'service_id'            : unicode, # id of the service
+        'service_type'          : unicode, # service type
+        'metadata_url'          : unicode,
+        'data_provider'         : unicode, # who provides the data
+        'geophysical_params'    : unicode, #
+        'contact'               : unicode, # comma separated list of email addresses to contact when down
+        'interval'              : int,     # interval (in s) between stat retrievals
+        'job_id'                : unicode, # id of continuous ping job (scheduled)
+        'created'               : datetime,
+        'updated'               : datetime,
     }
 
     default_values = {
@@ -48,7 +49,6 @@ class Service(BaseDocument):
             return retval[0]['os']
 
         return None
-
 
     def response_time(self, num_samples=1):
         retval = db.Stat.aggregate([{'$match':{'service_id':self._id}},
@@ -81,24 +81,29 @@ class Service(BaseDocument):
                                  interval=self.interval,
                                  repeat=None,
                                  result_ttl=self.interval * 2)
-
         self.job_id = unicode(job.id)
         self.save()
 
         return job.id
 
+    def get_job_id(self):
+        for job in scheduler.get_jobs():
+            if job.args and isinstance(job.args, tuple) and len(job.args) == 1 and job.args[0] == unicode(self._id):
+                return job.id
+
     def cancel_ping(self):
         """
         Cancels any scheduled ping job for this service.
         """
-        if self.job_id:
+        try:
             scheduler.cancel(self.job_id)
-
+        except AttributeError:
+            # "full nuclear" - make sure there are no other scheduled jobs that are for this service
+            try:
+                scheduler.cancel(self.get_job_id())
+            except BaseException:
+                pass
+        finally:
             self.job_id = None
             self.save()
-
-        # "full nuclear" - make sure there are no other scheduled jobs that are for this service
-        for job in scheduler.get_jobs():
-            if job.args and isinstance(job.args, tuple) and len(job.args) == 1 and job.args[0] == unicode(self._id):
-                scheduler.cancel(job.id)
 
