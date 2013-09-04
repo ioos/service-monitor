@@ -3,6 +3,7 @@ from fabric.contrib.files import *
 import os
 from copy import copy
 import time
+import urlparse
 
 """
     Call this with fab -c .fab TASK to pick up deploy variables
@@ -38,6 +39,7 @@ def deploy():
         run("git pull origin master")
         update_supervisord()
         update_libs()
+        create_index()
         start_supervisord()
         run("supervisorctl -c ~/supervisord.conf start all")
 
@@ -77,5 +79,14 @@ def kill_pythons():
 def start_supervisord():
     monitoring()
     with cd(code_dir):
-        with settings(warn_only=True):    
+        with settings(warn_only=True):
             run("supervisord -c ~/supervisord.conf")
+
+def create_index():
+    MONGO_URI = env.get('mongo_db')
+    url = urlparse.urlparse(MONGO_URI)
+    MONGODB_DATABASE = url.path[1:]
+
+    # @TODO: this will likely error on first run as the collection won't exist
+    run('mongo "%s" --eval "db.getCollection(\'stats\').ensureIndex({\'created\':-1})"' % MONGODB_DATABASE)
+

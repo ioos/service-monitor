@@ -37,7 +37,7 @@ def services(filter_provider, filter_type):
 
     f                 = ServiceForm()
     services          = list(db.Service.find(filters))
-    latest_stats      = db.Stat.latest_stats_by_service(1)
+    latest_stats      = db.Stat.latest_stats_by_service()
     last_weekly_stats = db.Stat.latest_stats_by_service_by_time(time_delta=timedelta(days=7))
 
     for s in services:

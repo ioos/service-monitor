@@ -24,7 +24,7 @@ class Stat(BaseDocument):
     default_values = {
         'created': datetime.utcnow
     }
-    
+
     def ping_service(self):
         s = db.Service.find_one({'_id':self.service_id})
         assert s is not None
@@ -41,33 +41,23 @@ class Stat(BaseDocument):
         return str(self)
 
     @classmethod
-    def latest_stats_by_service(self, num_samples=None):
-        map_func = Code("""
-            function () { emit(this.service_id, {a:[this]}) }
-        """)
+    def latest_stats_by_service(self):
+        finds = db.Stat.aggregate([{'$group':{'_id':'$service_id',
+                                              'when': {'$max':'$created'}}}])
 
-        red_func = Code("""
-            function(k, v) {
-              var val = {a:[]}
-              v.forEach(function(vv) {
-                val.a = vv.a.concat(val.a);
-              })
+        retval = {}
+        for f in finds:
+            stat = db.Stat.find_one({'service_id': f['_id'],
+                                     'created': f['when']})
 
-              val.a.sort(function(a, b) {
-                return (a.created < b.created) ? 1 : -1;
-              })
+            if not stat:
+                continue
 
-              val.a = val.a.slice(0, %d);
+            retval[f['_id']] = {'response_time':stat.response_time,
+                                'response_code':stat.response_code,
+                                'operational_status':stat.operational_status,
+                                'created':f['when']} 
 
-              return val;
-            }
-        """ % num_samples)
-
-        res = db["stats"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
-        retval = {a[u'_id']:{'response_time':sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
-                             'response_code': [b.get('response_code', None) for b in a['value']['a']][-1],
-                             'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
-                             'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
         return retval
 
     @classmethod
@@ -81,38 +71,11 @@ class Stat(BaseDocument):
             else:
                 start_time = datetime.utcfromtimestamp(0)   # 1970
 
-        # make javascript happy by converting to ms
-        start_time = time.mktime(start_time.timetuple()) * 1000
-        end_time = time.mktime(end_time.timetuple()) * 1000
+        finds = db.Stat.aggregate([{'$match': {'created': {'$gte':start_time, '$lte':end_time}}},
+                                   {'$group': {'_id': '$service_id',
+                                               'response_time': {'$max':'$response_time'},
+                                               'operational_status': {'$max':'$operational_status'}}}])
 
-        map_func = Code("""
-            function () { 
-                var d1 = new Date(%s);
-                var d2 = new Date(%s);
-                if (this.created >= d1 && this.created <= d2) {
-                    emit(this.service_id, {a:[this]})
-                }
-            }
-        """ % (start_time, end_time))
-
-        red_func = Code("""
-            function(k, v) {
-              var val = {a:[]}
-              v.forEach(function(vv) {
-                val.a = vv.a.concat(val.a);
-              })
-
-              val.a.sort(function(a, b) {
-                return (a.created < b.created) ? 1 : -1;
-              })
-
-              return val;
-            }
-        """)
-
-        res = db["stats"].map_reduce(map_func, red_func, "aggregate_stats_by_tld")
-        retval = {a[u'_id']:{'response_time': sum(filter(None,[b.get('response_time',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
-                             'response_code':None,
-                             'operational_status':sum(filter(None,[b.get('operational_status',None) for b in a['value']['a']]))/float(len(a['value']['a'])),
-                             'created':max([b.get('created',None) for b in a['value']['a']])} for a in res.find()}
+        retval = {f['_id']:f for f in finds}
         return retval
+
