@@ -20,7 +20,7 @@
 <hr />
 
 <div class="row">
-  <dl class="dl-horizontal span8">
+  <dl class="dl-horizontal col-lg-8">
     <dt>Name</dt>
     <dd>{{ service.name }}</dd>
     <dt>Service ID</dt>
@@ -37,7 +37,7 @@
     <dd>{{ service.metadata_url }}</dd>
 
   </dl>
-  <dl class="dl-horizontal span4">
+  <dl class="dl-horizontal col-lg-4">
     <dt>Monitoring</dt>
     <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.job_id else "<span class=\"label label-important\">NO</span>" | safe }}</dd>
     <dt>Interval</dt>

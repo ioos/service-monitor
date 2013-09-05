@@ -41,12 +41,12 @@
         </thead>
         {%- for service_group in services|groupby('tld') %}
         <tbody>
-            <tr class="info">
+            <tr class="hilite">
               <td colspan="7">{{ service_group.grouper }}</td>
               <td>{{ tld_stats[service_group.grouper]['ok'] }}/{{ tld_stats[service_group.grouper]['total'] }}</td>
             </tr>
             {%- for service in service_group.list %}
-            <tr class="{{ "error" if service.last_operational_status == 0 and service.last_update }}">
+            <tr class="{{ "danger" if service.last_operational_status == 0 and service.last_update }}">
                 <td>{{ service.data_provider }}</td>
                 <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>                
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
