@@ -107,3 +107,10 @@ class Service(BaseDocument):
             self['job_id'] = None
             self.save()
 
+    @classmethod
+    def count_types(cls):
+        retval = db.Service.aggregate([{'$group':{'_id':'$service_type',
+                                               'count':{'$sum':1}}}])
+
+        return retval
+

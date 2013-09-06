@@ -1,13 +1,22 @@
 from datetime import datetime
 
 from flask import render_template, make_response, redirect, jsonify
-from ioos_service_monitor import app, scheduler
+from ioos_service_monitor import app, scheduler, db
 
 from ioos_service_monitor.tasks.regulator import regulate
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    counts = db.Service.count_types()
+    stats = db.Stat.latest(8)
+
+    # temp
+    providers = sorted(db['services'].distinct('data_provider'))
+
+    return render_template('index.html',
+                           counts=counts,
+                           stats=stats,
+                           providers=providers)
 
 def serialize_date(date):
     if date is not None:

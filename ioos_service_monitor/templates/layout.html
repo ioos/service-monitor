@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>IOOS Service Monitor</title>
+    <title>IOOS Catalog</title>
     {% block javascript %}
     <script type="text/javascript" src="{{ url_for('.static', filename='js/jquery.min.js') }}" /></script>
     <script type="text/javascript" src="{{ url_for('.static', filename='js/bootstrap.js') }}" /></script>
@@ -23,8 +23,8 @@
           {%- endfor %}
         {%- endif %}
       {%- endwith %}
-
-      {% block page %}{% endblock %}
     </div>
+
+    {% block page %}{% endblock %}
   </body>
 </html>

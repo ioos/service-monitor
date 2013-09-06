@@ -41,6 +41,21 @@ class Stat(BaseDocument):
         return str(self)
 
     @classmethod
+    def latest(self, num):
+        stats = list(db.Stat.find().sort([('created',-1)]).limit(num))
+        sids = list(set((x.service_id for x in stats)))
+
+        services = {s._id:s for s in db.Service.find({'_id':{'$in':sids}})}
+
+        for s in stats:
+            service            = services[s.service_id]
+            s.service_name     = service.name
+            s.service_provider = service.data_provider
+            s.service_type     = service.service_type
+
+        return stats
+
+    @classmethod
     def latest_stats_by_service(self):
         finds = db.Stat.aggregate([{'$group':{'_id':'$service_id',
                                               'when': {'$max':'$created'}}}])

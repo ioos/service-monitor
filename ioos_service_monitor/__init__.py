@@ -50,8 +50,32 @@ def timedeltaformat(starting, ending):
         return ending - starting
     return "unknown"
 
+# from http://stackoverflow.com/a/5164027/84732
+def prettydate(d):
+    diff = datetime.datetime.utcnow() - d
+    s = diff.seconds
+    if diff.days > 7 or diff.days < 0:
+        return d.strftime('%d %b %y')
+    elif diff.days == 1:
+        return '1 day ago'
+    elif diff.days > 1:
+        return '{} days ago'.format(diff.days)
+    elif s <= 1:
+        return 'just now'
+    elif s < 60:
+        return '{} seconds ago'.format(s)
+    elif s < 120:
+        return '1 minute ago'
+    elif s < 3600:
+        return '{} minutes ago'.format(s/60)
+    elif s < 7200:
+        return '1 hour ago'
+    else:
+        return '{} hours ago'.format(s/3600)
+
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['timedeltaformat'] = timedeltaformat
+app.jinja_env.filters['prettydate'] = prettydate
 
 # pad/truncate filter (for making text tables)
 def padfit(value, size):

@@ -1,2 +1,85 @@
 {% extends "layout.html" %}
 
+{% block page %}
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>IOOS Catalog</h1>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div id="#recent" class="col-lg-8">
+      <h3>Recent Updates</h3>
+      <table class="table table-striped table-condensed">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Service</th>
+            <th>Updated</th>
+            <th>Code</th>
+            <th>ms</th>
+          </tr>
+        </thead>
+        <tbody>
+        {%- for stat in stats %}
+        <tr class="{{ "danger" if stat.operational_status == 0 }}">
+          <td></td>
+          <td>
+            <a href="{{url_for('show_service', service_id=stat.service_id)}}">{{ stat.service_name }}</a><br />
+            <small>{{ stat.service_provider }} &middot; {{ stat.service_type }}</small>
+          </td>
+          <td>{{ stat.created | prettydate }}</td>
+          <td>{{ stat.response_code }}</td>
+          <td>{{ stat.response_time }}</td>
+        </tr>
+        {%- endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-lg-4">
+      <div id="#overview">
+        <h3>Overview</h3>
+        <div>
+          <ul class="list-group">
+          {%- for count in counts %}
+          <li class="list-group-item">
+            <span class="badge">{{ count.count }}</span>
+            {{ count._id }}
+          </li>
+          {%- endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <div id="#datasets">
+        <h3>Datasets</h3>
+        <p>Coming Soon...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="well">
+    <div class="row">
+      <div class="col-lg-6">
+        {%- for provider in providers %}
+        <div class="col-lg-4">
+          <a class="thumbnail" style="margin:5px;" href="{{url_for('services', filter_provider=provider, filter_type='null')}}">{{ provider }}</a>
+        </div>
+        {%- endfor %}
+      </div>
+
+      <div class="col-lg-6">
+        <div class="">
+          {%- for count in counts %}
+            <a class="btn btn-lg btn-info" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">{{ count._id }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
