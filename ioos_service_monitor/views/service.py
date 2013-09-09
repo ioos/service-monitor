@@ -95,7 +95,7 @@ def show_service(service_id):
                           'created':{'$lte':now,
                                      '$gte':week_ago}}).sort('created', DESCENDING))
 
-    avg_response_time = sum([x.response_time for x in stats]) / len(stats) if len(stats) else 0
+    avg_response_time = sum([x.response_time for x in stats if x.response_time]) / len(stats) if len(stats) else 0
 
     return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time)
 
