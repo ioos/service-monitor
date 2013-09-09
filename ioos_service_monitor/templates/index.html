@@ -17,7 +17,7 @@
           <tr>
             <th></th>
             <th>Service</th>
-            <th>Updated</th>
+            <th style="width: 6em;">Updated</th>
             <th>Code</th>
             <th>ms</th>
           </tr>
@@ -63,23 +63,143 @@
 
   <div class="well">
     <div class="row">
-      <div class="col-lg-6">
-        {%- for provider in providers %}
-        <div class="col-lg-4">
-          <a class="thumbnail" style="margin:5px;" href="{{url_for('services', filter_provider=provider, filter_type='null')}}">{{ provider }}</a>
-        </div>
-        {%- endfor %}
+      <div class="col-lg-6" id="map">
       </div>
 
       <div class="col-lg-6">
-        <div class="">
+        <h3>Explore Services</h3>
+
+        <p>1. Pick a region using the dropdown or the map:</p>
+
+        <select id="region-select" class="form-control">
+          {%- for provider in providers %}
+          <option>{{ provider }}</option>
+          {%- endfor %}
+        </select>
+
+        <br/>
+        <p>2. Choose a service type:</p>
+
+        <div id="service-type-btns" class="">
           {%- for count in counts %}
-            <a class="btn btn-lg btn-info" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">{{ count._id }}</a>
+          <div class="col-lg-3">
+            <a class="btn btn-lg btn-default service-type-btn" data-type="{{count._id}}" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">
+              {{ count._id }}
+              <span class="badge">15</span>
+            </a>
+          </div>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+
+<script type="text/javascript">
+
+var countsByProvider = {{ counts_by_provider | tojson }};
+
+function updateTypeBtns() {
+  var region = $('#region-select').val();
+
+  // update count badges on buttons, disable those with none?
+  var btns = $('.service-type-btn')
+    .removeClass('btn-success')
+    .addClass('btn-default')
+    .removeAttr('disabled');
+
+  btns.each(function(idx, el) {
+    var el = $(el);
+    var cnt = countsByProvider[region][el.data('type')] || 0;
+    $('.badge', el).text(cnt);
+
+    if (cnt > 0) {
+      el.addClass('btn-success')
+        .removeClass('btn-default');
+    } else {
+      el.attr('disabled', 'disabled');
+    }
+    
+    // update hrefs of buttons to include service provider
+    el.attr('href', '/services/filter/' + region + '/' + el.data('type'));
+  });
+
+}
+
+$(function() {
+  $('#region-select').on('change', updateTypeBtns);
+  $('#region-select').change();
+});
+
+var width = 500,
+    height = 300;
+
+var projection = d3.geo.albers()
+    .scale(250)
+    .rotate([100, 0])
+    .center([50.6, 5.7])
+    //.parallels([29.5, 45.5])
+    //.precision(.1)
+    //.translate([0, height / 2]);
+        
+var path = d3.geo.path()
+  .projection(projection);
+   
+var svg = d3.select("#map").append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+  svg.append("filter").attr("id", "blur-effect-1").append("feGaussianBlur").attr("stdDeviation", 2);
+
+queue()
+  .defer(d3.json, "{{ url_for('.static', filename='geojson/na_merged.geojson') }}")
+  .defer(d3.json, "{{ url_for('.static', filename='geojson/ioos.geojson') }}")
+  .await(function(error, na, ioos) {
+    svg.append("g")
+      .selectAll("path")
+        .data([na])
+      .enter().append("path")
+        .attr("d", path)
+        .attr("stroke", "#000000")
+        .attr("stroke-width", 1)
+        .attr("fill", "#333333");
+
+    var regions = svg.append("g")
+      .selectAll("path")
+        .data(ioos.features);
+
+    regions.enter().append("path")
+      .attr("d", path)
+      .attr("fill", "#ff0000")
+      .attr("stroke", "none");
+
+    var textg = regions.enter().append("g")
+      .attr("transform", function(d) { var proj = projection(d.geometry.coordinates); proj[0] += 5; proj[1] += 5; return "translate(" + proj[0] + "," + proj[1] + ")"; })
+      .on('click', function() {
+        var region = d3.select(this).datum().properties.region;
+        $('#region-select').val(region);
+        updateTypeBtns();
+      });
+
+    textg.append("text")
+      .text(function(d) { return d.properties.region; })
+      .attr("class", "first")
+      .attr("fill", "none")
+      .attr("stroke", "#ffffff")
+      .attr("stroke-width", "5")
+
+    textg.append("text")
+      .text(function(d) { return d.properties.region; })
+      .attr("fill", "#000000")
+      .attr("stroke", "none");
+
+  });
+        
+
+
+</script>
 
 {% endblock %}

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from ioos_service_monitor import app, db, scheduler
 from ioos_service_monitor.models.base_document import BaseDocument
@@ -113,4 +114,28 @@ class Service(BaseDocument):
                                                'count':{'$sum':1}}}])
 
         return retval
+
+    @classmethod
+    def count_types_by_provider(cls):
+        """
+        Groups by Service Provider then Service Type.
+
+        MARACOOS ->
+            WCS -> 5
+            DAP -> 20
+        GLOS ->
+            SOS -> 57
+            ...
+        """
+        counts = db.Service.aggregate([{'$group':{'_id':{'service_type':'$service_type',
+                                                         'data_provider':'$data_provider'},
+                                                  'cnt':{'$sum':1}}}])
+
+        # transform into slightly friendlier structure.  could likely do this in mongo but no point
+        retval = defaultdict(dict)
+        for val in counts:
+            retval[val['_id']['data_provider']][val['_id']['service_type']] = val['cnt']
+
+        return dict(retval)
+
 

@@ -13,8 +13,12 @@ def index():
     # temp
     providers = sorted(db['services'].distinct('data_provider'))
 
+    # counts by provider
+    counts_by_provider = db.Service.count_types_by_provider()
+
     return render_template('index.html',
                            counts=counts,
+                           counts_by_provider=counts_by_provider,
                            stats=stats,
                            providers=providers)
 

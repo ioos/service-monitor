@@ -1,0 +1,149 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "NERACOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.169921875,
+          42.293564192170095
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "MARACOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.970703125,
+          39.57182223734374
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "SECOORA"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -80.771484375,
+          31.87755764334002
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "GLOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -84.287109375,
+          45.398449976304086
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "GCOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -91.14257812499999,
+          27.839076094777816
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "CARICOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.357421875,
+          18.562947442888312
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "SCOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.00390625,
+          33.87041555094183
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "CENCOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.04687499999999,
+          38.75408327579141
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "NANOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.1015625,
+          46.98025235521883
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "AOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -153.10546875,
+          60.50052541051131
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "PacIOOS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -160.83984375,
+          23.079731762449878
+        ]
+      }
+    }
+  ]
+}
+

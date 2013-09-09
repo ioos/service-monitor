@@ -2,3 +2,12 @@ tr.hilite>td {
   background-color: #d9edf7 !important;
   color: #3a87ad;
 }
+
+svg text.first {
+  -webkit-filter: blur(2px); filter: url(#blur-effect-1);
+  opacity: 0.9;
+}
+
+svg text {
+  cursor: pointer;
+}
