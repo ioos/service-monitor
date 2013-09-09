@@ -159,22 +159,19 @@ queue()
   .defer(d3.json, "{{ url_for('.static', filename='geojson/ioos.geojson') }}")
   .await(function(error, na, ioos) {
     svg.append("g")
+      .attr('class', 'map')
       .selectAll("path")
         .data([na])
       .enter().append("path")
-        .attr("d", path)
-        .attr("stroke", "#000000")
-        .attr("stroke-width", 1)
-        .attr("fill", "#333333");
+        .attr("d", path);
 
     var regions = svg.append("g")
+      .attr('class', 'ioos')
       .selectAll("path")
         .data(ioos.features);
 
     regions.enter().append("path")
-      .attr("d", path)
-      .attr("fill", "#ff0000")
-      .attr("stroke", "none");
+      .attr("d", path);
 
     var textg = regions.enter().append("g")
       .attr("transform", function(d) { var proj = projection(d.geometry.coordinates); proj[0] += 5; proj[1] += 5; return "translate(" + proj[0] + "," + proj[1] + ")"; })
@@ -186,15 +183,10 @@ queue()
 
     textg.append("text")
       .text(function(d) { return d.properties.region; })
-      .attr("class", "first")
-      .attr("fill", "none")
-      .attr("stroke", "#ffffff")
-      .attr("stroke-width", "5")
+      .attr("class", "first");
 
     textg.append("text")
-      .text(function(d) { return d.properties.region; })
-      .attr("fill", "#000000")
-      .attr("stroke", "none");
+      .text(function(d) { return d.properties.region; });
 
   });
         
