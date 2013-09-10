@@ -1,6 +1,6 @@
 tr.hilite>td {
-  background-color: #d9edf7 !important;
-  color: #3a87ad;
+  background-color: #C6D4E1 !important;
+  color: #565C61;
 }
 
 svg text.first {
@@ -42,6 +42,9 @@ svg .ioos path {
   padding-bottom: 0px;
   border-bottom: 5px solid #9fabb7;
   background-color: #C6D4E1;
+
+  line-height: inherit;
+  font-size: inherit;
 }
 
 .jumbotron h1, .jumbotron h3 {
@@ -54,6 +57,10 @@ svg .ioos path {
 }
 
 .jumbotron a:hover {
+}
+
+.jumbotron label {
+  margin-top: 10px;
 }
 
 .well {
