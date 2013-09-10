@@ -112,24 +112,29 @@ $(function() {
   var width = 1100,
       height = 50;
 
-  var graph = new Rickshaw.Graph({
-    element: $('#pings')[0],
-    width: width,
-    height: height,
-    renderer: 'bar',
-    series: [{data:pingData.good, color:'#C6D4E1'}, {data:pingData.bad, color:'#d9534f'}]
-  });
+  if (pingData.good.length > 0 || pingData.bad.length > 0) {
+    var graph = new Rickshaw.Graph({
+      element: $('#pings')[0],
+      width: width,
+      height: height,
+      renderer: 'bar',
+      series: [{data:pingData.good, color:'#C6D4E1'}, {data:pingData.bad, color:'#d9534f'}]
+    });
 
-  var y_ticks = new Rickshaw.Graph.Axis.Y( {
-    graph: graph,
-    orientation: 'left',
-    tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-    tickValues: [0, 200, 400, 600],
-    element: $('#y_axis')[0]
-  });
+    var y_ticks = new Rickshaw.Graph.Axis.Y( {
+      graph: graph,
+      orientation: 'left',
+      tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+      tickValues: [0, 200, 400, 600],
+      element: $('#y_axis')[0]
+    });
 
-  graph.render();
+    graph.render();
+  }
 
+});
+
+$(function() {
   $('#start-monitoring-link').on('click', function() {
     $('#start-monitoring-form').submit();
     event.preventDefault();
