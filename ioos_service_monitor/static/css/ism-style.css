@@ -12,6 +12,7 @@ svg text.first {
 
 svg text {
   cursor: pointer;
+  color: #565C61;
 }
 
 svg .map path {
@@ -57,6 +58,7 @@ svg .ioos path {
 
 .well {
   background-color: #C6D4E1;
+  color: #565C61;
 }
 
 a {
