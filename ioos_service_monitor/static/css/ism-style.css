@@ -44,12 +44,12 @@ svg .ioos path {
 }
 
 .jumbotron h1, .jumbotron h3 {
-  color: #ffffff;
+  color: #565C61;
   margin-top: 10px;
 }
 
 .jumbotron a {
-  color: white;
+  color: #565C61;
 }
 
 .jumbotron a:hover {
@@ -64,4 +64,14 @@ a {
 }
 
 .service-type-btn {
+}
+
+#pings {
+  position: relative;
+  left: 40px;
+}
+
+#y_axis {
+  position: absolute;
+  width: 40px;
 }

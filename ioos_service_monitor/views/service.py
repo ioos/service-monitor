@@ -81,8 +81,8 @@ def services(filter_provider, filter_type):
 @app.template_filter('status_icon')
 def status_icon_helper(status_val):
     if status_val:
-        return "<i class=\"icon-ok\"></i>"
-    return "<i class=\"icon-exclamation-sign\"></i>"
+        return "<span class=\"glyphicon glyphicon-ok\"></span>"
+    return "<span class=\"glyphicon glyphicon-exclamation-sign\"></span>"
 
 @app.route('/services/<ObjectId:service_id>', methods=['GET'])
 def show_service(service_id):
@@ -97,7 +97,18 @@ def show_service(service_id):
 
     avg_response_time = sum([x.response_time for x in stats if x.response_time]) / len(stats) if len(stats) else 0
 
-    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time)
+    ping_data = {'good':[], 'bad':[]}
+    for i, x in enumerate(reversed(stats)):
+        v = {'x':i, 'y':x.response_time or 250}
+        if x.operational_status:
+            ping_data['good'].append(v)
+            ping_data['bad'].append({'x':i,'y':0})
+        else:
+            ping_data['bad'].append(v)
+            ping_data['good'].append({'x':i,'y':0})
+
+
+    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data)
 
 @app.route('/services/', methods=['POST'])
 def add_service():
@@ -150,7 +161,7 @@ def ping_service(service_id):
     flash("Ping returned: %s" % ret)
     return redirect(url_for('show_service', service_id=service_id))
 
-@app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['GET'])
+@app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['POST'])
 def start_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
@@ -160,7 +171,7 @@ def start_monitoring_service(service_id):
     flash("Scheduled monitoring for '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
 
-@app.route('/services/<ObjectId:service_id>/stop_monitoring', methods=['GET'])
+@app.route('/services/<ObjectId:service_id>/stop_monitoring', methods=['POST'])
 def stop_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
