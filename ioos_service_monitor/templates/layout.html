@@ -13,11 +13,17 @@
     {% endblock %}
   </head>
   <body>
+    <div class="jumbotron">
+      <div class="container">
+        {% block jumbo %}{% endblock %}
+      </div>
+    </div>
+
     <div class="container">
       {%- with messages = get_flashed_messages(with_categories=true) %}
         {%- if messages %}
           {%- for category, message in messages %}
-            <div class="alert alert-{{ category }}">
+            <div class="alert alert-{{ "info" if category == "message" else category }}">
               {{ message }}
             </div>
           {%- endfor %}

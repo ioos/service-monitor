@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 
-{% block page %}
+{% block jumbo %}
 
-<div class="jumbotron">
-  <div class="container">
-    <h1>IOOS Catalog</h1>
-  </div>
-</div>
+<a href="/"><h1>IOOS Catalog</h1></a>
+
+{% endblock %}
+
+{% block page %}
 
 <div class="container">
   <div class="well">
@@ -41,6 +41,12 @@
       </div>
     </div>
   </div>
+</div>
+
+<div class="" id="pings">
+</div>
+
+<div class="container">
   <div class="row">
     <div id="#recent" class="col-lg-8">
       <h3>Recent Updates</h3>
@@ -133,6 +139,41 @@ function updateTypeBtns() {
 $(function() {
   $('#region-select').on('change', updateTypeBtns);
   $('#region-select').change();
+
+  var data = [{x:0, y:22},
+    {x:1,y:17},
+    {x:2,y:16},
+    {x:3,y:67},
+    {x:4,y:25},
+    {x:5,y:42},
+    {x:6,y:33},
+    {x:7,y:19},
+    {x:8,y:21},
+    {x:9,y:9},
+    {x:10,y:16}];
+
+  var graph = new Rickshaw.Graph({
+    element: $('#pings')[0],
+    width: 1900,
+    height: 40,
+    renderer: 'bar',
+    series: new Rickshaw.Series.FixedDuration([{name:'one'}], undefined, {
+      timeInterval: 5000,
+      maxDataPoints: 100,
+      timeBase: new Date().getTime() / 1000})
+  });
+
+  graph.render();
+
+  /*
+  var src = new EventSource('/stream');
+  src.onmessage = function(ev) {
+    console.log(ev);
+    graph.series.addData({'one':parseInt(ev.data)});
+    graph.render();
+  };
+  */
+
 });
 
 var width = 500,

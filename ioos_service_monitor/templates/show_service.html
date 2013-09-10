@@ -1,37 +1,38 @@
 {% extends "layout.html" %}
 
-{% block page %}
 
-<div class="jumbotron">
-  <div class="container">
-    <div class="btn-group" style="float: right; margin-top: 10px;">
-      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-        Admin <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu pull-right">
-        <li><a href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a></li>
-        <li><a href="{{ url_for('edit_service', service_id=service._id) }}">Edit</a></li>
-        <li class="divider"></li>
-        <li>
-          {% if not service.job_id %}
-            <a id="start-monitoring-link" href="#">Start Monitoring</a>
-          {% else %}
-            <a id="stop-monitoring-link" href="#">Stop Monitoring</a>
-          {% endif %}
-        </li>
-        <li><a href="#" id="delete-link">Delete</a></li>
-      </ul>
-    </div>
-    <form id="start-monitoring-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('start_monitoring_service', service_id=service._id) }}">
-    </form>
-    <form id="stop-monitoring-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('stop_monitoring_service', service_id=service._id) }}">
-    </form>
-    <form id="delete-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
-    </form>
+{% block jumbo %}
 
-    <h3><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name }}</a><br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('services') }}">Services</a></small></h3>
-  </div>
+<div class="btn-group" style="float: right; margin-top: 10px;">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    Admin <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu pull-right">
+    <li><a href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a></li>
+    <li><a href="{{ url_for('edit_service', service_id=service._id) }}">Edit</a></li>
+    <li class="divider"></li>
+    <li>
+      {% if not service.job_id %}
+        <a id="start-monitoring-link" href="#">Start Monitoring</a>
+      {% else %}
+        <a id="stop-monitoring-link" href="#">Stop Monitoring</a>
+      {% endif %}
+    </li>
+    <li><a href="#" id="delete-link">Delete</a></li>
+  </ul>
 </div>
+<form id="start-monitoring-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('start_monitoring_service', service_id=service._id) }}">
+</form>
+<form id="stop-monitoring-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('stop_monitoring_service', service_id=service._id) }}">
+</form>
+<form id="delete-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
+</form>
+
+<h3><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name }}</a><br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('services') }}">Services</a></small></h3>
+
+{% endblock %}
+
+{% block page %}
 
 <div class="container">
   <div class="row">

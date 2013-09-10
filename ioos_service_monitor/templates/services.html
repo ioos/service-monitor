@@ -1,12 +1,10 @@
 {% extends "layout.html" %}
 
-{% block page %}
-
-<div class="jumbotron">
-  <div class="container">
+{% block jumbo %}
     <h3> <a href="{{ url_for('services') }}">Services</a><br/><small><a href="/">IOOS Catalog</a></small></h3>
-  </div>
-</div>
+{% endblock %}
+
+{% block page %}
 
 <div class="container">
 
