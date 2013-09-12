@@ -42,6 +42,10 @@ Service Status Changed ({{"UP" if status else "DOWN"}}): {{ service.name }} ({{ 
       <td width="400" valign="top">{{ last_success_stat.created | datetimeformat }}</td>
     </tr>
     {% endif %}
+    <tr>
+      <td valign="top">Details URL:</td>
+      <td width="400" valign="top">{{ url_for('show_service', service_id=service._id) }}</td>
+    </tr>
   </table>
 
   {% if status == 0 %}

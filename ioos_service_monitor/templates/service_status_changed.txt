@@ -12,4 +12,5 @@ Last Successful Access: {{ last_success_stat.created | datetimeformat }}
 
 We will keep checking the service and you will be notified when its status changes.
 {% endif %}
+           Details URL: {{ url_for('show_service', service_id=service._id) }}
 
