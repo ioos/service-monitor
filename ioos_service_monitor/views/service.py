@@ -244,31 +244,13 @@ def stop_all():
     flash("Stopped %d pings" % services.count())
     return redirect(url_for('services'))
 
-@app.route('/services/daily', methods=['GET'])
-def daily():
-    from datetime import datetime, timedelta
-    from collections import defaultdict
-    end_time = datetime.utcnow()
-    start_time = end_time - timedelta(days=1)
+@app.route('/services/daily', methods=['GET'], defaults={'year':None, 'month':None, 'day':None})
+@app.route('/services/daily/<int:year>/<int:month>/<int:day>', methods=['GET'])
+def daily(year, month, day):
+    end_time = None
+    if year is not None and month is not None and day is not None:
+        end_time = datetime.strptime("%s/%s/%s" % (year, month, day), "%Y/%m/%d")
 
-    service_stats = db.Stat.aggregate([{'$match':{'created':{'$gte':start_time,
-                                                             '$lte':end_time}}},
-                                       {'$sort':{'created':1}},
-                                       {'$group':{'_id':'$service_id',
-                                                  'total': {'$sum':1},
-                                                  'status': {'$push':'$operational_status'},
-                                                  'current': {'$last':'$operational_status'}}},
-                                       {'$unwind':'$status'},
-                                       {'$match':{'status':0}},
-                                       {'$group':{'_id':'$_id',
-                                                  'total':{'$last':'$total'},
-                                                  'current':{'$last':'$current'},
-                                                  'fails':{'$sum':1}}}])
-
-    failed_services = {x[u'_id']:(x[u'fails'], x[u'total'], x[u'current']) for x in service_stats}
-
-    # retrieve all services
-    services = db.Service.find({'_id':{'$in':failed_services.keys()}}).sort([('data_provider', 1), ('name', 1)])
-
-    return render_template("daily_service_report.html", services=services, failed_services=failed_services, start_time=start_time, end_time=end_time)
+    failed_services, services, end_time, start_time = db.Service.get_failures_in_time_range(end_time=end_time)
+    return render_template("daily_service_report_page.html", services=services, failed_services=failed_services, start_time=start_time, end_time=end_time)
 

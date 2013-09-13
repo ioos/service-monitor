@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <div class="col-lg-10">
+  <h3>Daily Report<br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('services') }}">Services</a></small></h3>
+  </div>
+  <div class="col-lg-2">
+    <input type="date" name="enddate" class="form-control" style="margin-top: 10px;" value="{{ end_time | datetimeformat('%Y-%m-%d') }}" />
+  </div>
+</div>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+
+{% include "_daily_service_report.html" %}
+
+</div>
+
+<script type="text/javascript">
+$(function() {
+  $('input[name="enddate"]').on('change', function() {
+    var v = $(this).val().split("-");
+    window.location.href = "{{ url_for('daily') }}" + "/" + v.join("/");
+  });
+}); 
+</script>
+
+{% endblock %}

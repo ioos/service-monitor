@@ -1,5 +1,6 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 from ioos_service_monitor import app, db, scheduler
 from ioos_service_monitor.models.base_document import BaseDocument
 from ioos_service_monitor.tasks.stat import ping_service_task
@@ -138,4 +139,39 @@ class Service(BaseDocument):
 
         return dict(retval)
 
+    @classmethod
+    def get_failures_in_time_range(self, end_time=None, start_time=None):
+
+        if end_time is None:
+            end_time = datetime.utcnow()
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=pytz.utc)
+        end_time = end_time.astimezone(pytz.utc)
+
+        if start_time is None:
+            start_time = end_time - timedelta(days=1)
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=pytz.utc)
+        start_time = start_time.astimezone(pytz.utc)
+
+        service_stats = db.Stat.aggregate([{'$match':{'created':{'$gte':start_time,
+                                                                 '$lte':end_time}}},
+                                           {'$sort':{'created':1}},
+                                           {'$group':{'_id':'$service_id',
+                                                      'total': {'$sum':1},
+                                                      'status': {'$push':'$operational_status'},
+                                                      'current': {'$last':'$operational_status'}}},
+                                           {'$unwind':'$status'},
+                                           {'$match':{'status':0}},
+                                           {'$group':{'_id':'$_id',
+                                                      'total':{'$last':'$total'},
+                                                      'current':{'$last':'$current'},
+                                                      'fails':{'$sum':1}}}])
+
+        failed_services = {x[u'_id']:(x[u'fails'], x[u'total'], x[u'current']) for x in service_stats}
+
+        # retrieve all services
+        services = list(db.Service.find({'_id':{'$in':failed_services.keys()}}).sort([('data_provider', 1), ('name', 1)]))
+
+        return failed_services, services, end_time, start_time
 
