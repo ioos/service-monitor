@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 
+import pytz
+
 from ioos_service_monitor import app, db, scheduler
 
 from ioos_service_monitor.tasks.stat import ping_service_task
@@ -9,6 +11,14 @@ from ioos_service_monitor.tasks.send_email import send_daily_report_email
 
 def regulate():
     with app.app_context():
+
+        # Get services that have not been updated in two weeks and remove them.
+        # The reindex job sets the 'updated' field.  The below logic should effectively remove
+        # services that the reindex task has not seen in two weeks.
+        two_weeks_ago = (datetime.utcnow() - timedelta(weeks=2)).replace(tzinfo=pytz.utc)
+        deletes = [s for s in db.Service.find() if s.updated.replace(tzinfo=pytz.utc).astimezone(pytz.utc) < two_weeks_ago]
+        for d in deletes:
+            d.delete()
 
         # Get function and args of 
         jobs = scheduler.get_jobs()
@@ -64,5 +74,6 @@ def regulate():
             )
             s['job_id'] = unicode(job.id)
             s.save()
+
         
-    return "Regulated %s reindex jobs and %s ping jobs" % (len(reindex_services_jobs), len(stat_jobs))
+    return "Regulated %s reindex jobs, %s ping jobs, and deleted %s old services" % (len(reindex_services_jobs), len(stat_jobs), len(deletes))
