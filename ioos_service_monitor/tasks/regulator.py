@@ -6,6 +6,7 @@ import pytz
 from ioos_service_monitor import app, db, scheduler
 
 from ioos_service_monitor.tasks.stat import ping_service_task
+from ioos_service_monitor.tasks.harvest import harvest
 from ioos_service_monitor.tasks.reindex_services import reindex_services
 from ioos_service_monitor.tasks.send_email import send_daily_report_email
 
@@ -18,9 +19,11 @@ def regulate():
         two_weeks_ago = (datetime.utcnow() - timedelta(weeks=2)).replace(tzinfo=pytz.utc)
         deletes = [s for s in db.Service.find() if s.updated.replace(tzinfo=pytz.utc).astimezone(pytz.utc) < two_weeks_ago]
         for d in deletes:
+            d.cancel_ping()
+            d.cancel_harvest()
             d.delete()
 
-        # Get function and args of 
+        # Get function and args of
         jobs = scheduler.get_jobs()
 
         # Make sure a daily report job is running
@@ -58,22 +61,19 @@ def regulate():
 
         # Make sure each service has a ping job
         stat_jobs = [unicode(job.args[0]) for job in jobs if job.func == ping_service_task]
-
         # Get services that don't have jobs
-        services = [s for s in db.Service.find() if unicode(s._id) not in stat_jobs]
-
+        need_ping = [s for s in db.Service.find() if unicode(s._id) not in stat_jobs]
         # Schedule the ones that do not
-        for s in services:
-            job = scheduler.schedule(
-                scheduled_time=datetime.now(),  # Time for first execution
-                func=ping_service_task,         # Function to be queued
-                args=(unicode(s._id),),         # Arguments passed into function when executed
-                interval=s.interval,            # Time before the function is called again, in seconds
-                repeat=None,                    # Repeat this number of times (None means repeat forever)
-                result_ttl=s.interval * 2       # How long to keep the results, in seconds    
-            )
-            s['job_id'] = unicode(job.id)
-            s.save()
+        for s in need_ping:
+            s.schedule_ping(cancel=False)
 
-        
-    return "Regulated %s reindex jobs, %s ping jobs, and deleted %s old services" % (len(reindex_services_jobs), len(stat_jobs), len(deletes))
+        # Make sure each service has a harvest job
+        harvest_jobs = [unicode(job.args[0]) for job in jobs if job.func == harvest]
+        # Get services that don't have jobs
+        need_harvest = [s for s in db.Service.find() if unicode(s._id) not in harvest_jobs]
+        # Schedule the ones that do not
+        for s in need_harvest:
+            s.schedule_harvest(cancel=False)
+
+
+    return "Regulated %s reindex jobs, %s ping jobs, %s harvest jobs, and deleted %s old services" % (len(reindex_services_jobs), len(need_ping), len(need_harvest), len(deletes))

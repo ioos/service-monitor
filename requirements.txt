@@ -11,5 +11,7 @@ rq==0.3.8
 git+https://github.com/ui/rq-scheduler.git
 
 rq-dashboard==0.3.1
+lxml
 OWSLib
 pytz
+geojson

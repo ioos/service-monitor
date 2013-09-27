@@ -107,8 +107,10 @@ def show_service(service_id):
             ping_data['bad'].append(v)
             ping_data['good'].append({'x':i,'y':0})
 
+    datasets = db.Dataset.aggregate([{'$match':{'services.service_id':service_id}},
+                                     {'$group':{'_id' : '$asset_type','count':{'$sum':1}}}])
 
-    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data)
+    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets)
 
 @app.route('/services/', methods=['POST'])
 def add_service():
@@ -161,6 +163,13 @@ def ping_service(service_id):
     flash("Ping returned: %s" % ret)
     return redirect(url_for('show_service', service_id=service_id))
 
+@app.route('/services/<ObjectId:service_id>/harvest', methods=['GET'])
+def harvest_service(service_id):
+    s = db.Service.find_one({ '_id' : service_id })
+    s.schedule_harvest()
+    flash("Harvest scheduled")
+    return redirect(url_for('show_service', service_id=service_id))
+
 @app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['POST'])
 def start_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
@@ -168,7 +177,7 @@ def start_monitoring_service(service_id):
 
     s.schedule_ping()
 
-    flash("Scheduled monitoring for '%s' service" % s.name)
+    flash("Started monitoring the '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/stop_monitoring', methods=['POST'])
@@ -178,7 +187,27 @@ def stop_monitoring_service(service_id):
 
     s.cancel_ping()
 
-    flash("Stopped monitoring for '%s' service" % s.name)
+    flash("Stopped monitoring the '%s' service" % s.name)
+    return redirect(url_for('show_service', service_id=service_id))
+
+@app.route('/services/<ObjectId:service_id>/start_harvesting', methods=['POST'])
+def start_harvesting_service(service_id):
+    s = db.Service.find_one({'_id':service_id})
+    assert s is not None
+
+    s.schedule_harvest()
+
+    flash("Started harvesting the '%s' service" % s.name)
+    return redirect(url_for('show_service', service_id=service_id))
+
+@app.route('/services/<ObjectId:service_id>/stop_harvesting', methods=['POST'])
+def stop_harvesting_service(service_id):
+    s = db.Service.find_one({'_id':service_id})
+    assert s is not None
+
+    s.cancel_harvest()
+
+    flash("Stopped harvesting the '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/edit', methods=['GET'])
@@ -227,10 +256,9 @@ def dev_atom_feed():
 
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
 
-
 @app.route('/services/schedule_all', methods=['GET'])
 def schedule_all():
-    services = db.Service.find({'job_id':None})
+    services = db.Service.find({'ping_job_id':None})
     map(lambda x: x.schedule_ping(), services)
 
     flash("Scheduled %d pings" % services.count())
@@ -238,7 +266,7 @@ def schedule_all():
 
 @app.route('/services/stop_all', methods=['GET'])
 def stop_all():
-    services = db.Service.find({'job_id': {'$ne':None}})
+    services = db.Service.find({'ping_job_id': {'$ne':None}})
     map(lambda x: x.cancel_ping(), services)
 
     flash("Stopped %d pings" % services.count())

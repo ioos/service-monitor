@@ -1,1 +1,1 @@
-from ioos_service_monitor.models import service, stat
+from ioos_service_monitor.models import service, stat, dataset, migrations

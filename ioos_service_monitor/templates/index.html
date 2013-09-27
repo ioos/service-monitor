@@ -84,7 +84,7 @@
 
     <div class="col-lg-4">
       <div id="#overview">
-        <h3>Overview</h3>
+        <h3>Service Overview</h3>
         <div>
           <ul class="list-group">
           {%- for count in counts %}
@@ -97,9 +97,18 @@
         </div>
       </div>
 
-      <div id="#datasets">
-        <h3>Datasets</h3>
-        <p>Coming Soon...</p>
+      <div id="#assettypes">
+        <h3>Asset Overview</h3>
+        <div>
+          <ul class="list-group">
+          {%- for asset in asset_counts %}
+          <li class="list-group-item">
+            <span class="badge">{{ asset.count }}</span>
+            {{ asset._id }}
+          </li>
+          {%- endfor %}
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -134,7 +143,7 @@ function updateTypeBtns() {
     } else {
       el.attr('disabled', 'disabled');
     }
-    
+
     // update hrefs of buttons to include service provider
     el.attr('href', '/services/filter/' + region + '/' + el.data('type'));
   });
@@ -191,10 +200,10 @@ var projection = d3.geo.albers()
     //.parallels([29.5, 45.5])
     //.precision(.1)
     //.translate([0, height / 2]);
-        
+
 var path = d3.geo.path()
   .projection(projection);
-   
+
 var svg = d3.select("#map").append("svg")
   .attr("width", width)
   .attr("height", height);
@@ -236,7 +245,7 @@ queue()
       .text(function(d) { return d.properties.region; });
 
   });
-        
+
 
 
 </script>

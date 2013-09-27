@@ -4,12 +4,13 @@ import pytz
 from ioos_service_monitor import app, db, scheduler
 from ioos_service_monitor.models.base_document import BaseDocument
 from ioos_service_monitor.tasks.stat import ping_service_task
+from ioos_service_monitor.tasks.harvest import harvest
 
 @db.register
 class Service(BaseDocument):
-    __collection__ = 'services'
+    __collection__   = 'services'
     use_dot_notation = True
-    use_schemaless = True
+    use_schemaless   = True
 
     structure = {
         'name'                  : unicode, # friendly name of the service
@@ -22,7 +23,8 @@ class Service(BaseDocument):
         'geophysical_params'    : unicode, #
         'contact'               : unicode, # comma separated list of email addresses to contact when down
         'interval'              : int,     # interval (in s) between stat retrievals
-        'job_id'                : unicode, # id of continuous ping job (scheduled)
+        'ping_job_id'                : unicode, # id of continuous ping job (scheduled)
+        'harvest_job_id'        : unicode, # id of harvest job (scheduled)
         'created'               : datetime,
         'updated'               : datetime,
     }
@@ -64,7 +66,28 @@ class Service(BaseDocument):
 
         return None
 
-    def schedule_ping(self):
+    def schedule_harvest(self, cancel=True):
+        """
+        Starts a continuous harvest job via the rq scheduler.
+        Cancels any existing job it can find regarding this service.
+
+        Runs once per day (86400 seconds)
+        """
+        if cancel is True:
+            self.cancel_harvest()
+
+        job = scheduler.schedule(scheduled_time=datetime.now(),
+                                 func=harvest,
+                                 args=(unicode(self._id),),
+                                 interval=86400,
+                                 repeat=None,
+                                 result_ttl=86400 * 2)
+        self['harvest_job_id'] = unicode(job.id)
+        self.save()
+
+        return job.id
+
+    def schedule_ping(self, cancel=True):
         """
         Starts a continuous ping job via the rq scheduler.
         Cancels any existing job it can find regarding this service.
@@ -72,7 +95,8 @@ class Service(BaseDocument):
         If self.interval is 0 or not set, does nothing.
         """
 
-        self.cancel_ping()
+        if cancel is True:
+            self.cancel_ping()
 
         if not self.interval:
             return None
@@ -83,37 +107,57 @@ class Service(BaseDocument):
                                  interval=self.interval,
                                  repeat=None,
                                  result_ttl=self.interval * 2)
-        self['job_id'] = unicode(job.id)
+        self['ping_job_id'] = unicode(job.id)
         self.save()
 
         return job.id
 
-    def get_job_id(self):
+    def get_ping_job_id(self):
         for job in scheduler.get_jobs():
-            if job.args and isinstance(job.args, tuple) and len(job.args) == 1 and job.args[0] == unicode(self._id):
+            if job.func == ping_service_task and unicode(job.args[0]) == unicode(self._id):
                 return job.id
+
+    def get_harvest_job_id(self):
+        for job in scheduler.get_jobs():
+            if job.func == harvest and unicode(job.args[0]) == unicode(self._id):
+                return job.id
+
+    def cancel_harvest(self):
+        """
+        Cancels any scheduled harvest jobs for this service.
+        """
+        try:
+            scheduler.cancel(self.harvest_job_id)
+        except AttributeError:
+            # "full nuclear" - make sure there are no other scheduled jobs that are for this service
+            try:
+                scheduler.cancel(self.get_harvest_job_id())
+            except BaseException:
+                pass
+        finally:
+            self['harvest_job_id'] = None
+            self.save()
 
     def cancel_ping(self):
         """
         Cancels any scheduled ping job for this service.
         """
         try:
-            scheduler.cancel(self.job_id)
+            scheduler.cancel(self.ping_job_id)
         except AttributeError:
             # "full nuclear" - make sure there are no other scheduled jobs that are for this service
             try:
-                scheduler.cancel(self.get_job_id())
+                scheduler.cancel(self.get_ping_job_id())
             except BaseException:
                 pass
         finally:
-            self['job_id'] = None
+            self['ping_job_id'] = None
             self.save()
 
     @classmethod
     def count_types(cls):
         retval = db.Service.aggregate([{'$group':{'_id':'$service_type',
                                                'count':{'$sum':1}}}])
-
         return retval
 
     @classmethod

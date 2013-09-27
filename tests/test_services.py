@@ -23,5 +23,3 @@ class TestServices(FlaskMongoTestCase):
 
         s2 = self.db['services'].find_one({'name':slug})
         assert s2 is None
-
-

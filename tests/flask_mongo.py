@@ -1,5 +1,4 @@
 import unittest
-import ioos_service_monitor
 from ioos_service_monitor import app
 from mongokit import Connection
 
@@ -11,4 +10,6 @@ class FlaskMongoTestCase(unittest.TestCase):
         self.db = Connection(app.config['MONGODB_HOST'], app.config['MONGODB_PORT'])[app.config['MONGODB_DATABASE']]
 
     def tearDown(self):
-        self.db.drop_collection("runs")
+        self.db.drop_collection("services")
+        self.db.drop_collection("stats")
+        self.db.drop_collection("datasets")

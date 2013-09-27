@@ -84,4 +84,5 @@ def reindex_services():
                         s.updated           = datetime.utcnow()
                         s.contact           = unicode(contact_email)
                         s.metadata_url      = unicode(metadata_url)
-                        s.save()    
+                        s.save()
+                        s.schedule_harvest()

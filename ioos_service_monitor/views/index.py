@@ -13,11 +13,15 @@ def index():
     # temp
     providers = sorted(db['services'].distinct('data_provider'))
 
-    # counts by provider
+    # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider()
 
+    # dataset 
+    asset_counts = db.Dataset.count_types()
+    app.logger.info(asset_counts)
     return render_template('index.html',
                            counts=counts,
+                           asset_counts=asset_counts,
                            counts_by_provider=counts_by_provider,
                            stats=stats,
                            providers=providers)
@@ -62,9 +66,9 @@ def reg():
         scheduler.schedule(
             scheduled_time=datetime.now(),  # Time for first execution
             func=regulate,                  # Function to be queued
-            interval=300,                   # Time before the function is called again, in seconds
+            interval=600,                   # Time before the function is called again, in seconds
             repeat=None,                    # Repeat this number of times (None means repeat forever)
-            result_ttl=600                  # How long to keep the results
+            result_ttl=1200                 # How long to keep the results
         )
         return jsonify({"message" : "regulated"})
     return jsonify({ "message" : "no need to regulate" })
