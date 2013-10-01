@@ -4,7 +4,7 @@ DEBUG = True
 TESTING = True
 
 # Database
-MONGO_URI = "mongodb://localhost:27017/ioos_service_monitor_testing"
+MONGO_URI = "mongodb://localhost:27017/ioos_catalog_testing"
 url = urlparse.urlparse(MONGO_URI)
 MONGODB_HOST = url.hostname
 MONGODB_PORT = url.port

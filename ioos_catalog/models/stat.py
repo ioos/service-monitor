@@ -1,8 +1,8 @@
 from bson.objectid import ObjectId
 from datetime import datetime
 import time
-from ioos_service_monitor import app, db
-from ioos_service_monitor.models.base_document import BaseDocument
+from ioos_catalog import app, db
+from ioos_catalog.models.base_document import BaseDocument
 import requests
 from bson.code import Code
 
@@ -71,7 +71,7 @@ class Stat(BaseDocument):
             retval[f['_id']] = {'response_time':stat.response_time,
                                 'response_code':stat.response_code,
                                 'operational_status':stat.operational_status,
-                                'created':f['when']} 
+                                'created':f['when']}
 
         return retval
 

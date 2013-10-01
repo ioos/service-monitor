@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from flask import render_template, make_response, redirect, jsonify
-from ioos_service_monitor import app, scheduler, db
+from ioos_catalog import app, scheduler, db
 
-from ioos_service_monitor.tasks.regulator import regulate
+from ioos_catalog.tasks.regulator import regulate
 
 @app.route('/', methods=['GET'])
 def index():
@@ -16,9 +16,8 @@ def index():
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider()
 
-    # dataset 
+    # dataset
     asset_counts = db.Dataset.count_types()
-    app.logger.info(asset_counts)
     return render_template('index.html',
                            counts=counts,
                            asset_counts=asset_counts,

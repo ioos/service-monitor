@@ -3,12 +3,12 @@ from bson.objectid import ObjectId
 
 import pytz
 
-from ioos_service_monitor import app, db, scheduler
+from ioos_catalog import app, db, scheduler
 
-from ioos_service_monitor.tasks.stat import ping_service_task
-from ioos_service_monitor.tasks.harvest import harvest
-from ioos_service_monitor.tasks.reindex_services import reindex_services
-from ioos_service_monitor.tasks.send_email import send_daily_report_email
+from ioos_catalog.tasks.stat import ping_service_task
+from ioos_catalog.tasks.harvest import harvest
+from ioos_catalog.tasks.reindex_services import reindex_services
+from ioos_catalog.tasks.send_email import send_daily_report_email
 
 def regulate():
     with app.app_context():

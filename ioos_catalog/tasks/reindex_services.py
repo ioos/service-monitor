@@ -8,7 +8,7 @@ from owslib import fes, csw
 from owslib.util import nspath_eval
 from owslib.namespaces import Namespaces
 
-from ioos_service_monitor import app,db
+from ioos_catalog import app,db
 
 
 def reindex_services():

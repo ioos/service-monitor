@@ -1,5 +1,5 @@
 from flask.ext.mail import Message
-from ioos_service_monitor import db, app, mail
+from ioos_catalog import db, app, mail
 from flask import render_template
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -26,7 +26,7 @@ def send_service_down_email(service_id):
         to_addresses = [app.config.get("MAIL_DEFAULT_LIST")] if app.config.get('MAILER_DEBUG') == False else [app.config.get("MAIL_DEFAULT_TO")]
         # Don't send these until Anna updates the ISO document in GeoPortal with the correct service contacts
         #if app.config.get('MAILER_DEBUG') == False and kwargs['service'].contact is not None:
-        #    to_addresses = kwargs['service'].contact.split(",")        
+        #    to_addresses = kwargs['service'].contact.split(",")
         cc_addresses = [app.config.get("MAIL_DEFAULT_TO")]
 
         send(subject,

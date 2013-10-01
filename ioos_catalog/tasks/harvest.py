@@ -10,8 +10,8 @@ from owslib.crs import Crs
 import geojson
 import json
 
-from ioos_service_monitor import app, db
-from ioos_service_monitor.tasks.send_email import send_service_down_email
+from ioos_catalog import app, db
+from ioos_catalog.tasks.send_email import send_service_down_email
 
 def harvest(service_id):
     with app.app_context():

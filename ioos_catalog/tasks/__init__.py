@@ -1,1 +1,1 @@
-from ioos_service_monitor.tasks import stat, reindex_services, regulator, send_email, harvest
+from ioos_catalog.tasks import stat, reindex_services, regulator, send_email, harvest

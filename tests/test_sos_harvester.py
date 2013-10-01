@@ -1,4 +1,4 @@
-from ioos_service_monitor.tasks.harvest import SosHarvest
+from ioos_catalog.tasks.harvest import SosHarvest
 from tests.flask_mongo import FlaskMongoTestCase
 import json
 

@@ -6,7 +6,7 @@ from flask import Flask
 # Create application object
 app = Flask(__name__)
 
-app.config.from_object('ioos_service_monitor.defaults')
+app.config.from_object('ioos_catalog.defaults')
 app.config.from_envvar('APPLICATION_SETTINGS', silent=True)
 
 import sys
@@ -19,7 +19,7 @@ RQDashboard(app)
 if app.config.get('LOG_FILE') == True:
     import logging
     from logging import FileHandler
-    file_handler = FileHandler('logs/ioos_service_monitor.txt')
+    file_handler = FileHandler('logs/ioos_catalog.txt')
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
 
@@ -98,6 +98,6 @@ def slugify(value):
     return unicode(re.sub('[-\s]+', '-', value))
 
 # Import everything
-import ioos_service_monitor.views
-import ioos_service_monitor.models
-import ioos_service_monitor.tasks
+import ioos_catalog.views
+import ioos_catalog.models
+import ioos_catalog.tasks

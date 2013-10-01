@@ -6,10 +6,10 @@ from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response
 from wtforms import TextField, IntegerField, SelectField
 
-from ioos_service_monitor import app, db, scheduler
-from ioos_service_monitor.models.stat import Stat
-from ioos_service_monitor.tasks.stat import ping_service_task
-from ioos_service_monitor.tasks.reindex_services import reindex_services
+from ioos_catalog import app, db, scheduler
+from ioos_catalog.models.stat import Stat
+from ioos_catalog.tasks.stat import ping_service_task
+from ioos_catalog.tasks.reindex_services import reindex_services
 
 
 class DatasetFilterForm(Form):

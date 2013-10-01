@@ -1,5 +1,5 @@
 import unittest
-from ioos_service_monitor import app
+from ioos_catalog import app
 from mongokit import Connection
 
 class FlaskMongoTestCase(unittest.TestCase):

@@ -1,7 +1,7 @@
 from datetime import datetime
-from ioos_service_monitor import app, db, queue
+from ioos_catalog import app, db, queue
 from bson import ObjectId
-from ioos_service_monitor.tasks.send_email import send_service_down_email
+from ioos_catalog.tasks.send_email import send_service_down_email
 
 def ping_service_task(service_id):
     with app.app_context():

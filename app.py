@@ -1,4 +1,4 @@
-from ioos_service_monitor import app
+from ioos_catalog import app
 import os
 
 if os.environ.get('APPLICATION_SETTINGS') == 'development.py':

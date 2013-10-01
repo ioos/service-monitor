@@ -1,10 +1,10 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 import pytz
-from ioos_service_monitor import app, db, scheduler
-from ioos_service_monitor.models.base_document import BaseDocument
-from ioos_service_monitor.tasks.stat import ping_service_task
-from ioos_service_monitor.tasks.harvest import harvest
+from ioos_catalog import app, db, scheduler
+from ioos_catalog.models.base_document import BaseDocument
+from ioos_catalog.tasks.stat import ping_service_task
+from ioos_catalog.tasks.harvest import harvest
 
 @db.register
 class Service(BaseDocument):

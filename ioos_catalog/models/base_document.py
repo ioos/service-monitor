@@ -1,5 +1,5 @@
 from flask.ext.mongokit import Document
-from ioos_service_monitor import app, db
+from ioos_catalog import app, db
 
 class BaseDocument(Document):
 
