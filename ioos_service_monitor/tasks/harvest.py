@@ -154,13 +154,28 @@ class SosHarvest(Harvester):
 
 
 class WmsHarvest(Harvester):
+    def __init__(self, service_id, service_type, url):
+        Harvester.__init__(self, service_id, service_type, url)
     def harvest(self):
         pass
 
 class WcsHarvest(Harvester):
+    def __init__(self, service_id, service_type, url):
+        Harvester.__init__(self, service_id, service_type, url)
     def harvest(self):
         pass
 
 class DapHarvest(Harvester):
+    def __init__(self, service_id, service_type, url):
+        Harvester.__init__(self, service_id, service_type, url)
+
     def harvest(self):
+        """
+        Identify the type of CF dataset this is:
+          * UGRID
+          * CGRID
+          * RGRID
+          * DSG
+        """
         pass
+
