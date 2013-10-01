@@ -39,7 +39,7 @@ class Dataset(BaseDocument):
         ],
         'keywords'      : [unicode],   # Search keywords
         'variables'     : [unicode],   # Environmental properties measured by this dataset
-        'asset_type'     : unicode,    # See the IOOS vocablary for assets
+        'asset_type'     : unicode,    # See the IOOS vocablary for assets: http://mmisw.org/orr/#http://mmisw.org/ont/ioos/platform
         'geojson'       : dict,        # GeoJSON of the datasets location (point / line / polygon) as a dict
         'messages'      : [unicode],   # Useful messages to display about a dataset
         'created'       : datetime,
