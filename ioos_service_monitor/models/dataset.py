@@ -53,7 +53,7 @@ class Dataset(BaseDocument):
 
     @classmethod
     def count_types(cls):
-        retval = db.Dataset.aggregate([{'$group':{'_id':'$assetType',
+        retval = db.Dataset.aggregate([{'$group':{'_id':'$asset_type',
                                                'count':{'$sum':1}}}])
         return retval
 
