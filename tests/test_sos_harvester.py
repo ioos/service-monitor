@@ -18,8 +18,16 @@ class TestSosHarvester(FlaskMongoTestCase):
             # Each dataset should only have one service
             assert len(d['services']) == 1
             assert type(json.loads(json.dumps(d['geojson']))) == dict
-            assert d['assetType'] == "BUOY"
+            assert d['asset_type'] == "BUOY"
             assert len(d['keywords']) > 0
 
         d = self.db['datasets'].find({ 'uid' : unicode('urn:ioos:station:us.glos:UMBIO') })[0]
-        assert sorted(d['variables']) == sorted(['wind_speed','dew_point_temperature','sea_surface_wave_significant_height','wind_from_direction','sea_surface_wind_wave_period','wind_speed_of_gust','sea_water_temperature','air_temperature','air_pressure_at_sea_level'])
+        assert sorted(d['variables']) == sorted([u'urn:ioos:sensor:us.glos:UMBIO:air_pressure_at_sea_level',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:air_temperature',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:dew_point_temperature',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:sea_surface_wave_significant_height',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:sea_surface_wind_wave_period',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:sea_water_temperature',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:wind_from_direction',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:wind_speed',
+                                                 u'urn:ioos:sensor:us.glos:UMBIO:wind_speed_of_gust'])

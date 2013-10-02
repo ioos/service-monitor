@@ -7,6 +7,8 @@ from owslib.swe.sensor.sml import SensorML
 from owslib.util import testXMLAttribute, testXMLValue
 from owslib.crs import Crs
 
+from pyoos.parsers.ioos.describe_sensor import IoosDescribeSensor
+
 import geojson
 import json
 
@@ -56,14 +58,13 @@ class SosHarvest(Harvester):
                     self.process_station(uid)
                 processed.append(uid)
             elif sp_uid[2] == "network": # Network Offering
-                network_ds = SensorML(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid)).members[0]
+                network_ds = IoosDescribeSensor(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
                 # Iterate over stations in the network and process them individually
-                for component in network_ds.components:
-                    stat_uid = testXMLAttribute(component, "{http://www.w3.org/1999/xlink}xlink")
-                    if stat_uid is not None and stat_uid.split(":")[2] == "station":
-                        if not stat_uid in processed:
-                            self.process_station(stat_uid)
-                        processed.append(stat_uid)
+                for proc in network_ds.procedures:
+                    if proc is not None and proc.split(":")[2] == "station":
+                        if not proc in processed:
+                            self.process_station(proc)
+                        processed.append(proc)
 
     def process_station(self, uid):
         """ Makes a DescribeSensor request based on a 'uid' parameter being a station procedure """
@@ -74,9 +75,9 @@ class SosHarvest(Harvester):
         with app.app_context():
 
             metadata_value = etree.fromstring(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
-            sml_system     = SensorML(metadata_value).members[0]
+            station_ds     = IoosDescribeSensor(metadata_value)
 
-            unique_id = self.get_named_by_definition(sml_system.get_identifiers_by_name("stationID"), "http://mmisw.org/ont/ioos/definition/stationID")
+            unique_id = station_ds.id
             if unique_id is None:
                 app.logger.warn("Could not get a 'stationID' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/stationID'")
                 return
@@ -101,31 +102,25 @@ class SosHarvest(Harvester):
             dataset.services.append(service)
 
             # NAME
-            name = self.get_named_by_definition(sml_system.get_identifiers_by_name("shortName"), "http://mmisw.org/ont/ioos/definition/shortName")
-            if name is None:
+            dataset.name = unicode(station_ds.shortName)
+            if dataset.name == u'None':
                 dataset.messages.append(u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
-            else:
-                dataset.name = unicode(name)
 
             # DESCRIPTION
-            description = self.get_named_by_definition(sml_system.get_identifiers_by_name("longName"), "http://mmisw.org/ont/ioos/definition/longName")
-            if description is None:
+            dataset.description = unicode(station_ds.longName)
+            if dataset.description == u'None':
                 dataset.messages.append(u"Could not get a 'longName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/longName'")
-            else:
-                dataset.description = unicode(description)
 
             # PLATFORM TYPE
-            platformType = self.get_named_by_definition(sml_system.get_classifiers_by_name("platformType"), "http://mmisw.org/ont/ioos/definition/platformType")
-            if platformType is None:
+            dataset.asset_type = unicode(station_ds.platformType)
+            if dataset.asset_type == u'None':
                 dataset.messages.append(u"Could not get a 'platformType' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/platformType'")
-            else:
-                dataset.asset_type  = unicode(platformType)
 
             # KEYWORDS
-            dataset.keywords = map(unicode, sml_system.keywords)
+            dataset.keywords = station_ds.keywords
 
             # LOCATION is in GML
-            loc = sml_system.location[0]
+            loc = station_ds.location[0]
             if loc.tag == "{%s}Point" % GML_NS:
                 pos_element = loc.find("{%s}pos" % GML_NS)
                 # strip out points
@@ -138,20 +133,12 @@ class SosHarvest(Harvester):
             else:
                 dataset.messages.append(u"Found an unrecognized sml:location element and didn't attempt to process: %s" % etree.tostring(loc))
 
-            # VARIABLES (components)
-            vs = [unicode(testXMLAttribute(comp, "{%s}title" % XLINK_NS).split(":")[-1]) for comp in sml_system.components]
-            dataset.variables = list(set(dataset.variables + vs))
+            # VARIABLES
+            dataset.variables = map(unicode, sorted(station_ds.variables))
 
             dataset.updated = datetime.utcnow()
             dataset.save()
             return "Harvested"
-
-    def get_named_by_definition(self, element_list, string_def):
-        try:
-            return next((st.value for st in element_list if st.definition == string_def))
-        except:
-            return None
-
 
 class WmsHarvest(Harvester):
     def __init__(self, service_id, service_type, url):
