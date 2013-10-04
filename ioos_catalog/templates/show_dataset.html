@@ -3,7 +3,7 @@
 
 {% block jumbo %}
 
-<h3><a href="{{ url_for('show_dataset', dataset_id=dataset._id) }}">{{ dataset.name }}</a><br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('datasets') }}">Datasets</a></small></h3>
+<h3><a href="{{ url_for('show_dataset', dataset_id=dataset._id) }}">{{ dataset.uid }}</a><br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('datasets') }}">Datasets</a></small></h3>
 
 {% endblock %}
 
@@ -11,57 +11,65 @@
 
 <div class="container">
   <div class="row">
-    <dl class="dl-horizontal col-lg-8">
-      <dt>UID</dt>
-      <dd>{{ dataset.uid }}</dd>
-      <dt>Name</dt>
-      <dd>{{ dataset.name }}</dd>
-      <dt>Description</dt>
-      <dd>{{ dataset.description }}</dd>
-      <dt>Asset Type</dt>
-      <dd>{{ dataset.asset_type }}</dd>
-      <dt>Last updated</dt>
-      <dd>{{ dataset.updated | datetimeformat }}</dd>
-      <dt>GeoJSON</dt>
-      <dd>{{ dataset.geojson }}</dd>
-      <dt>Variables</dt>
-      <dd>{{ dataset.variables }}</dd>
-    </dl>
-    <dl class="dl-horizontal col-lg-4">
-        <h4>Services</h4>
+    <div class="col-lg-2">
+      <ul class="nav nav-tabs nav-stacked" id="service_tabs">
         {%- for s in dataset.services %}
-        <a data-toggle="modal" href="#{{s['service_id']}}" class="btn btn-primary">{{ s['service_type'] }} - {{ s['metadata_type'] }}</a>
-        <div class="modal fade" id="{{s['service_id']}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">{{ s['metadata_type'] }}</h4>
-              </div>
-              <div class="model-body">
-                <textarea style="border:none; width: 100%; height: 400px;">
-                  {{ s['metadata_value'] | safe }}
-                </textarea>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <li><a data-target="#{{ s.service_id }}" data-toggle="tab">{{ s['service_type'] }}</a></li>
         {%- endfor %}
-    </dl>
-  </div>
-  <div class="row">
-    <dl class="dl-horizontal col-lg-3">
-      <h4>Messages</h4>
-      {%- for m in dataset.messages %}
-      <dt>{{ m }}</dt>
+      </ul>
+    </div>
+
+    <div class="col-lg-10 tab-content">
+      {%- for s in dataset.services %}
+      <div class="tab-pane" id="{{ s.service_id }}">
+        <dl class="dl-horizontal">
+          <dt>Name</dt>
+          <dd>{{ s.name }}</dd>
+          <dt>Description</dt>
+          <dd>{{ s.description }}</dd>
+          <dt>Asset Type</dt>
+          <dd>{{ s.asset_type }}</dd>
+          <dt>Last updated</dt>
+          <dd>{{ s.updated | datetimeformat }}</dd>
+          <dt>GeoJSON</dt>
+          <dd>{{ s.geojson }}</dd>
+          <dt>Variables</dt>
+          <dd>
+            <ul class="list-unstyled">
+              {%- for v in s.variables %}
+              <li>{{ v }}</li>
+              {%- endfor %}
+            </ul>
+          </dd>
+          <dt>Keywords</dt>
+          <dd><span class="badge">{{ s.keywords | count }}</span></dd>
+          <dt>Service</dt>
+          <dd><a href="{{ url_for('show_service', service_id=s.service_id) }}">view</a></dd>
+          <dt>Metadata ({{ s.metadata_type }})</dt>
+          <dd>
+            <pre class="pre-scrollable">
+              {{- s.metadata_value }}
+            </pre>
+          <dd>
+          <dt>Messages</dt>
+          <dd>
+            <ul class="list-unstyled">
+              {%- for m in s.messages %}
+              <li><pre>{{ m }}</pre></li>
+              {%- endfor %}
+            </ul>
+          </dd>
       {%- endfor %}
-    </dl>
+      </div>
+    </div>
   </div>
 </div>
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
+<script>
+  $(function () {
+    $('#service_tabs a:first').tab('show')
+  })
+</script>
 
 {% endblock %}

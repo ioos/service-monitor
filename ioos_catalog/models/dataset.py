@@ -27,21 +27,23 @@ class Dataset(BaseDocument):
 
     structure = {
         'uid'           : unicode,
-        'name'          : unicode,
-        'description'   : unicode,
-        'services'      : [            # The services that this dataset is available in
+        'services'      : [         # The services that this dataset is available in
             {
+                'name'              : unicode,
+                'description'       : unicode,
                 'service_id'        : ObjectId,   # reference to the service object
                 'service_type'      : unicode,    # service type cached here
                 'metadata_type'     : unicode,    # sensorml, ncml, iso, wmsgetcaps
-                'metadata_value'    : unicode     # value of the metadata (actual xml)
+                'metadata_value'    : unicode,    # value of the metadata (actual xml)
+                'keywords'          : [unicode],  # Search keywords
+                'variables'         : [unicode],  # Environmental properties measured by this dataset
+                'asset_type'        : unicode,    # See the IOOS vocablary for assets: http://mmisw.org/orr/#http://mmisw.org/ont/ioos/platform
+                'geojson'           : dict,       # GeoJSON of the datasets location (point / line / polygon) as a dict
+                'messages'          : [unicode],    # messages regarding the harvesting of this
+                'created'           : datetime,
+                'updated'           : datetime
             }
         ],
-        'keywords'      : [unicode],   # Search keywords
-        'variables'     : [unicode],   # Environmental properties measured by this dataset
-        'asset_type'     : unicode,    # See the IOOS vocablary for assets: http://mmisw.org/orr/#http://mmisw.org/ont/ioos/platform
-        'geojson'       : dict,        # GeoJSON of the datasets location (point / line / polygon) as a dict
-        'messages'      : [unicode],   # Useful messages to display about a dataset
         'created'       : datetime,
         'updated'       : datetime
     }
@@ -49,7 +51,6 @@ class Dataset(BaseDocument):
     default_values = {
         'created': datetime.utcnow
     }
-
 
     @classmethod
     def count_types(cls):

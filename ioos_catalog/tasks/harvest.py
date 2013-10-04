@@ -28,6 +28,15 @@ def harvest(service_id):
         elif service.service_type == "WCS":
             return WcsHarvest(service._id, service.service_type, service.url).harvest()
 
+def unicode_or_none(thing):
+    if thing is None:
+        return thing
+    else:
+        try:
+            return unicode(thing)
+        except:
+            return None
+
 class Harvester(object):
     def __init__(self, service_id, service_type, url):
         self.service_id     = service_id
@@ -93,49 +102,56 @@ class SosHarvest(Harvester):
                 if d['service_id'] == self.service_id:
                     dataset.services.remove(d)
 
-            service = {
-                'service_type'      : unicode(self.service_type),
-                'service_id'        : ObjectId(self.service_id),
-                'metadata_type'     : u'sensorml',
-                'metadata_value'    : unicode(etree.tostring(metadata_value))
-            }
-            dataset.services.append(service)
+            # Parsing messages
+            messages = []
 
             # NAME
-            dataset.name = unicode(station_ds.shortName)
-            if dataset.name == u'None':
-                dataset.messages.append(u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
+            name = unicode_or_none(station_ds.shortName)
+            if name is None:
+                service.messages.append(u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
 
             # DESCRIPTION
-            dataset.description = unicode(station_ds.longName)
-            if dataset.description == u'None':
-                dataset.messages.append(u"Could not get a 'longName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/longName'")
+            description = unicode_or_none(station_ds.longName)
+            if description is None:
+                messages.append(u"Could not get a 'longName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/longName'")
 
             # PLATFORM TYPE
-            dataset.asset_type = unicode(station_ds.platformType)
-            if dataset.asset_type == u'None':
-                dataset.messages.append(u"Could not get a 'platformType' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/platformType'")
-
-            # KEYWORDS
-            dataset.keywords = station_ds.keywords
+            asset_type = unicode_or_none(station_ds.platformType)
+            if asset_type is None:
+                messages.append(u"Could not get a 'platformType' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/platformType'")
 
             # LOCATION is in GML
-            loc = station_ds.location[0]
-            if loc.tag == "{%s}Point" % GML_NS:
+            gj = None
+            loc = station_ds.location
+            if loc is not None and loc.tag == "{%s}Point" % GML_NS:
                 pos_element = loc.find("{%s}pos" % GML_NS)
                 # strip out points
                 positions = map(float, testXMLValue(pos_element).split(" "))
                 crs = Crs(testXMLAttribute(pos_element, "srsName"))
                 if crs.axisorder == "yx":
-                    dataset.geojson = json.loads(geojson.dumps(geojson.Point([positions[1], positions[0]])))
+                    gj = json.loads(geojson.dumps(geojson.Point([positions[1], positions[0]])))
                 else:
-                    dataset.geojson = json.loads(geojson.dumps(geojson.Point([positions[0], positions[1]])))
+                    gj = json.loads(geojson.dumps(geojson.Point([positions[0], positions[1]])))
             else:
-                dataset.messages.append(u"Found an unrecognized sml:location element and didn't attempt to process: %s" % etree.tostring(loc))
+                messages.append(u"Found an unrecognized child of the sml:location element and did not attempt to process it: %s" % etree.tostring(loc).strip())
 
-            # VARIABLES
-            dataset.variables = map(unicode, sorted(station_ds.variables))
+            service = {
+                # Reset service
+                'name'              : name,
+                'description'       : description,
+                'service_type'      : self.service_type,
+                'service_id'        : ObjectId(self.service_id),
+                'metadata_type'     : u'sensorml',
+                'metadata_value'    : unicode(etree.tostring(metadata_value)).strip(),
+                'messages'          : map(unicode, messages),
+                'keywords'          : map(unicode, sorted(station_ds.keywords)),
+                'variables'         : map(unicode, sorted(station_ds.variables)),
+                'asset_type'        : asset_type,
+                'geojson'           : gj,
+                'updated'           : datetime.utcnow()
+            }
 
+            dataset.services.append(service)
             dataset.updated = datetime.utcnow()
             dataset.save()
             return "Harvested"

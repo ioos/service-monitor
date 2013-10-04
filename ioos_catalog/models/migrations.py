@@ -23,9 +23,7 @@ class StatMigration(DocumentMigration):
 from ioos_catalog.models import dataset
 class DatasetMigration(DocumentMigration):
     # add any migrations here named "allmigration_*"
-    def allmigration01__add_asset_type(self):
-        self.target = {'asset_type':{'$exists': False}}
-        self.update = {'$set':{'asset_type': None}}
+    pass
 
 with app.app_context():
     migration = ServiceMigration(service.Service)

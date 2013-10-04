@@ -73,7 +73,7 @@
       <dt>Harvesting</dt>
       <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.harvest_job_id else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
       {%- for d in datasets %}
-      <dt>{{ d._id }}</dt>
+      <dt>{{ d._id[0] }}</dt>
       <dd>{{ d.count }}</dd>
       {%- endfor %}
     </dl>

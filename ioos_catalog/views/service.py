@@ -108,7 +108,7 @@ def show_service(service_id):
             ping_data['good'].append({'x':i,'y':0})
 
     datasets = db.Dataset.aggregate([{'$match':{'services.service_id':service_id}},
-                                     {'$group':{'_id' : '$asset_type','count':{'$sum':1}}}])
+                                     {'$group':{'_id' : '$services.asset_type','count':{'$sum':1}}}])
 
     return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets)
 

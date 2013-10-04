@@ -13,7 +13,7 @@ from ioos_catalog.tasks.reindex_services import reindex_services
 
 
 class DatasetFilterForm(Form):
-    asset_type = SelectField('Asset Type', choices=[(u'BUOY', u'BUOY')])
+    asset_type = SelectField('Asset Type')
 
 @app.route('/datasets/', defaults={'filter_type':None}, methods=['GET'])
 @app.route('/datasets/filter/<filter_type>', methods=['GET'])
@@ -21,11 +21,11 @@ def datasets(filter_type):
     filters = {}
 
     if filter_type is not None and filter_type != "null":
-        filters['asset_type'] = filter_type
+        filters['services.asset_type'] = filter_type
 
     f          = DatasetFilterForm()
     datasets   = list(db.Dataset.find(filters))
-    assettypes = db.Dataset.aggregate({'$group' : {'_id' : '$asset_type' }})
+    assettypes = db.Dataset.aggregate({'$group' : {'_id' : '$services.asset_type' }})[0]['_id']
 
     return render_template('datasets.html', datasets=datasets, form=f, assettypes=assettypes, filters=filters)
 

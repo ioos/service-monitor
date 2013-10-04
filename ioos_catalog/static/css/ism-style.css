@@ -84,3 +84,10 @@ a {
   position: absolute;
   width: 40px;
 }
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+  background-color: #0088cc;
+  color: #fff;
+}
