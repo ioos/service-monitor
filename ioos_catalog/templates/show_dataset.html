@@ -32,7 +32,10 @@
           <dt>Last updated</dt>
           <dd>{{ s.updated | datetimeformat }}</dd>
           <dt>GeoJSON</dt>
-          <dd>{{ s.geojson }}</dd>
+          <dd>
+            <div id="map_{{s.service_id}}" class="map">
+            </div>
+          </dd>
           <dt>Variables</dt>
           <dd>
             <ul class="list-unstyled">
@@ -59,17 +62,54 @@
               {%- endfor %}
             </ul>
           </dd>
-      {%- endfor %}
+        </dl>
       </div>
+      <script type="text/javascript">
+        $(function () {
+          var width = 500,
+              height = 300;
+
+          var projection = d3.geo.albers()
+              .scale(250)
+              .rotate([100, 0])
+              .center([50.6, 5.7]);
+
+          var path = d3.geo.path()
+                      .projection(projection);
+
+          var svg = d3.select("#map_{{s.service_id}}").append("svg")
+                      .attr("width", width)
+                      .attr("height", height);
+
+          d3.json("{{ url_for('.static', filename='geojson/na_merged.geojson') }}", function(data) {
+            // North America
+            svg.append("g")
+              .attr('class', 'map')
+              .selectAll("path")
+                .data([data])
+              .enter().append("path")
+                .attr("d", path);
+
+            // Dataset
+            svg.append("g")
+                .attr('class', 'dataset')
+                .selectAll("path")
+                  .data([JSON.parse('{{ s.geojson | safe }}')])
+                .enter().append("path")
+                  .attr("d", path);
+          });
+        });
+      </script>
+      {%- endfor %}
     </div>
   </div>
 </div>
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
-<script>
+<script type="text/javascript">
   $(function () {
     $('#service_tabs a:first').tab('show')
-  })
+  });
 </script>
 
 {% endblock %}

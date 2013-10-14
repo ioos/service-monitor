@@ -25,6 +25,14 @@ svg .ioos path {
   fill: #EF7825;
 }
 
+svg .dataset path {
+  fill: #F23128;
+  fill-opacity: 0.5;
+  stroke: #8C2E19;
+  stroke-opacity: 0.5;
+  stroke-width: 1.5;
+}
+
 /* override some bootstrap colors/styles */
 
 .btn-success {

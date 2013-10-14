@@ -1,6 +1,7 @@
 from bson import ObjectId
 from datetime import datetime
 from lxml import etree
+import itertools
 
 from owslib.sos import SensorObservationService
 from owslib.swe.sensor.sml import SensorML
@@ -8,6 +9,10 @@ from owslib.util import testXMLAttribute, testXMLValue
 from owslib.crs import Crs
 
 from pyoos.parsers.ioos.describe_sensor import IoosDescribeSensor
+from paegan.cdm.dataset import CommonDataset, _possiblet, _possiblez, _possiblex, _possibley
+from petulantbear.netcdf2ncml import *
+
+from shapely.geometry import mapping, box
 
 import geojson
 import json
@@ -29,13 +34,16 @@ def harvest(service_id):
             return WcsHarvest(service._id, service.service_type, service.url).harvest()
 
 def unicode_or_none(thing):
-    if thing is None:
-        return thing
-    else:
-        try:
-            return unicode(thing)
-        except:
-            return None
+    try:
+        if thing is None:
+            return thing
+        else:
+            try:
+                return unicode(thing)
+            except:
+                return None
+    except:
+        return None
 
 class Harvester(object):
     def __init__(self, service_id, service_type, url):
@@ -108,7 +116,7 @@ class SosHarvest(Harvester):
             # NAME
             name = unicode_or_none(station_ds.shortName)
             if name is None:
-                service.messages.append(u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
+                messages.append(u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
 
             # DESCRIPTION
             description = unicode_or_none(station_ds.longName)
@@ -169,8 +177,16 @@ class WcsHarvest(Harvester):
         pass
 
 class DapHarvest(Harvester):
+
     def __init__(self, service_id, service_type, url):
         Harvester.__init__(self, service_id, service_type, url)
+
+    def get_standard_variables(self, dataset):
+        for d in dataset.variables:
+            try:
+                yield dataset.variables[d].getncattr("standard_name")
+            except AttributeError:
+                pass
 
     def harvest(self):
         """
@@ -180,5 +196,108 @@ class DapHarvest(Harvester):
           * RGRID
           * DSG
         """
-        pass
+
+        METADATA_VAR_NAMES = ['crs']
+        STD_AXIS_NAMES     = ['latitude', 'longitude', 'time']
+
+        cd = CommonDataset.open(self.url)
+
+        # For DAP, the unique ID is the URL
+        unique_id = self.url
+
+        with app.app_context():
+            dataset = db.Dataset.find_one( { 'uid' : unicode(unique_id) } )
+            if dataset is None:
+                dataset = db.Dataset()
+                dataset.uid = unicode(unique_id)
+
+        # Find service reference in Dataset.services and remove (to replace it)
+        tmp = dataset.services[:]
+        for d in tmp:
+            if d['service_id'] == self.service_id:
+                dataset.services.remove(d)
+
+        # Parsing messages
+        messages = []
+
+        # NAME
+        name = None
+        try:
+            name = unicode_or_none(cd.nc.getncattr('title'))
+        except AttributeError:
+            messages.append(u"Could not get dataset name.  No global attribute named 'title'.")
+
+        # DESCRIPTION
+        description = None
+        try:
+            description = unicode_or_none(cd.nc.getncattr('summary'))
+        except AttributeError:
+            messages.append(u"Could not get dataset description.  No global attribute named 'summary'.")
+
+        # KEYWORDS
+        keywords = []
+        try:
+            keywords = sorted(map(lambda x: unicode(x.strip()), cd.nc.getncattr('keywords').split(",")))
+        except AttributeError:
+            messages.append(u"Could not get dataset keywords.  No global attribute named 'keywords' or was not comma seperated list.")
+
+        # VARIABLES
+        prefix    = None
+        # Add additonal prefix mappings as they become available.
+        try:
+            standard_name_vocabulary = unicode(cd.nc.getncattr("standard_name_vocabulary"))
+            if standard_name_vocabulary == unicode('http://www.cgd.ucar.edu/cms/eaton/cf-metadata/standard_name.html'):
+                prefix = "http://mmisw.org/ont/cf/parameter/"
+        except AttributeError:
+            pass
+
+        std_names = [x for x in self.get_standard_variables(cd.nc) if x not in STD_AXIS_NAMES]
+        variables = []
+        if prefix == "":
+            variable = map(unicode, cd.nc.variables)
+            messages.append(u"Could not find a standard name vocabulary.  No global attribute named 'standard_name_vocabulary'.  All variables included.")
+        else:
+            variables = ["%s%s" % (prefix, x) for x in std_names]
+
+        # LOCATION (from Paegan)
+        # Try POLYGON and fall back to BBOX
+        if len(std_names) > 0:
+            var_to_get_geo_from = cd.get_varname_from_stdname(next(x for x in std_names))[0]
+        else:
+            # No idea which variable to generate geometry from... try to factor out axis variables
+            var_to_get_geo_from = next(x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, METADATA_VAR_NAMES))
+
+        messages.append(u"Variable '%s' was used to calculate geometry." % var_to_get_geo_from)
+
+        gj = None
+        try:
+            gj = mapping(cd.getboundingpolygon(var=var_to_get_geo_from))
+        except AttributeError:
+            messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
+            try:
+                # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
+                # Asterik magic to expland the tuple into positional arguments
+                gj = mapping(box(*cd.getboundingpolygon(var=var_to_get_geo_from)))
+            except AttributeError:
+                messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
+
+        service = {
+            'name'              : name,
+            'description'       : description,
+            'service_type'      : self.service_type,
+            'service_id'        : ObjectId(self.service_id),
+            'metadata_type'     : u'ncml',
+            'metadata_value'    : unicode(dataset2ncml(cd.nc, url=self.url)),
+            'messages'          : map(unicode, messages),
+            'keywords'          : keywords,
+            'variables'         : variables,
+            'asset_type'        : unicode(cd._datasettype).upper(),
+            'geojson'           : gj,
+            'updated'           : datetime.utcnow()
+        }
+
+        with app.app_context():
+            dataset.services.append(service)
+            dataset.updated = datetime.utcnow()
+            dataset.save()
 

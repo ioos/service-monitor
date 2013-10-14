@@ -12,3 +12,4 @@ rq-dashboard==0.3.1
 pyoos
 OWSLib
 geojson
+git+https://github.com/asascience-open/petulant-bear.git

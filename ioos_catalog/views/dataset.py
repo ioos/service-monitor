@@ -32,6 +32,8 @@ def datasets(filter_type):
 @app.route('/datasets/<ObjectId:dataset_id>', methods=['GET'])
 def show_dataset(dataset_id):
     dataset = db.Dataset.find_one({'_id':dataset_id})
+    for s in dataset.services:
+        s['geojson'] = json.dumps(s['geojson'])
     return render_template('show_dataset.html', dataset=dataset)
 
 @app.route('/datasets/removeall', methods=['GET'])
