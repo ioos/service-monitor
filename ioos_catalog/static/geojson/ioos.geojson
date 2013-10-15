@@ -82,7 +82,7 @@
     {
       "type": "Feature",
       "properties": {
-        "region": "SCOOS"
+        "region": "SCCOOS"
       },
       "geometry": {
         "type": "Point",
