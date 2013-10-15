@@ -24,6 +24,7 @@ def regulate():
             # I don't think we want to delete these.
             # Lets make deletion a manual process.
             #d.delete()
+            # TODO: Now delete the stats that were collected for this service.
 
         # Get function and args of
         jobs = scheduler.get_jobs()
