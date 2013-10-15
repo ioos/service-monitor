@@ -21,7 +21,9 @@ def regulate():
         for d in deletes:
             d.cancel_ping()
             d.cancel_harvest()
-            d.delete()
+            # I don't think we want to delete these.
+            # Lets make deletion a manual process.
+            #d.delete()
 
         # Get function and args of
         jobs = scheduler.get_jobs()
