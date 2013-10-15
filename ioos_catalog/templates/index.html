@@ -31,14 +31,25 @@
         </select>
 
         <br/>
-        <p>2. Choose a service type:</p>
-
-        <div id="service-type-btns" class="">
+        <p>2. Choose a filter:</p>
+        <p><strong>Services</strong></p>
+        <div id="service-type-btns" class="row">
           {%- for count in counts %}
           <div class="col-lg-3">
             <a class="btn btn-lg btn-default service-type-btn" data-type="{{count._id}}" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">
               {{ count._id }}
-              <span class="badge">15</span>
+              <span class="badge">0</span>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+        <p><strong>Datasets</strong></p>
+        <div id="dataset-type-btns" class="row">
+          {%- for count in asset_counts %}
+          <div class="col-lg-3">
+            <a class="btn btn-lg btn-default dataset-type-btn" data-type="{{count._id[0]}}" href="{{url_for('datasets', filter_provider='null', filter_type=count._id[0]) }}">
+              {{ count._id[0] }}
+              <span class="badge">0</span>
             </a>
           </div>
           {% endfor %}
@@ -98,13 +109,13 @@
       </div>
 
       <div id="#assettypes">
-        <h3>Asset Overview</h3>
+        <h3>Dataset Overview</h3>
         <div>
           <ul class="list-group">
           {%- for asset in asset_counts %}
           <li class="list-group-item">
             <span class="badge">{{ asset.count }}</span>
-            {{ asset._id }}
+            {{ asset._id[0] }}
           </li>
           {%- endfor %}
           </ul>
@@ -121,20 +132,29 @@
 
 <script type="text/javascript">
 
-var countsByProvider = {{ counts_by_provider | tojson }};
+var countsByProvider   = {{ counts_by_provider | tojson }};
+var datasetsByProvider = {{ dataset_counts_by_provider | tojson }};
 
 function updateTypeBtns() {
   var region = $('#region-select').val();
 
+  // Service Buttons
   // update count badges on buttons, disable those with none?
-  var btns = $('.service-type-btn')
+  var svcbtns = $('.service-type-btn')
     .removeClass('btn-success')
     .addClass('btn-default')
     .removeAttr('disabled');
 
-  btns.each(function(idx, el) {
+  console.log(countsByProvider);
+
+  svcbtns.each(function(idx, el) {
     var el = $(el);
-    var cnt = countsByProvider[region][el.data('type')] || 0;
+    var cnt = null;
+    try {
+      cnt = countsByProvider[region][el.data('type')] || 0;
+    } catch(err) {
+      cnt = 0;
+    }
     $('.badge', el).text(cnt);
 
     if (cnt > 0) {
@@ -146,6 +166,33 @@ function updateTypeBtns() {
 
     // update hrefs of buttons to include service provider
     el.attr('href', '/services/filter/' + region + '/' + el.data('type'));
+  });
+
+  // update count badges on buttons, disable those with none?
+  var dsbtns = $('.dataset-type-btn')
+    .removeClass('btn-success')
+    .addClass('btn-default')
+    .removeAttr('disabled');
+
+  dsbtns.each(function(idx, el) {
+    var el = $(el);
+    var cnt = null;
+    try {
+      cnt = datasetsByProvider[region][el.data('type')] || 0;
+    } catch(err) {
+      cnt = 0;
+    }
+    $('.badge', el).text(cnt);
+
+    if (cnt > 0) {
+      el.addClass('btn-success')
+        .removeClass('btn-default');
+    } else {
+      el.attr('disabled', 'disabled');
+    }
+
+    // update hrefs of buttons to include service provider
+    el.attr('href', '/datasets/filter/' + region + '/' + el.data('type'));
   });
 
 }
@@ -234,7 +281,7 @@ queue()
       .on('click', function() {
         var region = d3.select(this).datum().properties.region;
         $('#region-select').val(region);
-        updateTypeBtns();
+        $('#region-select').change();
       });
 
     textg.append("text")

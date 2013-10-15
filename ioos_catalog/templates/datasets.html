@@ -2,20 +2,29 @@
 
 {% block jumbo %}
 <div class="row">
+  <div class="col-lg-6">
+    <h3> <a href="{{ url_for('datasets') }}">Datasets</a><br/><small><a href="/">IOOS Catalog</a></small></h3>
+  </div>
+  <form class="form-inline">
     <div class="col-lg-3">
-        <h3> <a href="{{ url_for('datasets') }}">Datasets</a><br/><small><a href="/">IOOS Catalog</a></small></h3>
+      <label for="filter-provider">By Provider</label>
+      <select name="filter-provider" class="form-control">
+        <option value="null">-</option>
+        {%- for provider in providers|sort %}
+        <option>{{ provider }}</option>
+        {%- endfor %}
+      </select>
     </div>
-    <form class="form-inline">
-        <div class="col-lg-3">
-            <label for="filter-type">By Type</label>
-            <select name="filter-type" class="form-control">
-                <option value="null">-</option>
-                {%- for a in assettypes|sort %}
-                <option>{{ a }}</option>
-                {%- endfor %}
-            </select>
-        </div>
-    </form>
+    <div class="col-lg-3">
+      <label for="filter-type">By Type</label>
+      <select name="filter-type" class="form-control">
+        <option value="null">-</option>
+        {%- for a in assettypes|sort %}
+        <option>{{ a }}</option>
+        {%- endfor %}
+      </select>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
@@ -42,18 +51,25 @@
     <script type="text/javascript">
       $(function() {
 
-        {% if 'asset_type' in filters %}
-          $('select[name="filter-type"]').val('{{ filters['asset_type'] }}');
+        {% if 'services.data_provider' in filters %}
+          $('select[name="filter-provider"]').val('{{ filters['services.data_provider'] }}');
+        {% endif %}
+
+        {% if 'services.asset_type' in filters %}
+          $('select[name="filter-type"]').val('{{ filters['services.asset_type'] }}');
         {% endif %}
 
         $('select[name^="filter"]').change(function() {
+          var provVal = $('select[name="filter-provider"]').val();
           var typeVal = $('select[name="filter-type"]').val();
-          if (typeVal == "null") {
+          if (provVal == "null" && typeVal == "null") {
             window.location = "{{ url_for("datasets") }}";
             return;
           }
           var url = '{{ url_for("datasets") }}filter/';
+          url += provVal + "/";
           url += typeVal;
+
           window.location = url;
         });
       });

@@ -35,6 +35,10 @@ svg .dataset path {
 
 /* override some bootstrap colors/styles */
 
+.dataset-type-btn, .service-type-btn {
+  margin-bottom: 10px;
+}
+
 .btn-success {
   background-color: #FFA855;
   border-color: #EF7825;

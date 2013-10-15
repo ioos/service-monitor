@@ -15,19 +15,27 @@ from ioos_catalog.tasks.reindex_services import reindex_services
 class DatasetFilterForm(Form):
     asset_type = SelectField('Asset Type')
 
-@app.route('/datasets/', defaults={'filter_type':None}, methods=['GET'])
-@app.route('/datasets/filter/<filter_type>', methods=['GET'])
-def datasets(filter_type):
+@app.route('/datasets/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
+@app.route('/datasets/filter/<filter_provider>/<filter_type>', methods=['GET'])
+def datasets(filter_provider, filter_type):
     filters = {}
+
+    if filter_provider is not None and filter_provider != "null":
+        filters['services.data_provider'] = filter_provider
 
     if filter_type is not None and filter_type != "null":
         filters['services.asset_type'] = filter_type
 
     f          = DatasetFilterForm()
     datasets   = list(db.Dataset.find(filters))
-    assettypes = db.Dataset.aggregate({'$group' : {'_id' : '$services.asset_type' }})[0]['_id']
+    try:
+        assettypes = map(lambda x: x['_id'][0], db.Dataset.aggregate({'$group' : {'_id' : '$services.asset_type' }}))
+    except:
+        assettypes = []
 
-    return render_template('datasets.html', datasets=datasets, form=f, assettypes=assettypes, filters=filters)
+    # get list of unique providers in system
+    providers = db["services"].distinct('data_provider')
+    return render_template('datasets.html', datasets=datasets, form=f, assettypes=assettypes, providers=providers, filters=filters)
 
 @app.route('/datasets/<ObjectId:dataset_id>', methods=['GET'])
 def show_dataset(dataset_id):

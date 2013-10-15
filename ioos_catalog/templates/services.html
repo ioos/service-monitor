@@ -5,7 +5,7 @@
   <div class="col-lg-6">
     <h3> <a href="{{ url_for('services') }}">Services</a><br/><small><a href="/">IOOS Catalog</a></small></h3>
   </div>
-    <form class="form-inline">
+  <form class="form-inline">
     <div class="col-lg-3">
       <label for="filter-provider">By Provider</label>
       <select name="filter-provider" class="form-control">
@@ -36,7 +36,7 @@
         <thead>
             <tr>
                 <th>provider</th>
-                <th>type</th>                
+                <th>type</th>
                 <th>name</th>
                 <th>updated (utc)</th>
                 <th>code</th>
@@ -54,7 +54,7 @@
             {%- for service in service_group.list %}
             <tr class="{{ "danger" if service.last_operational_status == 0 and service.last_update }}">
                 <td>{{ service.data_provider }}</td>
-                <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>                
+                <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
                 <td>{{ service.last_update | datetimeformat }}</td>
                 <td>{{ service.last_response_code }}</td>
@@ -66,7 +66,7 @@
          </tbody>
         {%- endfor %}
     </table>
- 
+
     <!--
     <h4>Add Service</h4>
 

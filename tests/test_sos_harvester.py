@@ -10,7 +10,7 @@ class TestSosHarvester(FlaskMongoTestCase):
         self.db['services'].insert({ 'url' : url, 'service_type' : service_type })
         service = list(self.db['services'].find())[0]
 
-        h = SosHarvest(service_id=service['_id'], url=url, service_type=service_type).harvest()
+        h = SosHarvest(service=service).harvest()
 
         #assert len(list(self.db["datasets"].find())) == 14
 

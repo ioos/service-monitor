@@ -7,21 +7,22 @@ from ioos_catalog.tasks.regulator import regulate
 
 @app.route('/', methods=['GET'])
 def index():
-    counts = db.Service.count_types()
-    stats = db.Stat.latest(8)
+    counts       = db.Service.count_types()
+    asset_counts = db.Dataset.count_types()
+    stats        = db.Stat.latest(8)
 
     # temp
     providers = sorted(db['services'].distinct('data_provider'))
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider()
+    dataset_counts_by_provider = db.Dataset.count_types_by_provider()
 
-    # dataset
-    asset_counts = db.Dataset.count_types()
     return render_template('index.html',
                            counts=counts,
                            asset_counts=asset_counts,
                            counts_by_provider=counts_by_provider,
+                           dataset_counts_by_provider=dataset_counts_by_provider,
                            stats=stats,
                            providers=providers)
 

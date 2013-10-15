@@ -10,7 +10,7 @@ class TestDapHarvester(FlaskMongoTestCase):
         self.db['services'].insert({ 'url' : url, 'service_type' : service_type })
         service = list(self.db['services'].find())[0]
 
-        h = DapHarvest(service_id=service['_id'], url=url, service_type=service_type).harvest()
+        h = DapHarvest(service=service).harvest()
 
         #assert len(list(self.db["datasets"].find())) == 14
 

@@ -25,13 +25,13 @@ def harvest(service_id):
         service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
 
         if service.service_type == "DAP":
-            return DapHarvest(service._id, service.service_type, service.url).harvest()
+            return DapHarvest(service).harvest()
         elif service.service_type == "SOS":
-            return SosHarvest(service._id, service.service_type, service.url).harvest()
+            return SosHarvest(service).harvest()
         elif service.service_type == "WMS":
-            return WmsHarvest(service._id, service.service_type, service.url).harvest()
+            return WmsHarvest(service).harvest()
         elif service.service_type == "WCS":
-            return WcsHarvest(service._id, service.service_type, service.url).harvest()
+            return WcsHarvest(service).harvest()
 
 def unicode_or_none(thing):
     try:
@@ -46,17 +46,15 @@ def unicode_or_none(thing):
         return None
 
 class Harvester(object):
-    def __init__(self, service_id, service_type, url):
-        self.service_id     = service_id
-        self.service_type   = service_type
-        self.url            = url
+    def __init__(self, service):
+        self.service = service
 
 class SosHarvest(Harvester):
-    def __init__(self, service_id, service_type, url):
-        Harvester.__init__(self, service_id, service_type, url)
+    def __init__(self, service):
+        Harvester.__init__(self, service)
 
     def harvest(self):
-        self.sos = SensorObservationService(self.url)
+        self.sos = SensorObservationService(self.service.get('url'))
         for offering in self.sos.offerings:
             # TODO: We assume an offering should only have one procedure here
             # which will be the case in sos 2.0, but may not be the case right now
@@ -107,7 +105,7 @@ class SosHarvest(Harvester):
             # Find service reference in Dataset.services and remove (to replace it)
             tmp = dataset.services[:]
             for d in tmp:
-                if d['service_id'] == self.service_id:
+                if d['service_id'] == self.service.get('_id'):
                     dataset.services.remove(d)
 
             # Parsing messages
@@ -147,8 +145,9 @@ class SosHarvest(Harvester):
                 # Reset service
                 'name'              : name,
                 'description'       : description,
-                'service_type'      : self.service_type,
-                'service_id'        : ObjectId(self.service_id),
+                'service_type'      : self.service.get('service_type'),
+                'service_id'        : ObjectId(self.service.get('_id')),
+                'data_provider'     : self.service.get('data_provider'),
                 'metadata_type'     : u'sensorml',
                 'metadata_value'    : unicode(etree.tostring(metadata_value)).strip(),
                 'messages'          : map(unicode, messages),
@@ -165,21 +164,21 @@ class SosHarvest(Harvester):
             return "Harvested"
 
 class WmsHarvest(Harvester):
-    def __init__(self, service_id, service_type, url):
-        Harvester.__init__(self, service_id, service_type, url)
+    def __init__(self, service):
+        Harvester.__init__(self, service)
     def harvest(self):
         pass
 
 class WcsHarvest(Harvester):
-    def __init__(self, service_id, service_type, url):
-        Harvester.__init__(self, service_id, service_type, url)
+    def __init__(self, service):
+        Harvester.__init__(self, service)
     def harvest(self):
         pass
 
 class DapHarvest(Harvester):
 
-    def __init__(self, service_id, service_type, url):
-        Harvester.__init__(self, service_id, service_type, url)
+    def __init__(self, service):
+        Harvester.__init__(self, service)
 
     def get_standard_variables(self, dataset):
         for d in dataset.variables:
@@ -200,10 +199,10 @@ class DapHarvest(Harvester):
         METADATA_VAR_NAMES = ['crs']
         STD_AXIS_NAMES     = ['latitude', 'longitude', 'time']
 
-        cd = CommonDataset.open(self.url)
+        cd = CommonDataset.open(self.service.get('url'))
 
         # For DAP, the unique ID is the URL
-        unique_id = self.url
+        unique_id = self.service.get('url')
 
         with app.app_context():
             dataset = db.Dataset.find_one( { 'uid' : unicode(unique_id) } )
@@ -214,7 +213,7 @@ class DapHarvest(Harvester):
         # Find service reference in Dataset.services and remove (to replace it)
         tmp = dataset.services[:]
         for d in tmp:
-            if d['service_id'] == self.service_id:
+            if d['service_id'] == self.service.get('_id'):
                 dataset.services.remove(d)
 
         # Parsing messages
@@ -284,10 +283,11 @@ class DapHarvest(Harvester):
         service = {
             'name'              : name,
             'description'       : description,
-            'service_type'      : self.service_type,
-            'service_id'        : ObjectId(self.service_id),
+            'service_type'      : self.service.get('service_type'),
+            'service_id'        : ObjectId(self.service.get('_id')),
+            'data_provider'     : self.service.get('data_provider'),
             'metadata_type'     : u'ncml',
-            'metadata_value'    : unicode(dataset2ncml(cd.nc, url=self.url)),
+            'metadata_value'    : unicode(dataset2ncml(cd.nc, url=self.service.get('url'))),
             'messages'          : map(unicode, messages),
             'keywords'          : keywords,
             'variables'         : variables,
