@@ -241,7 +241,7 @@ class DapHarvest(Harvester):
             messages.append(u"Could not get dataset keywords.  No global attribute named 'keywords' or was not comma seperated list.")
 
         # VARIABLES
-        prefix    = None
+        prefix    = ""
         # Add additonal prefix mappings as they become available.
         try:
             standard_name_vocabulary = unicode(cd.nc.getncattr("standard_name_vocabulary"))
