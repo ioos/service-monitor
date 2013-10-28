@@ -245,8 +245,13 @@ class DapHarvest(Harvester):
         # Add additonal prefix mappings as they become available.
         try:
             standard_name_vocabulary = unicode(cd.nc.getncattr("standard_name_vocabulary"))
-            if standard_name_vocabulary == unicode('http://www.cgd.ucar.edu/cms/eaton/cf-metadata/standard_name.html'):
-                prefix = "http://mmisw.org/ont/cf/parameter/"
+
+            cf_regex = [re.compile("CF-"), re.compile('http://www.cgd.ucar.edu/cms/eaton/cf-metadata/standard_name.html')]
+
+            for reg in cf_regex:
+                if reg.match(standard_name_vocabulary) is not None:
+                    prefix = "http://mmisw.org/ont/cf/parameter/"
+                    break
         except AttributeError:
             pass
 
