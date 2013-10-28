@@ -183,7 +183,7 @@ class DapHarvest(Harvester):
     def get_standard_variables(self, dataset):
         for d in dataset.variables:
             try:
-                yield dataset.variables[d].getncattr("standard_name")
+                yield unicode(dataset.variables[d].getncattr("standard_name"))
             except AttributeError:
                 pass
 
@@ -196,18 +196,18 @@ class DapHarvest(Harvester):
           * DSG
         """
 
-        METADATA_VAR_NAMES   = ['crs']
-        STD_AXIS_NAMES       = ['latitude',
-                                'longitude',
-                                'time',
-                                'forecast_reference_time',
-                                'forecast_period',
-                                'ocean_sigma'
-                                'ocean_s_coordinate_g1',
-                                'ocean_s_coordinate_g2',
-                                'ocean_s_coordinate',
-                                'ocean_double_sigma',
-                                'ocean_sigma_over_z']
+        METADATA_VAR_NAMES   = [u'crs']
+        STD_AXIS_NAMES       = [u'latitude',
+                                u'longitude',
+                                u'time',
+                                u'forecast_reference_time',
+                                u'forecast_period',
+                                u'ocean_sigma',
+                                u'ocean_s_coordinate_g1',
+                                u'ocean_s_coordinate_g2',
+                                u'ocean_s_coordinate',
+                                u'ocean_double_sigma',
+                                u'ocean_sigma_over_z']
 
         cd = CommonDataset.open(self.service.get('url'))
 
@@ -265,10 +265,10 @@ class DapHarvest(Harvester):
         except AttributeError:
             pass
 
-        std_names = [x for x in self.get_standard_variables(cd.nc) if x not in STD_AXIS_NAMES]
+        std_names = list(set([x for x in self.get_standard_variables(cd.nc) if x not in STD_AXIS_NAMES]))
         variables = []
         if prefix == "":
-            variable = map(unicode, cd.nc.variables)
+            variables = map(unicode, cd.nc.variables)
             messages.append(u"Could not find a standard name vocabulary.  No global attribute named 'standard_name_vocabulary'.  All variables included.")
         else:
             variables = ["%s%s" % (prefix, x) for x in std_names]
@@ -276,8 +276,8 @@ class DapHarvest(Harvester):
         # LOCATION (from Paegan)
         # Try POLYGON and fall back to BBOX
         if len(std_names) > 0:
-            var_to_get_geo_from = cd.get_varname_from_stdname(next(x for x in std_names))[0]
-            messages.append(u"Variable '%s'with standard name '%s' was used to calculate geometry." % (var_to_get_geo_from, x))
+            var_to_get_geo_from = cd.get_varname_from_stdname(std_names[-1])[0]
+            messages.append(u"Variable '%s' with standard name '%s' was used to calculate geometry." % (var_to_get_geo_from, std_names[-1]))
         else:
             # No idea which variable to generate geometry from... try to factor out axis variables
             var_to_get_geo_from = next(x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, METADATA_VAR_NAMES))
