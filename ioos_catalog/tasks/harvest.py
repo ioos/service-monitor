@@ -196,8 +196,18 @@ class DapHarvest(Harvester):
           * DSG
         """
 
-        METADATA_VAR_NAMES = ['crs']
-        STD_AXIS_NAMES     = ['latitude', 'longitude', 'time']
+        METADATA_VAR_NAMES   = ['crs']
+        STD_AXIS_NAMES       = ['latitude',
+                                'longitude',
+                                'time',
+                                'forecast_reference_time',
+                                'forecast_period',
+                                'ocean_sigma'
+                                'ocean_s_coordinate_g1',
+                                'ocean_s_coordinate_g2',
+                                'ocean_s_coordinate',
+                                'ocean_double_sigma',
+                                'ocean_sigma_over_z']
 
         cd = CommonDataset.open(self.service.get('url'))
 
@@ -267,11 +277,11 @@ class DapHarvest(Harvester):
         # Try POLYGON and fall back to BBOX
         if len(std_names) > 0:
             var_to_get_geo_from = cd.get_varname_from_stdname(next(x for x in std_names))[0]
+            messages.append(u"Variable '%s'with standard name '%s' was used to calculate geometry." % (var_to_get_geo_from, x))
         else:
             # No idea which variable to generate geometry from... try to factor out axis variables
             var_to_get_geo_from = next(x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, METADATA_VAR_NAMES))
-
-        messages.append(u"Variable '%s' was used to calculate geometry." % var_to_get_geo_from)
+            messages.append(u"No 'standard_name' attributes were found on non-axis variables.  Variable '%s' was used to calculate geometry." % var_to_get_geo_from)
 
         gj = None
         try:
