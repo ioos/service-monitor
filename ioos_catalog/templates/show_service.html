@@ -50,18 +50,17 @@
       <dt>Name</dt>
       <dd>{{ service.name }}</dd>
       <dt>Service ID</dt>
-      <dd>{{ service.service_id }}</dd>
+      <dd>{{ service.service_id | truncate(90, true) }}</dd>
       <dt>Provider</dt>
       <dd><a href="{{ url_for("services", filter_provider=service.data_provider, filter_type='null') }}">{{ service.data_provider }}</a></dd>
       <dt>Type</dt>
       <dd><a href="{{ url_for("services", filter_provider='null', filter_type=service.service_type) }}">{{ service.service_type }}</a></dd>
       <dt>URL</dt>
-      <dd>{{ service.url }}</dd>
+      <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
       <dt>Contact(s)</dt>
       <dd>{{ service.contact | default('None',true) }}</dd>
       <dt>Source Metadata URL</dt>
-      <dd>{{ service.metadata_url }}</dd>
-
+      <dd><a href="{{ service.metadata_url }}">{{ service.metadata_url | truncate(90, true) }}</a></dd>
     </dl>
     <dl class="dl-horizontal col-lg-3">
       <dt>Monitoring</dt>
