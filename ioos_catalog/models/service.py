@@ -20,10 +20,9 @@ class Service(BaseDocument):
         'service_type'          : unicode, # service type
         'metadata_url'          : unicode, # link to raw ISO document the service was pulled from
         'data_provider'         : unicode, # who provides the data
-        'geophysical_params'    : unicode, #
         'contact'               : unicode, # comma separated list of email addresses to contact when down
         'interval'              : int,     # interval (in s) between stat retrievals
-        'ping_job_id'                : unicode, # id of continuous ping job (scheduled)
+        'ping_job_id'           : unicode, # id of continuous ping job (scheduled)
         'harvest_job_id'        : unicode, # id of harvest job (scheduled)
         'created'               : datetime,
         'updated'               : datetime,
