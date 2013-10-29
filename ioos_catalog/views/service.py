@@ -176,8 +176,9 @@ def ping_service(service_id):
 @app.route('/services/<ObjectId:service_id>/harvest', methods=['GET'])
 def harvest_service(service_id):
     s = db.Service.find_one({ '_id' : service_id })
-    s.schedule_harvest()
-    flash("Harvest scheduled")
+
+    h = harvest(service_id)
+    flash(h)
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['POST'])
