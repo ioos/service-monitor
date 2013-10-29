@@ -48,6 +48,6 @@ class TestDapHarvester(FlaskMongoTestCase):
             assert len(d['services']) == 1
             s = d['services'][0]
             # Can't compute geometry on default ROMS output
-            assert s['geojson'] == None
+            assert type(json.loads(json.dumps(s['geojson']))) == dict
             assert s['asset_type'] == "CGRID"
             assert sorted(s['keywords']) == []
