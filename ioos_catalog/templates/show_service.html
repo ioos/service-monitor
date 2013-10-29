@@ -80,11 +80,18 @@
     </dl>
   </div>
 
-  <h4>Datasets</h4>
+  <h4>Harvested Datasets</h4>
   <div class="col-lg-12 row">
-      {%- for d in datasets %}
-      <div class="col-lg-2">{{ d._id[0] }} <span class="badge">{{ d.count }}</span></div>
+    <ul>
+    {%- for d in datasets %}
+      <li><span class="badge">{{ d['datasets'] | count }}</span> {{ d['_id'][0] }}</li>
+      <ul>
+      {%- for l in d['datasets'] %}
+        <li><a href="{{ url_for('show_dataset', dataset_id=l['_id']) }}">{{ l['uid'] }}</a></li>
       {%- endfor %}
+      </ul>
+    {%- endfor %}
+    </ul>
   </div>
 
   <h4>Last Week of Responses</h4>

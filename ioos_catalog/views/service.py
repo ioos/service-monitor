@@ -108,16 +108,23 @@ def show_service(service_id):
             ping_data['bad'].append(v)
             ping_data['good'].append({'x':i,'y':0})
 
-    datasets = db.Dataset.aggregate([{'$match':{'services.service_id':service_id}},
-                                     {'$group':{'_id' : '$services.asset_type','count':{'$sum':1}}}])
+    # Organize datasets by type.  Include the UID and _id of each dataset in the output so we can link to them.
+    datasets = db.Dataset.aggregate([
+        {'$match'   : { 'services.service_id' : service_id }},
+        {'$group'   : { '_id'       : '$services.asset_type',
+                        'datasets'  : { '$push' : { 'uid' : '$uid', '_id' : '$_id' } } } }
+
+    ])
 
     harvests = { 'next' : None, 'last' : None }
-    pings    = { 'next' : None, 'last' : stats[0].created }
+    pings    = { 'next' : None, 'last' : None }
     for job in scheduler.get_jobs(with_times=True):
         if job[0].id == service.harvest_job_id:
             harvests['last'] = job[0].ended_at
             harvests['next'] = job[1]
         elif job[0].id == service.ping_job_id:
+            if len(stats) > 0:
+                pings['last'] = stats[0].created
             pings['next'] = job[1]
 
     return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets, harvests=harvests, pings=pings)
