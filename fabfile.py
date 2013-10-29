@@ -67,14 +67,14 @@ def stop_supervisord():
     with cd(code_dir):
         with settings(warn_only=True):
             run("supervisorctl -c ~/supervisord.conf stop all")
-            run("kill -QUIT $(ps aux | grep supervisord | grep -v grep | awk '{print $2}')")
+            run("kill -QUIT $(ps aux | grep supervisord | grep monitoring | grep -v grep | awk '{print $2}')")
 
     kill_pythons()
 
 def kill_pythons():
     admin()
     with settings(warn_only=True):
-        sudo("kill -QUIT $(ps aux | grep python | grep -v supervisord | awk '{print $2}')")
+        sudo("kill -QUIT $(ps aux | grep python | grep monitoring | grep -v supervisord | awk '{print $2}')")
 
 def start_supervisord():
     monitoring()
