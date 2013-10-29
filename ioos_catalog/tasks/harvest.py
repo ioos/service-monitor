@@ -2,6 +2,7 @@ from bson import ObjectId
 from datetime import datetime
 from lxml import etree
 import itertools
+import re
 
 from owslib.sos import SensorObservationService
 from owslib.swe.sensor.sml import SensorML
@@ -196,7 +197,8 @@ class DapHarvest(Harvester):
           * DSG
         """
 
-        METADATA_VAR_NAMES   = [u'crs']
+        METADATA_VAR_NAMES   = [u'crs',
+                                u'projection']
 
         # CF standard names for Axis
         STD_AXIS_NAMES       = [u'latitude',
@@ -209,11 +211,15 @@ class DapHarvest(Harvester):
                                 u'ocean_s_coordinate_g2',
                                 u'ocean_s_coordinate',
                                 u'ocean_double_sigma',
-                                u'ocean_sigma_over_z']
+                                u'ocean_sigma_over_z',
+                                u'projection_y_coordinate',
+                                u'projection_x_coordinate']
 
         # Some datasets don't define standard_names on axis variables.  This is used to weed them out based on the
         # actual variable name
-        COMMON_AXIS_NAMES    = [u'lat',
+        COMMON_AXIS_NAMES    = [u'x',
+                                u'y',
+                                u'lat',
                                 u'latitude',
                                 u'lon',
                                 u'longitude',
@@ -285,16 +291,14 @@ class DapHarvest(Harvester):
         except AttributeError:
             pass
 
-        std_names = list(set([x for x in self.get_standard_variables(cd.nc) if x not in STD_AXIS_NAMES]))
-        variables = []
-        if prefix == "":
-            variables = map(unicode, (x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, METADATA_VAR_NAMES, COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0))
-            messages.append(u"Could not find a standard name vocabulary.  No global attribute named 'standard_name_vocabulary'.  Variable list may be incorrect or contain non-measured quantities.")
-        else:
-            variables = map(unicode, ["%s%s" % (prefix, x) for x in std_names])
+        # Get variables with a standard_name
+        std_variables = [cd.get_varname_from_stdname(x)[0] for x in self.get_standard_variables(cd.nc) if x not in STD_AXIS_NAMES and len(cd.nc.variables[cd.get_varname_from_stdname(x)[0]].shape) > 0]
 
-        # LOCATION (from Paegan)
-        # Try POLYGON and fall back to BBOX
+        # Get variables that are not axis variables or metadata variables and are not already in the 'std_variables' variable
+        non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, METADATA_VAR_NAMES, COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
+
+        """
+        var_to_get_geo_from = None
         if len(std_names) > 0:
             var_to_get_geo_from = cd.get_varname_from_stdname(std_names[-1])[0]
             messages.append(u"Variable '%s' with standard name '%s' was used to calculate geometry." % (var_to_get_geo_from, std_names[-1]))
@@ -306,18 +310,41 @@ class DapHarvest(Harvester):
                 messages.append(u"Could not find any non-axis variables to compute geometry from.")
             else:
                 messages.append(u"No 'standard_name' attributes were found on non-axis variables.  Variable '%s' was used to calculate geometry." % var_to_get_geo_from)
+        """
 
+        # LOCATION (from Paegan)
+        # Try POLYGON and fall back to BBOX
         gj = None
-        try:
-            gj = mapping(cd.getboundingpolygon(var=var_to_get_geo_from))
-        except (AttributeError, AssertionError):
-            messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
+        for v in itertools.chain(std_variables, non_std_variables):
             try:
-                # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
-                # Asterik magic to expland the tuple into positional arguments
-                gj = mapping(box(*cd.getboundingpolygon(var=var_to_get_geo_from)))
+                gj = mapping(cd.getboundingpolygon(var=v))
             except (AttributeError, AssertionError):
-                messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
+                try:
+                    # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
+                    # Asterik magic to expland the tuple into positional arguments
+                    gj = mapping(box(*cd.get_bbox(var=v)))
+                except (AttributeError, AssertionError):
+                    pass
+
+            if gj is not None:
+                # We computed something, break out of loop.
+                messages.append(u"Variable %s was used to calculate geometry." % v)
+                break
+
+        if gj is None:
+            messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
+            messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
+            messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(itertools.chain(std_variables, non_std_variables)))
+
+        # TODO: compute bounding box using global attributes
+
+
+        final_var_names = []
+        if prefix == "":
+            messages.append(u"Could not find a standard name vocabulary.  No global attribute named 'standard_name_vocabulary'.  Variable list may be incorrect or contain non-measured quantities.")
+            final_var_names = non_std_variables + std_variables
+        else:
+            final_var_names = non_std_variables + list(map(unicode, ["%s%s" % (prefix, cd.nc.variables[x].getncattr("standard_name")) for x in std_variables]))
 
         service = {
             'name'              : name,
@@ -329,7 +356,7 @@ class DapHarvest(Harvester):
             'metadata_value'    : unicode(dataset2ncml(cd.nc, url=self.service.get('url'))),
             'messages'          : map(unicode, messages),
             'keywords'          : keywords,
-            'variables'         : variables,
+            'variables'         : map(unicode, final_var_names),
             'asset_type'        : unicode(cd._datasettype).upper(),
             'geojson'           : gj,
             'updated'           : datetime.utcnow()
