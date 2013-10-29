@@ -9,7 +9,7 @@ gunicorn==0.16.1
 git+https://github.com/nvie/rq.git
 # Need 'timeout' parameter supported, which is not in the most recent release (0.3.6)
 #rq-scheduler==0.3.6
-git+https://github.com/kwilcox/rq-scheduler.git@utc-time
+git+https://github.com/kwilcox/rq-scheduler.git@utc-time-with-master
 
 rq-dashboard==0.3.1
 
