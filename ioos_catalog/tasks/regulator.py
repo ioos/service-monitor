@@ -36,10 +36,10 @@ def regulate():
             for j in daily_email_jobs[1:]:
                 scheduler.cancel(j)
         elif len(daily_email_jobs) < 1:
-            # Run today at 3am (if it is between midnight and 3am)
-            runat = datetime.now().replace(hour=3, minute=0, second=0, microsecond=0)
-            if datetime.now() > runat:
-                # Run tomorrow at 3am (it is already past 3am)
+            # Run today at 3am (7am UTC) if it is between midnight and 3am
+            runat = datetime.utcnow().replace(hour=7, minute=0, second=0, microsecond=0)
+            if datetime.utcnow() > runat:
+                # Run tomorrow at 3am (7am UTC) because it is already past that time.
                 runat = runat + timedelta(days=1)
 
             scheduler.schedule(
@@ -54,12 +54,12 @@ def regulate():
         reindex_services_jobs = [job for job in jobs if job.func == reindex_services]
         if len(reindex_services_jobs) < 1:
             scheduler.schedule(
-                scheduled_time=datetime.now(),  # Time for first execution
-                func=reindex_services,          # Function to be queued
-                interval=21600,                 # Time before the function is called again, in seconds (21600 == 1/4 of a day)
-                repeat=None,                    # Repeat this number of times (None means repeat forever)
-                result_ttl=40000,               # How long to keep the results, in seconds
-                timeout=1200                    # Default timeout of 180 seconds may not be enough
+                scheduled_time=datetime.utcnow(),  # Time for first execution
+                func=reindex_services,             # Function to be queued
+                interval=21600,                    # Time before the function is called again, in seconds (21600 == 1/4 of a day)
+                repeat=None,                       # Repeat this number of times (None means repeat forever)
+                result_ttl=40000,                  # How long to keep the results, in seconds
+                timeout=1200                       # Default timeout of 180 seconds may not be enough
             )
 
         # Make sure each service has a ping job

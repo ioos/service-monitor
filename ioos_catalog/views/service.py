@@ -10,6 +10,7 @@ from ioos_catalog import app, db, scheduler
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
+from ioos_catalog.tasks.harvest import harvest
 
 class ServiceForm(Form):
     name               = TextField(u'Name')
@@ -110,7 +111,16 @@ def show_service(service_id):
     datasets = db.Dataset.aggregate([{'$match':{'services.service_id':service_id}},
                                      {'$group':{'_id' : '$services.asset_type','count':{'$sum':1}}}])
 
-    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets)
+    harvests = { 'next' : None, 'last' : None }
+    pings    = { 'next' : None, 'last' : stats[0].created }
+    for job in scheduler.get_jobs(with_times=True):
+        if job[0].id == service.harvest_job_id:
+            harvests['last'] = job[0].ended_at
+            harvests['next'] = job[1]
+        elif job[0].id == service.ping_job_id:
+            pings['next'] = job[1]
+
+    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets, harvests=harvests, pings=pings)
 
 @app.route('/services/', methods=['POST'])
 def add_service():
@@ -225,12 +235,12 @@ def reindex():
            scheduler.cancel(job)
 
     scheduler.schedule(
-        scheduled_time=datetime.now(),  # Time for first execution
-        func=reindex_services,          # Function to be queued
-        interval=21600,                 # Time before the function is called again, in seconds
-        repeat=None,                    # Repeat this number of times (None means repeat forever)
-        result_ttl=40000,               # How long to keep the results
-        timeout=1200                    # Default timeout of 180 seconds may not be enough
+        scheduled_time=datetime.utcnow(), # Time for first execution
+        func=reindex_services,            # Function to be queued
+        interval=21600,                   # Time before the function is called again, in seconds
+        repeat=None,                      # Repeat this number of times (None means repeat forever)
+        result_ttl=40000,                 # How long to keep the results
+        timeout=1200                      # Default timeout of 180 seconds may not be enough
     )
 
     return jsonify({"message" : "scheduled"})

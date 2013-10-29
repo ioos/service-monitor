@@ -46,7 +46,7 @@
 
 <div class="container">
   <div class="row">
-    <dl class="dl-horizontal col-lg-9">
+    <dl class="dl-horizontal col-lg-8">
       <dt>Name</dt>
       <dd>{{ service.name }}</dd>
       <dt>Service ID</dt>
@@ -62,24 +62,33 @@
       <dt>Source Metadata URL</dt>
       <dd><a href="{{ service.metadata_url }}">{{ service.metadata_url | truncate(90, true) }}</a></dd>
     </dl>
-    <dl class="dl-horizontal col-lg-3">
+    <dl class="dl-horizontal col-lg-4">
       <dt>Monitoring</dt>
       <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.ping_job_id else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
-      <dt>Interval</dt>
-      <dd>{{ service.interval }}</dd>
+      <dt>Last Ping</dt>
+      <dd><abbr title="{{ pings['last'] | datetimeformat }}">{{ pings['last'] | prettydate }}</abbr></dd>      
+      <dt>Next Ping</dt>
+      <dd><abbr title="{{ pings['next'] | datetimeformat }}">{{ pings['next'] | prettydate }}</abbr></dd>
 
       <br />
       <dt>Harvesting</dt>
       <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.harvest_job_id else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
-      {%- for d in datasets %}
-      <dt>{{ d._id[0] }}</dt>
-      <dd>{{ d.count }}</dd>
-      {%- endfor %}
+      <dt>Last Harvest</dt>
+      <dd><abbr title="{{ harvests['last'] | datetimeformat }}">{{ harvests['last'] | prettydate }}</abbr></dd>      
+      <dt>Next Harvest</dt>
+      <dd><abbr title="{{ harvests['next'] | datetimeformat }}">{{ harvests['next'] | prettydate }}</abbr></dd>
     </dl>
   </div>
 
+  <h4>Datasets</h4>
+  <div class="col-lg-12 row">
+      {%- for d in datasets %}
+      <div class="col-lg-2">{{ d._id[0] }} <span class="badge">{{ d.count }}</span></div>
+      {%- endfor %}
+  </div>
+
   <h4>Last Week of Responses</h4>
-  <div>
+  <div class="row">
     <div id="y_axis">
 
     </div>

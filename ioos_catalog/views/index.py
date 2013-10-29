@@ -64,11 +64,11 @@ def reg():
 
     if regulate not in jobs:
         scheduler.schedule(
-            scheduled_time=datetime.now(),  # Time for first execution
-            func=regulate,                  # Function to be queued
-            interval=600,                   # Time before the function is called again, in seconds
-            repeat=None,                    # Repeat this number of times (None means repeat forever)
-            result_ttl=1200                 # How long to keep the results
+            scheduled_time=datetime.utcnow(), # Time for first execution
+            func=regulate,                    # Function to be queued
+            interval=600,                     # Time before the function is called again, in seconds
+            repeat=None,                      # Repeat this number of times (None means repeat forever)
+            result_ttl=1200                   # How long to keep the results
         )
         return jsonify({"message" : "regulated"})
     return jsonify({ "message" : "no need to regulate" })

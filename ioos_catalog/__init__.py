@@ -50,16 +50,26 @@ def timedeltaformat(starting, ending):
         return ending - starting
     return "unknown"
 
-# from http://stackoverflow.com/a/5164027/84732
 def prettydate(d):
-    diff = datetime.datetime.utcnow() - d
+    if d is None:
+        return "never"
+    utc_dt = datetime.datetime.utcnow()
+    #app.logger.info(utc_dt)
+    #app.logger.info(d)
+    if utc_dt > d:
+        return prettypastdate(utc_dt - d)
+    else:
+        return prettyfuturedate(d - utc_dt)
+
+# from http://stackoverflow.com/a/5164027/84732
+def prettypastdate(diff):
     s = diff.seconds
-    if diff.days > 7 or diff.days < 0:
+    if diff.days > 7:
         return d.strftime('%d %b %y')
-    elif diff.days == 1:
-        return '1 day ago'
     elif diff.days > 1:
         return '{} days ago'.format(diff.days)
+    elif diff.days == 1:
+        return '1 day ago'
     elif s <= 1:
         return 'just now'
     elif s < 60:
@@ -72,6 +82,27 @@ def prettydate(d):
         return '1 hour ago'
     else:
         return '{} hours ago'.format(s/3600)
+
+def prettyfuturedate(diff):
+    s = diff.seconds
+    if diff.days > 7:
+        return d.strftime('%d %b %y')
+    elif diff.days > 1:
+        return '{} days from now'.format(diff.days)
+    elif diff.days == 1:
+        return '1 day from now'
+    elif s <= 1:
+        return 'just now'
+    elif s < 60:
+        return '{} seconds from now'.format(s)
+    elif s < 120:
+        return '1 minute from now'
+    elif s < 3600:
+        return '{} minutes from now'.format(s/60)
+    elif s < 7200:
+        return '1 hour from now'
+    else:
+        return '{} hours from now'.format(s/3600)
 
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['timedeltaformat'] = timedeltaformat

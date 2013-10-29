@@ -75,7 +75,7 @@ class Service(BaseDocument):
         if cancel is True:
             self.cancel_harvest()
 
-        job = scheduler.schedule(scheduled_time=datetime.now(),
+        job = scheduler.schedule(scheduled_time=datetime.utcnow(),
                                  func=harvest,
                                  args=(unicode(self._id),),
                                  interval=86400,
@@ -100,7 +100,7 @@ class Service(BaseDocument):
         if not self.interval:
             return None
 
-        job = scheduler.schedule(scheduled_time=datetime.now(),
+        job = scheduler.schedule(scheduled_time=datetime.utcnow(),
                                  func=ping_service_task,
                                  args=(unicode(self._id),),
                                  interval=self.interval,

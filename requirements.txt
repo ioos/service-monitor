@@ -3,10 +3,14 @@ Flask-WTF==0.9.0
 Flask-MongoKit==0.6
 Flask-Mail==0.9.0
 gunicorn==0.16.1
-rq==0.3.8
+
+# Need UTC times which will be 0.3.12 (not relased on PyPi yet)
+#rq==0.3.12
+git+https://github.com/nvie/rq.git
 # Need 'timeout' parameter supported, which is not in the most recent release (0.3.6)
 #rq-scheduler==0.3.6
-git+https://github.com/ui/rq-scheduler.git
+git+https://github.com/kwilcox/rq-scheduler.git@utc-time
+
 rq-dashboard==0.3.1
 
 pyoos
