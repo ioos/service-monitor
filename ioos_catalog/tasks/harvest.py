@@ -318,12 +318,12 @@ class DapHarvest(Harvester):
         for v in itertools.chain(std_variables, non_std_variables):
             try:
                 gj = mapping(cd.getboundingpolygon(var=v))
-            except (AttributeError, AssertionError):
+            except (AttributeError, AssertionError, ValueError):
                 try:
                     # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
                     # Asterik magic to expland the tuple into positional arguments
                     gj = mapping(box(*cd.get_bbox(var=v)))
-                except (AttributeError, AssertionError):
+                except (AttributeError, AssertionError, ValueError):
                     pass
 
             if gj is not None:
