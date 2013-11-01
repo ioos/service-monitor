@@ -12,17 +12,22 @@ from ioos_catalog import app,db
 
 
 def reindex_services():
-    region_map =    {   'AOOS'      :   '1E96581F-6B73-45AD-9F9F-2CC3FED76EE6',
-                        'CENCOOS'   :   'BE483F24-52E7-4DDE-909F-EE8D4FF118EA',
-                        'GCOOS'     :   'E77E250D-2D65-463C-B201-535775D222C9',
-                        'MARACOOS'  :   'A26F8553-798B-4B1C-8755-1031D752F7C2',
-                        'NANOOS'    :   'C6F4754B-30DC-459E-883A-2AC79DA977AB',
-                        'NERACOOS'  :   'E13C88D9-3FF3-4232-A379-84B6A1D7083E',
-                        'PacIOOS'   :   '78C0463E-2FCE-4AB2-A9C9-6A34BF261F52',
-                        'SCCOOS'    :   '20A3408F-9EC4-4B36-8E10-BBCDB1E81BDF',
-                        'SECOORA'   :   'E796C954-B248-4118-896C-42E6FAA6EDE9',
-                        'GLOS'      :   'E4A9E4F4-78A4-4BA0-B653-F548D74F68FA',
-                        'CARICOOS'  :   '0C4CA8A6-5967-4590-BFE0-B8A21CD8BB01' }
+    region_map =    {   'AOOS':         '1706F520-2647-4A33-B7BF-592FAFDE4B45',
+                        'CARICOOS':     '117F1684-A5E3-400E-98D8-A270BDBA1603',
+                        'CENCOOS':      '4BA5624D-A61F-4C7E-BAEE-7F8BDDB8D9C4',
+                        'GCOOS':        '003747E7-4818-43CD-937D-44D5B8E2F4E9',
+                        'GLOS':         'B664427E-6953-4517-A874-78DDBBD3893E',
+                        'MARACOOS':     'C664F631-6E53-4108-B8DD-EFADF558E408',
+                        'NANOOS':       '254CCFC0-E408-4E13-BD62-87567E7586BB',
+                        'NERACOOS':     'E41F4FCD-0297-415D-AC53-967B970C3A3E',
+                        'PacIOOS':      '68FF11D8-D66B-45EE-B33A-21919BB26421',
+                        'SCCOOS':       'B70B3E3C-3851-4BA9-8E9B-C9F195DCEAC7',
+                        'SECOORA':      'B3EA8869-B726-4E39-898A-299E53ABBC98' }
+                        #'NOS/CO-OPS':   '72E748DF-23B1-4E80-A2C4-81E70783094A',
+                        #'USACE':        '73019DFF-2E01-4800-91CD-0B3F812256A7',
+                        #'NAVY':         '3B94DAAE-B7E9-4789-993B-0045AD9149D9',
+                        #'NDBC':         '828981B0-0039-4360-9788-E788FA6B0875',
+                        #'USGS/CMGP':    'C6F11F00-C2BD-4AC6-8E2C-013E16F4932E' }
 
     services =      {   'SOS'       :   'urn:x-esri:specification:ServiceType:sos:url',
                         'WMS'       :   'urn:x-esri:specification:ServiceType:wms:url',
