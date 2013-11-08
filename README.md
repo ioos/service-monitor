@@ -1,4 +1,4 @@
-catalog
+The IOOS Catalog
 =======
 
 A web based catalog of IOOS services and datasets, available at http://catalog.ioos.us
