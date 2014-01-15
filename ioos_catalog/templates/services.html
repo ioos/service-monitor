@@ -56,7 +56,7 @@
                 <td>{{ service.data_provider }}</td>
                 <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
-                <td>{{ service.last_update | datetimeformat }}</td>
+                <td><abbr title="{{ service.last_update | datetimeformat }}">{{ service.last_update | prettydate }}</abbr></td>
                 <td>{{ service.last_response_code }}</td>
                 <td>{{ service.last_response_time }}</td>
                 <td>{{ service.avg_response_time | float | round }}</td>
