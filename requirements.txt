@@ -6,7 +6,7 @@ gunicorn==0.16.1
 
 # Need UTC times which will be 0.3.12 (not relased on PyPi yet)
 #rq==0.3.12
-git+https://github.com/nvie/rq.git
+git+https://github.com/nvie/rq.git@09d461c2c0523784e893b94eba65b287248d0ec0
 # Need 'timeout' parameter supported, which is not in the most recent release (0.3.6)
 #rq-scheduler==0.3.6
 git+https://github.com/kwilcox/rq-scheduler.git@utc-time-with-master
