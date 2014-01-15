@@ -57,12 +57,12 @@ def prettydate(d):
     #app.logger.info(utc_dt)
     #app.logger.info(d)
     if utc_dt > d:
-        return prettypastdate(utc_dt - d)
+        return prettypastdate(utc_dt - d, d)
     else:
         return prettyfuturedate(d - utc_dt)
 
 # from http://stackoverflow.com/a/5164027/84732
-def prettypastdate(diff):
+def prettypastdate(diff, d):
     s = diff.seconds
     if diff.days > 7:
         return d.strftime('%d %b %y')
