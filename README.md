@@ -10,7 +10,7 @@ Here's the sequence of events to get data loaded in to the catalog:
 
 * Register new data service URL at the NGDC Collection Source table  - Day 1, manual
 * Test metadata harvest happens - by 7:15 am on Day 2, automatic
-* Approval of  new data service - Day 2, manual
+* Approval of  new data service [check status in EMMA](http://www.ngdc.noaa.gov/docucomp/page?view=wafsInGroup&title=Metrics%20and%20Collections%20for%20Group%20IOOS&groupName=IOOS) - Day 2, manual
 * WAF is populated with new ISO record - Day 3 by 7:15 am, automatic
 * Geoportal harvests records from WAF - Day 3 by 9 am, automatic
 * IOOS Catalog queries Geoportal for all IOOS service URLs -?
