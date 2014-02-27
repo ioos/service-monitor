@@ -56,6 +56,11 @@ class SosHarvest(Harvester):
 
     def harvest(self):
         self.sos = SensorObservationService(self.service.get('url'))
+
+        # List storing the stations that have already been processed in this SOS server.
+        # This is kept and checked later to avoid servers that have the same stations in many offerings.
+        processed = []
+
         for offering in self.sos.offerings:
             # TODO: We assume an offering should only have one procedure here
             # which will be the case in sos 2.0, but may not be the case right now
@@ -63,17 +68,9 @@ class SosHarvest(Harvester):
             uid = offering.procedures[0]
             sp_uid = uid.split(":")
 
-            # List storing the stations that have already been processed in this SOS server.
-            # This is kept and checked later to avoid servers that have the same stations in many offerings.
-            processed = []
-
-            # temnplate:  urn:ioos:type:authority:id
+            # template:   urn:ioos:type:authority:id
             # sample:     ioos:station:wmo:21414
-            if sp_uid[2] == "station":   # Station Offering
-                if not uid in processed:
-                    self.process_station(uid)
-                processed.append(uid)
-            elif sp_uid[2] == "network": # Network Offering
+            if len(sp_uid) > 2 and sp_uid[2] == "network": # Network Offering
                 network_ds = IoosDescribeSensor(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
                 # Iterate over stations in the network and process them individually
                 for proc in network_ds.procedures:
@@ -81,6 +78,11 @@ class SosHarvest(Harvester):
                         if not proc in processed:
                             self.process_station(proc)
                         processed.append(proc)
+            else:
+                # Station Offering, or malformed urn - try it anyway as if it is a station
+                if not uid in processed:
+                    self.process_station(uid)
+                processed.append(uid)
 
     def process_station(self, uid):
         """ Makes a DescribeSensor request based on a 'uid' parameter being a station procedure """
@@ -134,13 +136,27 @@ class SosHarvest(Harvester):
                 pos_element = loc.find("{%s}pos" % GML_NS)
                 # strip out points
                 positions = map(float, testXMLValue(pos_element).split(" "))
-                crs = Crs(testXMLAttribute(pos_element, "srsName"))
-                if crs.axisorder == "yx":
-                    gj = json.loads(geojson.dumps(geojson.Point([positions[1], positions[0]])))
+
+                for el in [pos_element, loc]:
+                    srs_name = testXMLAttribute(el, "srsName")
+                    if srs_name:
+                        crs = Crs(srs_name)
+                        if crs.axisorder == "yx":
+                            gj = json.loads(geojson.dumps(geojson.Point([positions[1], positions[0]])))
+                        else:
+                            gj = json.loads(geojson.dumps(geojson.Point([positions[0], positions[1]])))
+                        break
                 else:
-                    gj = json.loads(geojson.dumps(geojson.Point([positions[0], positions[1]])))
+                    if positions:
+                        messages.append(u"Position(s) found but could not parse SRS: %s, %s" % (positions, srs_name))
+
             else:
-                messages.append(u"Found an unrecognized child of the sml:location element and did not attempt to process it: %s" % etree.tostring(loc).strip())
+                messages.append(u"Found an unrecognized child of the sml:location element and did not attempt to process it: %s" % loc)
+
+            meta_str = unicode(etree.tostring(metadata_value)).strip()
+            if len(meta_str) > 4000000:
+                messages.append(u'Metadata document was too large to store (len: %s)' % len(meta_str))
+                meta_str = u''
 
             service = {
                 # Reset service
@@ -150,7 +166,7 @@ class SosHarvest(Harvester):
                 'service_id'        : ObjectId(self.service.get('_id')),
                 'data_provider'     : self.service.get('data_provider'),
                 'metadata_type'     : u'sensorml',
-                'metadata_value'    : unicode(etree.tostring(metadata_value)).strip(),
+                'metadata_value'    : u'',
                 'messages'          : map(unicode, messages),
                 'keywords'          : map(unicode, sorted(station_ds.keywords)),
                 'variables'         : map(unicode, sorted(station_ds.variables)),
