@@ -121,7 +121,7 @@
           {%- for name, count in asset_counts.iteritems() %}
           <li class="list-group-item">
             <span class="badge">{{ count }}</span>
-            {{ name }}
+            {{ "ALL" if name == "_all" else name }}
           </li>
           {%- endfor %}
           </ul>
