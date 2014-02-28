@@ -27,7 +27,7 @@ code_dir = "/home/monitoring/ioos-service-monitor"
 env.hosts = ['198.199.75.160']
 
 def admin():
-    env.user = "kwilcox"
+    env.user = "dfoster"
 def monitoring():
     env.user = "monitoring"
 
