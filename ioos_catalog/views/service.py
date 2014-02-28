@@ -127,7 +127,10 @@ def show_service(service_id):
                 pings['last'] = stats[0].created
             pings['next'] = job[1]
 
-    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets, harvests=harvests, pings=pings)
+    # get cc/metamap
+    metadata = db.Metadata.find_one({'ref_id':service._id})
+
+    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets, harvests=harvests, pings=pings, metadata=metadata)
 
 @app.route('/services/', methods=['POST'])
 def add_service():

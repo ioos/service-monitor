@@ -89,4 +89,5 @@ def create_index():
 
     # @TODO: this will likely error on first run as the collection won't exist
     run('mongo "%s" --eval "db.getCollection(\'stats\').ensureIndex({\'created\':-1})"' % MONGODB_DATABASE)
+    run('mongo "%s" --eval "db.getCollection(\'metadatas\').ensureIndex({\'ref_id\':1, \'ref_type\':1, \'ref_subtype\':1})"' % MONGODB_DATABASE)
 
