@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import datetime
 
 from bson.objectid import ObjectId
@@ -56,6 +55,7 @@ class Dataset(BaseDocument):
 
     @classmethod
     def count_types(cls):
+        # @TODO this doesn't do as expected, see count_types_by_provider instead
         retval = db.Dataset.aggregate([{'$group':{'_id':'$services.asset_type',
                                                'count':{'$sum':1}}}])
         return retval
@@ -72,16 +72,16 @@ class Dataset(BaseDocument):
             SOS -> 57
             ...
         """
-        counts = db.Dataset.aggregate([{'$group':{'_id':{'asset_type':'$services.asset_type',
-                                                         'data_provider':'$services.data_provider'},
-                                                  'cnt':{'$sum':1}}}])
+        counts = db.Dataset.aggregate([
+            { '$unwind' : '$services' },
+            { '$group' : { '_id' : {'asset_type' : '$services.asset_type',
+                                    'data_provider' : '$services.data_provider'},
+                          'cnt'  : {'$sum':1}}},
+            { '$group' : { '_id' : '$_id.data_provider',
+                          'stuff' : {'$addToSet': { 'asset_type' : '$_id.asset_type', 'cnt': '$cnt'}}}}
+        ])
 
-        # transform into slightly friendlier structure.  could likely do this in mongo but no point
-        retval = defaultdict(dict)
-        for val in counts:
-            try:
-                retval[val['_id']['data_provider'][0]][val['_id']['asset_type'][0]] = val['cnt']
-            except:
-                pass
+        # massage this a bit
+        retval = {d['_id']:{dd['asset_type']:dd['cnt'] for dd in d['stuff']} for d in counts}
 
-        return dict(retval)
+        return retval

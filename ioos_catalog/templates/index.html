@@ -45,10 +45,10 @@
         </div>
         <p><strong>Datasets</strong></p>
         <div id="dataset-type-btns" class="row">
-          {%- for count in asset_counts %}
+          {%- for name, count in asset_counts.iteritems() %}
           <div class="col-lg-3">
-            <a class="btn btn-lg btn-default dataset-type-btn" data-type="{{count._id[0]}}" href="{{url_for('datasets', filter_provider='null', filter_type=count._id[0]) }}">
-              {{ count._id[0] }}
+            <a class="btn btn-lg btn-default dataset-type-btn" data-type="{{name}}" href="{{url_for('datasets', filter_provider='null', filter_type=name) }}">
+              {{ name }}
               <span class="badge">0</span>
             </a>
           </div>
@@ -112,10 +112,10 @@
         <h3>Dataset Overview</h3>
         <div>
           <ul class="list-group">
-          {%- for asset in asset_counts %}
+          {%- for name, count in asset_counts.iteritems() %}
           <li class="list-group-item">
-            <span class="badge">{{ asset.count }}</span>
-            {{ asset._id[0] }}
+            <span class="badge">{{ count }}</span>
+            {{ name }}
           </li>
           {%- endfor %}
           </ul>

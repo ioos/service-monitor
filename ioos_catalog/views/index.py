@@ -1,4 +1,5 @@
 from datetime import datetime
+from collections import defaultdict
 
 from flask import render_template, make_response, redirect, jsonify
 from ioos_catalog import app, scheduler, db
@@ -8,7 +9,6 @@ from ioos_catalog.tasks.regulator import regulate
 @app.route('/', methods=['GET'])
 def index():
     counts       = db.Service.count_types()
-    asset_counts = db.Dataset.count_types()
     stats        = db.Stat.latest(8)
 
     # temp
@@ -18,9 +18,15 @@ def index():
     counts_by_provider = db.Service.count_types_by_provider()
     dataset_counts_by_provider = db.Dataset.count_types_by_provider()
 
+    # asset counts (not by provider)
+    asset_counts = defaultdict(int)
+    for v in dataset_counts_by_provider.itervalues():
+        for atn, atc in v.iteritems():
+            asset_counts[atn] += atc
+
     return render_template('index.html',
                            counts=counts,
-                           asset_counts=asset_counts,
+                           asset_counts=dict(asset_counts),
                            counts_by_provider=counts_by_provider,
                            dataset_counts_by_provider=dataset_counts_by_provider,
                            stats=stats,
