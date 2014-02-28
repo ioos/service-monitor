@@ -13,7 +13,9 @@ git+https://github.com/kwilcox/rq-scheduler.git@utc-time-with-master
 
 rq-dashboard==0.3.1
 
-pyoos
+git+https://github.com/asascience-open/pyoos.git
 OWSLib
 geojson
 git+https://github.com/asascience-open/petulant-bear.git
+git+https://github.com/asascience-open/wicken.git
+git+https://github.com/asascience-open/compliance-checker.git
