@@ -20,7 +20,7 @@
       </div>
 
       <div class="col-lg-6">
-        <h3>Explore Services</h3>
+        <h3 style="margin-top: 0px">Explore Services</h3>
 
         <p>1. Pick a region using the dropdown or the map:</p>
 
@@ -32,27 +32,33 @@
 
         <br/>
         <p>2. Choose a filter:</p>
-        <p><strong>Services</strong></p>
-        <div id="service-type-btns" class="row">
-          {%- for count in counts %}
-          <div class="col-lg-3">
-            <a class="btn btn-lg btn-default service-type-btn" data-type="{{count._id}}" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">
-              {{ count._id }}
-              <span class="badge">0</span>
-            </a>
+        <div class="row">
+          <div class="col-lg-6">
+            <p><strong>Services</strong></p>
+            <div id="service-type-btns">
+              <a class="btn btn-lg btn-default service-type-btn btn-block" data-type="_all" href="{{url_for('services', filter_provider='null', filter_type='null')}}">
+                ALL
+                <span class="badge">0</span>
+              </a>
+              {%- for count in counts %}
+              <a class="btn btn-lg btn-default service-type-btn btn-block" data-type="{{count._id}}" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">
+                {{ count._id }}
+                <span class="badge">0</span>
+              </a>
+              {% endfor %}
+            </div>
           </div>
-          {% endfor %}
-        </div>
-        <p><strong>Datasets</strong></p>
-        <div id="dataset-type-btns" class="row">
-          {%- for name, count in asset_counts.iteritems() %}
-          <div class="col-lg-3">
-            <a class="btn btn-lg btn-default dataset-type-btn" data-type="{{name}}" href="{{url_for('datasets', filter_provider='null', filter_type=name) }}">
-              {{ name }}
-              <span class="badge">0</span>
-            </a>
+          <div class="col-lg-6">
+            <p><strong>Datasets</strong></p>
+            <div id="dataset-type-btns">
+              {%- for name, count in asset_counts.iteritems() %}
+              <a class="btn btn-lg btn-default dataset-type-btn btn-block" data-type="{{name}}" href="{{url_for('datasets', filter_provider='null', filter_type=name) }}">
+                {{ "ALL" if name == "_all" else name }}
+                <span class="badge">0</span>
+              </a>
+              {% endfor %}
+            </div>
           </div>
-          {% endfor %}
         </div>
       </div>
     </div>
@@ -145,13 +151,12 @@ function updateTypeBtns() {
     .addClass('btn-default')
     .removeAttr('disabled');
 
-  console.log(countsByProvider);
-
   svcbtns.each(function(idx, el) {
     var el = $(el);
     var cnt = null;
+    var dtype = el.data('type');
     try {
-      cnt = countsByProvider[region][el.data('type')] || 0;
+      cnt = countsByProvider[region][dtype] || 0;
     } catch(err) {
       cnt = 0;
     }
@@ -165,7 +170,8 @@ function updateTypeBtns() {
     }
 
     // update hrefs of buttons to include service provider
-    el.attr('href', '/services/filter/' + region + '/' + el.data('type'));
+    var ltype = (dtype == "_all") ? "null" : dtype;
+    el.attr('href', '/services/filter/' + region + '/' + ltype);
   });
 
   // update count badges on buttons, disable those with none?
@@ -177,8 +183,9 @@ function updateTypeBtns() {
   dsbtns.each(function(idx, el) {
     var el = $(el);
     var cnt = null;
+    var dtype = el.data('type');
     try {
-      cnt = datasetsByProvider[region][el.data('type')] || 0;
+      cnt = datasetsByProvider[region][dtype] || 0;
     } catch(err) {
       cnt = 0;
     }
@@ -192,7 +199,8 @@ function updateTypeBtns() {
     }
 
     // update hrefs of buttons to include service provider
-    el.attr('href', '/datasets/filter/' + region + '/' + el.data('type'));
+    var ltype = (dtype == "_all") ? "null" : dtype;
+    el.attr('href', '/datasets/filter/' + region + '/' + ltype);
   });
 
 }
@@ -202,13 +210,13 @@ $(function() {
   $('#region-select').change();
 });
 
-var width = 500,
-    height = 300;
+var width = 600,
+    height = 400;
 
 var projection = d3.geo.albers()
-    .scale(250)
+    .scale(275)
     .rotate([100, 0])
-    .center([50.6, 5.7])
+    .center([50.6, 25.7])
     //.parallels([29.5, 45.5])
     //.precision(.1)
     //.translate([0, height / 2]);

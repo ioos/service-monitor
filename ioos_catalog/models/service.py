@@ -180,7 +180,12 @@ class Service(BaseDocument):
         for val in counts:
             retval[val['_id']['data_provider']][val['_id']['service_type']] = val['cnt']
 
-        return dict(retval)
+        retval = dict(retval)
+
+        for provider, svc_counts in retval.iteritems():
+            retval[provider]['_all'] = sum(svc_counts.itervalues())
+
+        return retval
 
     @classmethod
     def get_failures_in_time_range(self, end_time=None, start_time=None):

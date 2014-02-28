@@ -84,4 +84,8 @@ class Dataset(BaseDocument):
         # massage this a bit
         retval = {d['_id']:{dd['asset_type']:dd['cnt'] for dd in d['stuff']} for d in counts}
 
+        # add _all
+        for provider, dscounts in retval.iteritems():
+            retval[provider]['_all'] = sum(dscounts.itervalues())
+
         return retval
