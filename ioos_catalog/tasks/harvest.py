@@ -13,6 +13,11 @@ from pyoos.parsers.ioos.describe_sensor import IoosDescribeSensor
 from paegan.cdm.dataset import CommonDataset, _possiblet, _possiblez, _possiblex, _possibley
 from petulantbear.netcdf2ncml import *
 
+from compliance_checker.suite import CheckSuite
+from compliance_checker.ioos import IOOSBaseCheck, IOOSSOSGCCheck, IOOSSOSDSCheck, IOOSNCCheck
+from compliance_checker.base import get_namespaces
+from wicken.xml_dogma import MultipleXmlDogma
+
 from shapely.geometry import mapping, box
 
 import geojson
@@ -56,6 +61,13 @@ class SosHarvest(Harvester):
 
     def harvest(self):
         self.sos = SensorObservationService(self.service.get('url'))
+
+        scores   = self.ccheck_service()
+        metamap  = self.metamap_service()
+        try:
+            self.save_ccheck_service(scores, metamap)
+        except Exception as e:
+            app.logger.warn("Could not save compliancecheck/metamap information: %s", e)
 
         # List storing the stations that have already been processed in this SOS server.
         # This is kept and checked later to avoid servers that have the same stations in many offerings.
@@ -179,6 +191,98 @@ class SosHarvest(Harvester):
             dataset.updated = datetime.utcnow()
             dataset.save()
             return "Harvested"
+
+    def ccheck_service(self):
+        assert self.sos
+
+        with app.app_context():
+
+            scores = None
+
+            try:
+
+                cs = CheckSuite()
+                # @TODO: bleh
+
+                checkers = cs._get_valid_checkers(self.sos, [IOOSBaseCheck])
+                if len(checkers) != 1:
+                    app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
+                    return
+
+                # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
+                checker = checkers[0]()
+                dsp = checker.load_datapair(self.sos)
+                checker.setup(dsp)
+                checks = cs._get_checks(checker)
+
+                vals = list(itertools.chain.from_iterable(map(lambda c: cs._run_check(c, dsp), checks)))
+                scores = cs.scores(vals)
+            except Exception as e:
+                app.logger.warn("Caught exception doing Compliance Checker on SOS service: %s", e)
+
+            return scores
+
+    def metamap_service(self):
+        assert self.sos
+
+        with app.app_context():
+            # gets a metamap document of this service using wicken
+            beliefs = IOOSSOSGCCheck.beliefs()
+            doc = MultipleXmlDogma('sos-gc', beliefs, self.sos._capabilities, namespaces=get_namespaces())
+
+            # now make a map out of this
+            # @TODO wicken should make this easier
+            metamap = {}
+            for k in beliefs:
+                try:
+                    metamap[k] = getattr(doc, doc._fixup_belief(k)[0])
+                except Exception as e:
+                    pass
+
+            return metamap
+
+    def save_ccheck_service(self, scores, metamap):
+        """
+        Saves the result of ccheck_service and metamap
+        """
+        if not (scores or metadata):
+            return
+
+        with app.app_context():
+            def res2dict(r):
+                cl = []
+                #if r.children:
+                #    cl = map(res2dict, r.children)
+
+                return {'name'     : unicode(r.name),
+                        'score'    : float(r.value[0]),
+                        'maxscore' : float(r.value[1]),
+                        'weight'   : int(r.weight),
+                        'children' : cl}     # @TODO
+
+            metadata = db.Metadata.find_one({'ref_id': self.service._id})
+            if metadata is None:
+                metadata             = db.Metadata()
+                metadata.ref_id      = self.service._id
+                metadata.ref_type    = u'service'
+                metadata.ref_subtype = u'SOS'
+
+            metadata.cc_results = map(res2dict, scores)
+
+            # @TODO: srsly need to decouple from cchecker
+            score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
+            max_score = sum((r.weight for r in scores))
+
+            metadata.cc_score = {'score'     : float(score),
+                                 'max_score' : float(max_score),
+                                 'pct'       : float(score) / max_score}
+
+            metadata.metamap = metamap
+
+            metadata.updated = datetime.utcnow()
+            metadata.save()
+
+            return metadata
 
 class WmsHarvest(Harvester):
     def __init__(self, service):
