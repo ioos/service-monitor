@@ -104,9 +104,20 @@ def prettyfuturedate(diff):
     else:
         return '{} hours from now'.format(s/3600)
 
+def is_list(val):
+    return isinstance(val, list)
+
+def trim_star(val):
+    if val.endswith("*"):
+        return val[0:-1]
+
+    return val
+
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['timedeltaformat'] = timedeltaformat
 app.jinja_env.filters['prettydate'] = prettydate
+app.jinja_env.filters['is_list'] = is_list
+app.jinja_env.filters['trim_star'] = trim_star
 
 # pad/truncate filter (for making text tables)
 def padfit(value, size):

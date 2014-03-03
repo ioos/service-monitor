@@ -42,7 +42,11 @@ def show_dataset(dataset_id):
     dataset = db.Dataset.find_one({'_id':dataset_id})
     for s in dataset.services:
         s['geojson'] = json.dumps(s['geojson'])
-    return render_template('show_dataset.html', dataset=dataset)
+
+    # get cc/metamap
+    metadata = db.Metadata.find_one({'ref_id':dataset._id})
+
+    return render_template('show_dataset.html', dataset=dataset, metadata=metadata)
 
 @app.route('/datasets/removeall', methods=['GET'])
 def removeall():
