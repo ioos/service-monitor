@@ -154,6 +154,7 @@ class SosHarvest(Harvester):
         with app.app_context():
 
             metadata_value = etree.fromstring(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
+            sensor_ml      = SensorML(metadata_value)
             station_ds     = IoosDescribeSensor(metadata_value)
 
             unique_id = station_ds.id
@@ -241,8 +242,8 @@ class SosHarvest(Harvester):
             dataset.save()
 
             # do compliance checker / metadata now
-            scores = self.ccheck_station(station_ds)
-            metamap = self.metamap_station(station_ds)
+            scores = self.ccheck_station(sensor_ml)
+            metamap = self.metamap_station(sensor_ml)
 
             try:
                 self.save_ccheck_station(dataset._id, scores, metamap)
@@ -310,21 +311,21 @@ class SosHarvest(Harvester):
                                              scores,
                                              metamap)
 
-    def ccheck_station(self, describe_sensor):
+    def ccheck_station(self, sensor_ml):
         with app.app_context():
             scores = None
             try:
                 cs = CheckSuite()
                 # @TODO: bleh
 
-                checkers = cs._get_valid_checkers(describe_sensor, [IOOSBaseCheck])
+                checkers = cs._get_valid_checkers(sensor_ml, [IOOSBaseCheck])
                 if len(checkers) != 1:
                     app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
                     return
 
                 # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
                 checker = checkers[0]()
-                dsp = checker.load_datapair(describe_sensor)
+                dsp = checker.load_datapair(sensor_ml)
                 checker.setup(dsp)
                 checks = cs._get_checks(checker)
 
@@ -335,11 +336,11 @@ class SosHarvest(Harvester):
 
             return scores
 
-    def metamap_station(self, describe_sensor):
+    def metamap_station(self, sensor_ml):
         with app.app_context():
             # gets a metamap document of this service using wicken
             beliefs = IOOSSOSDSCheck.beliefs()
-            doc = MultipleXmlDogma('sos-ds', beliefs, describe_sensor._root, namespaces=get_namespaces())
+            doc = MultipleXmlDogma('sos-ds', beliefs, sensor_ml._root, namespaces=get_namespaces())
 
             # now make a map out of this
             # @TODO wicken should make this easier
