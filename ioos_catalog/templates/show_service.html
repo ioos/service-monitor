@@ -80,6 +80,7 @@
     </dl>
   </div>
 
+  {%- if service.service_type == 'SOS' %}
   <h4>Metamap</h4>
   <div class="row">
     <div class="col-lg-8">
@@ -110,6 +111,7 @@
       {%- endif %}
     </div>
   </div>
+  {%- endif %}
 
   <h4>Harvested Datasets</h4>
   <div class="col-lg-12 row">
@@ -136,31 +138,6 @@
   </div>
 
   <br/>
-
-  <table class="table table-striped table-bordered table-condensed">
-    <thead>
-      <tr>
-        <th>Response Time (ms)</th>
-        <th>Response Code</th>
-        <th>Status</th>
-        <th>Timestamp</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for s in stats %}
-      <tr{{ " class=danger" if s.operational_status == 0 }}>
-          <td>{{ s.response_time }}</td>
-          <td>{{ s.response_code }}</td>
-          <td>{{ s.operational_status | status_icon | safe }} {{ "UP" if s.operational_status else "DOWN" }}</td>
-          <td>{{ s.created | datetimeformat }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="4">Avg: {{ avg_response_time | round(2) }}</td>
-    </tfoot>
-  </table>
 
 </div>
 
