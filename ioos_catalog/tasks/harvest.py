@@ -12,11 +12,15 @@ from owslib.crs import Crs
 from pyoos.parsers.ioos.describe_sensor import IoosDescribeSensor
 from paegan.cdm.dataset import CommonDataset, _possiblet, _possiblez, _possiblex, _possibley
 from petulantbear.netcdf2ncml import *
+from petulantbear.netcdf_etree import parse_nc_dataset_as_etree
+from petulantbear.netcdf_etree import namespaces as pb_namespaces
+from netCDF4 import Dataset
 
 from compliance_checker.suite import CheckSuite
 from compliance_checker.ioos import IOOSBaseCheck, IOOSSOSGCCheck, IOOSSOSDSCheck, IOOSNCCheck
 from compliance_checker.base import get_namespaces
 from wicken.xml_dogma import MultipleXmlDogma
+from wicken.netcdf_dogma import NetCDFDogma
 
 from shapely.geometry import mapping, box
 
@@ -55,6 +59,51 @@ class Harvester(object):
     def __init__(self, service):
         self.service = service
 
+    def save_ccheck_and_metadata(self, ref_id, ref_type, ref_subtype, scores, metamap):
+        """
+        Saves the result of a compliance checker scores and metamap document.
+
+        Will be called by service/station derived methods.
+        """
+        if not (scores or metamap):
+            return
+
+        with app.app_context():
+            def res2dict(r):
+                cl = []
+                #if r.children:
+                #    cl = map(res2dict, r.children)
+
+                return {'name'     : unicode(r.name),
+                        'score'    : float(r.value[0]),
+                        'maxscore' : float(r.value[1]),
+                        'weight'   : int(r.weight),
+                        'children' : cl}     # @TODO
+
+            metadata = db.Metadata.find_one({'ref_id': ref_id})
+            if metadata is None:
+                metadata             = db.Metadata()
+                metadata.ref_id      = ref_id
+                metadata.ref_type    = unicode(ref_type)
+                metadata.ref_subtype = unicode(ref_subtype)
+
+            metadata.cc_results = map(res2dict, scores)
+
+            # @TODO: srsly need to decouple from cchecker
+            score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
+            max_score = sum((r.weight for r in scores))
+
+            metadata.cc_score = {'score'     : float(score),
+                                 'max_score' : float(max_score),
+                                 'pct'       : float(score) / max_score}
+
+            metadata.metamap = metamap
+
+            metadata.updated = datetime.utcnow()
+            metadata.save()
+
+            return metadata
+
 class SosHarvest(Harvester):
     def __init__(self, service):
         Harvester.__init__(self, service)
@@ -67,7 +116,7 @@ class SosHarvest(Harvester):
         try:
             self.save_ccheck_service(scores, metamap)
         except Exception as e:
-            app.logger.warn("Could not save compliancecheck/metamap information: %s", e)
+            app.logger.warn("could not save compliancecheck/metamap information: %s", e)
 
         # List storing the stations that have already been processed in this SOS server.
         # This is kept and checked later to avoid servers that have the same stations in many offerings.
@@ -190,6 +239,16 @@ class SosHarvest(Harvester):
             dataset.services.append(service)
             dataset.updated = datetime.utcnow()
             dataset.save()
+
+            # do compliance checker / metadata now
+            scores = self.ccheck_station(station_ds)
+            metamap = self.metamap_station(station_ds)
+
+            try:
+                self.save_ccheck_station(dataset._id, scores, metamap)
+            except Exception as e:
+                app.logger.warn("could not save compliancecheck/metamap information: %s", e)
+
             return "Harvested"
 
     def ccheck_service(self):
@@ -245,44 +304,63 @@ class SosHarvest(Harvester):
         """
         Saves the result of ccheck_service and metamap
         """
-        if not (scores or metadata):
-            return
+        return self.save_ccheck_and_metadata(self.service._id,
+                                             u'service',
+                                             u'SOS',
+                                             scores,
+                                             metamap)
 
+    def ccheck_station(self, describe_sensor):
         with app.app_context():
-            def res2dict(r):
-                cl = []
-                #if r.children:
-                #    cl = map(res2dict, r.children)
+            scores = None
+            try:
+                cs = CheckSuite()
+                # @TODO: bleh
 
-                return {'name'     : unicode(r.name),
-                        'score'    : float(r.value[0]),
-                        'maxscore' : float(r.value[1]),
-                        'weight'   : int(r.weight),
-                        'children' : cl}     # @TODO
+                checkers = cs._get_valid_checkers(describe_sensor, [IOOSBaseCheck])
+                if len(checkers) != 1:
+                    app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
+                    return
 
-            metadata = db.Metadata.find_one({'ref_id': self.service._id})
-            if metadata is None:
-                metadata             = db.Metadata()
-                metadata.ref_id      = self.service._id
-                metadata.ref_type    = u'service'
-                metadata.ref_subtype = u'SOS'
+                # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
+                checker = checkers[0]()
+                dsp = checker.load_datapair(describe_sensor)
+                checker.setup(dsp)
+                checks = cs._get_checks(checker)
 
-            metadata.cc_results = map(res2dict, scores)
+                vals = list(itertools.chain.from_iterable(map(lambda c: cs._run_check(c, dsp), checks)))
+                scores = cs.scores(vals)
+            except Exception as e:
+                app.logger.warn("Caught exception doing Compliance Checker on SOS station: %s", e)
 
-            # @TODO: srsly need to decouple from cchecker
-            score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
-            max_score = sum((r.weight for r in scores))
+            return scores
 
-            metadata.cc_score = {'score'     : float(score),
-                                 'max_score' : float(max_score),
-                                 'pct'       : float(score) / max_score}
+    def metamap_station(self, describe_sensor):
+        with app.app_context():
+            # gets a metamap document of this service using wicken
+            beliefs = IOOSSOSDSCheck.beliefs()
+            doc = MultipleXmlDogma('sos-ds', beliefs, describe_sensor._root, namespaces=get_namespaces())
 
-            metadata.metamap = metamap
+            # now make a map out of this
+            # @TODO wicken should make this easier
+            metamap = {}
+            for k in beliefs:
+                try:
+                    metamap[k] = getattr(doc, doc._fixup_belief(k)[0])
+                except Exception as e:
+                    pass
 
-            metadata.updated = datetime.utcnow()
-            metadata.save()
+            return metamap
 
-            return metadata
+    def save_ccheck_station(self, dataset_id, scores, metamap):
+        """
+        Saves the result of ccheck_station and metamap
+        """
+        return self.save_ccheck_and_metadata(dataset_id,
+                                             u'dataset',
+                                             u'SOS',
+                                             scores,
+                                             metamap)
 
 class WmsHarvest(Harvester):
     def __init__(self, service):
@@ -487,4 +565,72 @@ class DapHarvest(Harvester):
             dataset.updated = datetime.utcnow()
             dataset.save()
 
+        ncdataset = Dataset(self.service.get('url'))
+        scores = self.ccheck_dataset(ncdataset)
+        metamap = self.metamap_dataset(ncdataset)
+
+        try:
+            metadata_rec = self.save_ccheck_dataset(dataset._id, scores, metamap)
+        except Exception as e:
+            metadata_rec = None
+            app.logger.warn("could not save compliancecheck/metamap information: %s", e)
+
         return "Harvested"
+
+    def ccheck_dataset(self, ncdataset):
+        with app.app_context():
+            scores = None
+            try:
+                cs = CheckSuite()
+                # @TODO: bleh
+
+                checkers = cs._get_valid_checkers(ncdataset, [IOOSBaseCheck])
+                if len(checkers) != 1:
+                    app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
+                    return
+
+                # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
+                checker = checkers[0]()
+                dsp = checker.load_datapair(ncdataset)
+                checker.setup(dsp)
+                checks = cs._get_checks(checker)
+
+                vals = list(itertools.chain.from_iterable(map(lambda c: cs._run_check(c, dsp), checks)))
+                scores = cs.scores(vals)
+            finally:
+                pass
+            #except Exception as e:
+            #    app.logger.warn("Caught exception doing Compliance Checker on Dataset: %s", e)
+
+            return scores
+
+    def metamap_dataset(self, ncdataset):
+        with app.app_context():
+
+            # gets a metamap document of this service using wicken
+            beliefs = IOOSNCCheck.beliefs()
+            ncnamespaces = {'nc':pb_namespaces['ncml']}
+
+            doc = NetCDFDogma('nc', beliefs, ncdataset, namespaces=ncnamespaces)
+
+            # now make a map out of this
+            # @TODO wicken should make this easier
+            metamap = {}
+            for k in beliefs:
+                try:
+                    metamap[k] = getattr(doc, doc._fixup_belief(k)[0])
+                except Exception as e:
+                    print k, e
+
+            return metamap
+
+    def save_ccheck_dataset(self, dataset_id, scores, metamap):
+        """
+        Saves the result of ccheck_station and metamap
+        """
+        return self.save_ccheck_and_metadata(dataset_id,
+                                             u'dataset',
+                                             u'NC',
+                                             scores,
+                                             metamap)
+
