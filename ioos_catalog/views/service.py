@@ -129,7 +129,9 @@ def show_service(service_id):
 
     # get cc/metamap
     metadata_parent = db.Metadata.find_one({'ref_id':service._id})
-    metadatas = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == service._id}
+    metadatas = {}
+    if metadata_parent:
+        metadatas = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == service._id}
 
     return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets, harvests=harvests, pings=pings, metadatas=metadatas)
 

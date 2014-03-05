@@ -46,7 +46,9 @@ def show_dataset(dataset_id):
 
     for s in dataset.services:
         s['geojson'] = json.dumps(s['geojson'])
-        s['metadata'] = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == s['service_id']}
+        s['metadata'] = {}
+        if metadata_parent:
+            s['metadata'] = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == s['service_id']}
 
     return render_template('show_dataset.html', dataset=dataset)
 
