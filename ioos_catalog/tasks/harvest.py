@@ -59,7 +59,7 @@ class Harvester(object):
     def __init__(self, service):
         self.service = service
 
-    def save_ccheck_and_metadata(self, ref_id, ref_type, ref_subtype, scores, metamap):
+    def save_ccheck_and_metadata(self, service_id, checker_name, ref_id, ref_type, scores, metamap):
         """
         Saves the result of a compliance checker scores and metamap document.
 
@@ -71,33 +71,44 @@ class Harvester(object):
         with app.app_context():
             def res2dict(r):
                 cl = []
-                #if r.children:
-                #    cl = map(res2dict, r.children)
+                if r.children:
+                    cl = map(res2dict, r.children)
 
                 return {'name'     : unicode(r.name),
                         'score'    : float(r.value[0]),
                         'maxscore' : float(r.value[1]),
                         'weight'   : int(r.weight),
-                        'children' : cl}     # @TODO
+                        'children' : cl}
 
             metadata = db.Metadata.find_one({'ref_id': ref_id})
             if metadata is None:
                 metadata             = db.Metadata()
                 metadata.ref_id      = ref_id
                 metadata.ref_type    = unicode(ref_type)
-                metadata.ref_subtype = unicode(ref_subtype)
 
-            metadata.cc_results = map(res2dict, scores)
+            cc_results = map(res2dict, scores)
 
             # @TODO: srsly need to decouple from cchecker
             score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
             max_score = sum((r.weight for r in scores))
 
-            metadata.cc_score = {'score'     : float(score),
-                                 'max_score' : float(max_score),
-                                 'pct'       : float(score) / max_score}
+            score_doc = {'score'     : float(score),
+                         'max_score' : float(max_score),
+                         'pct'       : float(score) / max_score}
 
-            metadata.metamap = metamap
+            update_doc = {'cc_score'   : score_doc,
+                          'cc_results' : cc_results,
+                          'metamap'    : metamap}
+
+            for mr in metadata.metadata:
+                if mr['service_id'] == service_id and mr['checker'] == checker_name:
+                    mr.update(update_doc)
+                    break
+            else:
+                metarecord = {'service_id': service_id,
+                              'checker'   : unicode(checker_name)}
+                metarecord.update(update_doc)
+                metadata.metadata.append(metarecord)
 
             metadata.updated = datetime.utcnow()
             metadata.save()
@@ -114,9 +125,11 @@ class SosHarvest(Harvester):
         scores   = self.ccheck_service()
         metamap  = self.metamap_service()
         try:
-            self.save_ccheck_service(scores, metamap)
-        except Exception as e:
-            app.logger.warn("could not save compliancecheck/metamap information: %s", e)
+            self.save_ccheck_service('ioos', scores, metamap)
+        finally:
+        #except Exception as e:
+            #app.logger.warn("could not save compliancecheck/metamap information: %s", e)
+            pass
 
         # List storing the stations that have already been processed in this SOS server.
         # This is kept and checked later to avoid servers that have the same stations in many offerings.
@@ -246,7 +259,7 @@ class SosHarvest(Harvester):
             metamap = self.metamap_station(sensor_ml)
 
             try:
-                self.save_ccheck_station(dataset._id, scores, metamap)
+                self.save_ccheck_station('ioos', dataset._id, scores, metamap)
             except Exception as e:
                 app.logger.warn("could not save compliancecheck/metamap information: %s", e)
 
@@ -301,13 +314,14 @@ class SosHarvest(Harvester):
 
             return metamap
 
-    def save_ccheck_service(self, scores, metamap):
+    def save_ccheck_service(self, checker_name, scores, metamap):
         """
         Saves the result of ccheck_service and metamap
         """
         return self.save_ccheck_and_metadata(self.service._id,
+                                             checker_name,
+                                             self.service._id,
                                              u'service',
-                                             u'SOS',
                                              scores,
                                              metamap)
 
@@ -353,13 +367,14 @@ class SosHarvest(Harvester):
 
             return metamap
 
-    def save_ccheck_station(self, dataset_id, scores, metamap):
+    def save_ccheck_station(self, checker_name, dataset_id, scores, metamap):
         """
         Saves the result of ccheck_station and metamap
         """
-        return self.save_ccheck_and_metadata(dataset_id,
+        return self.save_ccheck_and_metadata(self.service._id,
+                                             checker_name,
+                                             dataset_id,
                                              u'dataset',
-                                             u'SOS',
                                              scores,
                                              metamap)
 
@@ -571,7 +586,7 @@ class DapHarvest(Harvester):
         metamap = self.metamap_dataset(ncdataset)
 
         try:
-            metadata_rec = self.save_ccheck_dataset(dataset._id, scores, metamap)
+            metadata_rec = self.save_ccheck_dataset('ioos', dataset._id, scores, metamap)
         except Exception as e:
             metadata_rec = None
             app.logger.warn("could not save compliancecheck/metamap information: %s", e)
@@ -625,13 +640,14 @@ class DapHarvest(Harvester):
 
             return metamap
 
-    def save_ccheck_dataset(self, dataset_id, scores, metamap):
+    def save_ccheck_dataset(self, checker_name, dataset_id, scores, metamap):
         """
         Saves the result of ccheck_station and metamap
         """
-        return self.save_ccheck_and_metadata(dataset_id,
+        return self.save_ccheck_and_metadata(self.service._id,
+                                             checker_name,
+                                             dataset_id,
                                              u'dataset',
-                                             u'NC',
                                              scores,
                                              metamap)
 

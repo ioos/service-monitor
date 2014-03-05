@@ -40,13 +40,15 @@ def datasets(filter_provider, filter_type):
 @app.route('/datasets/<ObjectId:dataset_id>', methods=['GET'])
 def show_dataset(dataset_id):
     dataset = db.Dataset.find_one({'_id':dataset_id})
-    for s in dataset.services:
-        s['geojson'] = json.dumps(s['geojson'])
 
     # get cc/metamap
-    metadata = db.Metadata.find_one({'ref_id':dataset._id})
+    metadata_parent = db.Metadata.find_one({'ref_id':dataset._id})
 
-    return render_template('show_dataset.html', dataset=dataset, metadata=metadata)
+    for s in dataset.services:
+        s['geojson'] = json.dumps(s['geojson'])
+        s['metadata'] = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == s['service_id']}
+
+    return render_template('show_dataset.html', dataset=dataset)
 
 @app.route('/datasets/removeall', methods=['GET'])
 def removeall():

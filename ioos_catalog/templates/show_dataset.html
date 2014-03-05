@@ -67,9 +67,10 @@
 
 
       <h4>Metamap</h4>
+      {%- for checker, metadata in s['metadata'].iteritems() %}
+      <h5>{{ checker }}</h5>
       <div class="row">
         <div class="col-lg-8">
-          {%- if metadata %}
           <dl class="dl-horizontal">
             {%- for k,v in metadata.metamap|dictsort %}
             <dt>{{ k|trim_star }}</dt>
@@ -86,9 +87,6 @@
             </dd>
             {%- endfor %}
           </dl>
-          {%- else %}
-          <p>None collected!</p>
-          {%- endif %}
         </div>
         <div class="col-lg-4">
           {%- if metadata %}
@@ -102,10 +100,10 @@
             <dd>{{metadata.cc_score.score }}<small>/{{metadata.cc_score.max_score}}</small> ({{ "%.1f"|format(metadata.cc_score.pct * 100) }}%)</dd>
           </dl>
           {%- else %}
-
           {%- endif %}
         </div>
       </div>
+      {%- endfor %}
 
       <script type="text/javascript">
         $(function () {

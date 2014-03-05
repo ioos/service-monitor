@@ -82,18 +82,26 @@
 
   {%- if service.service_type == 'SOS' %}
   <h4>Metamap</h4>
+  {%- for checker, metadata in metadatas.iteritems() %}
+  <h5>{{ checker }}</h5>
   <div class="row">
     <div class="col-lg-8">
-      {%- if metadata %}
       <dl class="dl-horizontal">
         {%- for k,v in metadata.metamap|dictsort %}
-        <dt>{{ k }}</dt>
-        <dd>{{ v }}</dd>
+        <dt>{{ k|trim_star}}</dt>
+        <dd>
+        {%- if v|is_list %}
+        <ul class="list-unstyled">
+          {%- for vv in v %}
+          <li>{{ vv }}</li>
+          {%- endfor %}
+        </ul>
+        {%- else %}
+        {{ v }}
+        {%- endif %}
+        </dd>
         {%- endfor %}
       </dl>
-      {%- else %}
-      <p>None collected!</p>
-      {%- endif %}
     </div>
     <div class="col-lg-4">
       {%- if metadata %}
@@ -107,10 +115,11 @@
         <dd>{{metadata.cc_score.score }}<small>/{{metadata.cc_score.max_score}}</small> ({{ "%.1f"|format(metadata.cc_score.pct * 100) }}%)</dd>
       </dl>
       {%- else %}
-
       {%- endif %}
+
     </div>
   </div>
+  {%- endfor %}
   {%- endif %}
 
   <h4>Harvested Datasets</h4>
