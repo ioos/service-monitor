@@ -26,7 +26,7 @@ class ServiceForm(Form):
     interval           = IntegerField(u'Update Interval', description="In seconds")
 
 @app.route('/services/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
-@app.route('/services/filter/<filter_provider>/<filter_type>', methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>/<filter_type>', methods=['GET'])
 def services(filter_provider, filter_type):
     filters = {}
 
