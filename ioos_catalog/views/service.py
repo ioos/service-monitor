@@ -5,8 +5,9 @@ from pymongo import DESCENDING
 from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response
 from wtforms import TextField, IntegerField, SelectField
+from bson import json_util
 
-from ioos_catalog import app, db, scheduler
+from ioos_catalog import app, db, scheduler, support_jsonp
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
@@ -25,9 +26,12 @@ class ServiceForm(Form):
     contact            = TextField(u'Contact Emails', description="A list of emails separated by commas")
     interval           = IntegerField(u'Update Interval', description="In seconds")
 
-@app.route('/services/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
-@app.route('/services/filter/<path:filter_provider>/<filter_type>', methods=['GET'])
-def services(filter_provider, filter_type):
+@app.route('/services/', defaults={'filter_provider':None, 'filter_type':None, 'format':None}, methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>', defaults={'filter_type':None, 'format':None}, methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>/<filter_type>', defaults={'format':None}, methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>/<filter_type>/<format>', methods=['GET'])
+@support_jsonp
+def services(filter_provider, filter_type, format):
     filters = {}
 
     if filter_provider is not None and filter_provider != "null":
@@ -59,6 +63,10 @@ def services(filter_provider, filter_type):
         else:
             s.avg_operational_status  = 0
             s.avg_response_time       = None
+
+    if format is not None and format == 'json':
+        resp = json.dumps({'services':services}, default=json_util.default)
+        return Response(resp, mimetype='application/json')
 
     # get TLD grouped statistics
     tld_stats = {}

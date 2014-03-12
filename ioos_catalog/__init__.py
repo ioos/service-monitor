@@ -1,7 +1,9 @@
 import os
 import datetime
+import json
+from functools import wraps
 
-from flask import Flask
+from flask import Flask, redirect, request, current_app
 
 # Create application object
 app = Flask(__name__)
@@ -138,6 +140,19 @@ def slugify(value):
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
     value = unicode(re.sub('[^\w\s-]', '', value).strip())
     return unicode(re.sub('[-\s]+', '-', value))
+
+# from https://gist.github.com/aisipos/1094140
+def support_jsonp(f):
+    """Wraps JSONified output for JSONP"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        callback = request.args.get('callback', False)
+        if callback:
+            content = str(callback) + '(' + str(f(*args,**kwargs).data) + ')'
+            return current_app.response_class(content, mimetype='application/javascript')
+        else:
+            return f(*args, **kwargs)
+    return decorated_function
 
 # Import everything
 import ioos_catalog.views
