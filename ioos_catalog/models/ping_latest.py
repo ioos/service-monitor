@@ -43,7 +43,7 @@ class PingLatest(BaseDocument):
 
     indexes = [
         {
-            'fields': ['service_id']
+            'fields': ['service_id', 'updated']
         },
     ]
 
