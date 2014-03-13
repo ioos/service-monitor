@@ -56,13 +56,8 @@ class Stat(BaseDocument):
         return stats
 
     @classmethod
-    def latest_stats_by_service(self, service_ids=None):
-        match_criteria = {}
-        if service_ids is not None:
-            match_criteria['service_id'] = {'$in':service_ids}
-
-        finds = db.Stat.aggregate([{'$match': match_criteria},
-                                   {'$group':{'_id':'$service_id',
+    def latest_stats_by_service(self):
+        finds = db.Stat.aggregate([{'$group':{'_id':'$service_id',
                                               'when': {'$max':'$created'}}}])
 
         retval = {}
@@ -81,7 +76,7 @@ class Stat(BaseDocument):
         return retval
 
     @classmethod
-    def latest_stats_by_service_by_time(self, start_time=None, end_time=None, time_delta=None, service_ids=None):
+    def latest_stats_by_service_by_time(self, start_time=None, end_time=None, time_delta=None):
         if end_time is None:
             end_time = datetime.utcnow()
 
@@ -91,11 +86,7 @@ class Stat(BaseDocument):
             else:
                 start_time = datetime.utcfromtimestamp(0)   # 1970
 
-        match_criteria = {'created': {'$gte':start_time, '$lte':end_time}}
-        if service_ids is not None:
-            match_criteria['service_id'] = {'$in':service_ids}
-
-        finds = db.Stat.aggregate([{'$match': match_criteria},
+        finds = db.Stat.aggregate([{'$match': {'created': {'$gte':start_time, '$lte':end_time}}},
                                    {'$group': {'_id': '$service_id',
                                                'response_time': {'$max':'$response_time'},
                                                'operational_status': {'$max':'$operational_status'}}}])
