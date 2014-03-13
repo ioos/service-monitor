@@ -6,6 +6,7 @@ from ioos_catalog import app, db, scheduler
 from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.harvest import harvest
+import requests
 
 @db.register
 class PingLatest(BaseDocument):
@@ -46,6 +47,49 @@ class PingLatest(BaseDocument):
             'fields': ['service_id', 'updated']
         },
     ]
+
+    @classmethod
+    def get_for_service(cls, service_id):
+        """
+        Returns or creates a new PingLatest object for the given service id.
+
+        A new one will not be saved automatically.
+        """
+        pl = db.PingLatest.find_one({'service_id':service_id})
+        if not pl:
+            pl = db.PingLatest()
+            pl.service_id = service_id
+
+        return pl
+
+    def ping_service(self):
+        """
+        Ping the service, record its entry in the correct index.
+
+        You are responsible for saving.
+
+        Returns a 2-tuple: the index of the last operation, and a boolean if the service has flipped.
+        """
+        s = db.Service.find_one({'_id':self.service_id})
+        assert s is not None
+
+        last = self.last_operational_status
+        dt   = datetime.utcnow()
+
+        try:
+            r = requests.get(s.url, timeout=15)
+
+            response_time = r.elapsed.microseconds / 1000
+            response_code = r.status_code
+            operational_status = True if r.status_code in [200,400] else False
+        except (requests.ConnectionError, requests.HTTPError):
+            response_time = None
+            response_code = -1
+            operational_status = False
+
+        idx = self.set_ping_data(dt, response_time, response_code, operational_status)
+
+        return idx, last and (last != operational_status)
 
     def get_index(self, dt):
         weekday = dt.weekday()

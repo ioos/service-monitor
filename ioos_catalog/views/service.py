@@ -199,12 +199,7 @@ def delete_service(service_id):
 
 @app.route('/services/<ObjectId:service_id>/ping', methods=['GET'])
 def ping_service(service_id):
-    st = db.Stat()
-    st.service_id = service_id
-
-    ret = st.ping_service()
-
-    st.save()
+    ret = ping_service_task(service_id)
     flash("Ping returned: %s" % ret)
     return redirect(url_for('show_service', service_id=service_id))
 
