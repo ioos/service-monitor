@@ -41,30 +41,6 @@ class Service(BaseDocument):
         by_tld = cls.aggregate(query)
         return {a['_id']:a['ids'] for a in by_tld}
 
-    def operational_status(self, num_samples=1):
-        retval = db.Stat.aggregate([{'$match':{'service_id':self._id}},
-                                    {'$sort':{'created':1}},
-                                    {'$limit':num_samples},
-                                    {'$group':{'_id':None,
-                                               'os':{'$avg':'$operational_status'}}}])
-
-        if len(retval) > 0:
-            return retval[0]['os']
-
-        return None
-
-    def response_time(self, num_samples=1):
-        retval = db.Stat.aggregate([{'$match':{'service_id':self._id}},
-                                    {'$sort':{'created':1}},
-                                    {'$limit':num_samples},
-                                    {'$group':{'_id':None,
-                                               'rt':{'$avg':'$response_time'}}}])
-
-        if len(retval) > 0:
-            return retval[0]['rt']
-
-        return None
-
     def schedule_harvest(self, cancel=True):
         """
         Starts a continuous harvest job via the rq scheduler.
