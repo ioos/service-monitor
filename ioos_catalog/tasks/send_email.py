@@ -14,9 +14,9 @@ def send(subject, recipients, cc_recipients, text_body, html_body):
 def send_service_down_email(service_id):
     with app.app_context():
         kwargs = {'service' : db.Service.find_one({'_id':service_id}),
-                  'stat'    : db.Stat.find_one({'service_id':service_id}, sort=[('created',-1)]),
-                  'last_success_stat' : db.Stat.find_one({'service_id':service_id, 'operational_status':1}, sort=[('created',-1)]) }
-        kwargs['status'] = kwargs['stat'].operational_status
+                  'stat'    : db.PingLatest.find_one({'service_id':service_id})}
+
+        kwargs['status'] = kwargs['stat'].last_operational_status
 
         subject = "[ioos] Service Status Alert (%s): %s (%s)" % ("UP" if kwargs['status'] else "DOWN", kwargs['service'].name, kwargs['service'].service_type)
 

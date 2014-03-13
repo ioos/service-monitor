@@ -4,11 +4,11 @@ changed. It is now {{"DOWN" if status == 0 else "UP"}}.
                   Name: {{ service.name }}
                    URL: {{ service.url }}
                   Type: {{ service.service_type }}
-         Last Accessed: {{ stat.created | datetimeformat }}
-             Last Ping: {{ stat.response_time }}
-           Last Status: {{ stat.response_code }}
+         Last Accessed: {{ stat.updated | datetimeformat }}
+             Last Ping: {{ stat.last_response_time }}
+           Last Status: {{ stat.last_response_code }}
 {% if status == 0 %}
-Last Successful Access: {{ last_success_stat.created | datetimeformat }}
+Last Successful Access: {{ stat.last_good_time | datetimeformat }}
 
 We will keep checking the service and you will be notified when its status changes.
 {% endif %}

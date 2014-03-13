@@ -26,20 +26,20 @@ Service Status Changed ({{"UP" if status else "DOWN"}}): {{ service.name }} ({{ 
     </tr>
     <tr>
       <td valign="top">Last Accessed:</td>
-      <td width="400" valign="top">{{ stat.created | datetimeformat }}</td>
+      <td width="400" valign="top">{{ stat.updated | datetimeformat }}</td>
     </tr>
     <tr>
       <td valign="top">Last Ping:</td>
-      <td width="400" valign="top">{{ stat.response_time }}</td>
+      <td width="400" valign="top">{{ stat.last_response_time }}</td>
     </tr>
     <tr>
       <td valign="top">Last Status:</td>
-      <td width="400" valign="top">{{ stat.response_code }}</td>
+      <td width="400" valign="top">{{ stat.last_response_code }}</td>
     </tr>
     {% if status == 0 %}
     <tr>
       <td valign="top">Last Successful Access:</td>
-      <td width="400" valign="top">{{ last_success_stat.created | datetimeformat }}</td>
+      <td width="400" valign="top">{{ stat.last_good_time | datetimeformat }}</td>
     </tr>
     {% endif %}
     <tr>
