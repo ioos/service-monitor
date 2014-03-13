@@ -9,7 +9,9 @@ from ioos_catalog.tasks.regulator import regulate
 @app.route('/', methods=['GET'])
 def index():
     counts       = db.Service.count_types()
-    stats        = db.Stat.latest(8)
+    stats        = list(db.PingLatest.find().sort([('updated',-1)]).limit(8))
+    services     = db.Service.find({'_id':{'$in':[p.service_id for p in stats]}})
+    services     = {s._id:s for s in services}
 
     # temp
     providers = sorted(db['services'].distinct('data_provider'))
@@ -30,6 +32,7 @@ def index():
                            counts_by_provider=counts_by_provider,
                            dataset_counts_by_provider=dataset_counts_by_provider,
                            stats=stats,
+                           services=services,
                            providers=providers)
 
 def serialize_date(date):

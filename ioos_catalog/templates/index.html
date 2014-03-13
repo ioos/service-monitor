@@ -84,15 +84,15 @@
         </thead>
         <tbody>
         {%- for stat in stats %}
-        <tr class="{{ "danger" if stat.operational_status == 0 }}">
+        <tr class="{{ "danger" if not stat.last_operational_status }}">
           <td></td>
           <td>
-            <a href="{{url_for('show_service', service_id=stat.service_id)}}">{{ stat.service_name }}</a><br />
-            <small>{{ stat.service_provider }} &middot; {{ stat.service_type }}</small>
+            <a href="{{url_for('show_service', service_id=stat.service_id)}}">{{ services[stat.service_id].name }}</a><br />
+            <small>{{ services[stat.service_id].data_provider }} &middot; {{ services[stat.service_id].service_type }}</small>
           </td>
-          <td>{{ stat.created | prettydate }}</td>
-          <td>{{ stat.response_code }}</td>
-          <td>{{ stat.response_time }}</td>
+          <td>{{ stat.updated | prettydate }}</td>
+          <td>{{ stat.last_response_code }}</td>
+          <td>{{ stat.last_response_time }}</td>
         </tr>
         {%- endfor %}
         </tbody>
