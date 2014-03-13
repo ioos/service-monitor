@@ -26,12 +26,12 @@ class ServiceForm(Form):
     contact            = TextField(u'Contact Emails', description="A list of emails separated by commas")
     interval           = IntegerField(u'Update Interval', description="In seconds")
 
-@app.route('/services/', defaults={'filter_provider':None, 'filter_type':None, 'format':None}, methods=['GET'])
-@app.route('/services/filter/<path:filter_provider>', defaults={'filter_type':None, 'format':None}, methods=['GET'])
-@app.route('/services/filter/<path:filter_provider>/<filter_type>', defaults={'format':None}, methods=['GET'])
-@app.route('/services/filter/<path:filter_provider>/<filter_type>/<format>', methods=['GET'])
+@app.route('/services/', defaults={'filter_provider':None, 'filter_type':None, 'oformat':None}, methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>', defaults={'filter_type':None, 'oformat':None}, methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>/<filter_type>', defaults={'oformat':None}, methods=['GET'])
+@app.route('/services/filter/<path:filter_provider>/<filter_type>/<oformat>', methods=['GET'])
 @support_jsonp
-def services(filter_provider, filter_type, format):
+def services(filter_provider, filter_type, oformat):
     filters = {}
 
     if filter_provider is not None and filter_provider != "null":
@@ -64,7 +64,7 @@ def services(filter_provider, filter_type, format):
             s.avg_operational_status  = 0
             s.avg_response_time       = None
 
-    if format is not None and format == 'json':
+    if oformat is not None and oformat == 'json':
         resp = json.dumps({'services':services}, default=json_util.default)
         return Response(resp, mimetype='application/json')
 
