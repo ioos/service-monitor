@@ -43,26 +43,41 @@ def services(filter_provider, filter_type, oformat):
     f                 = ServiceForm()
     services          = list(db.Service.find(filters))
     sids              = [s._id for s in services]
-    latest_stats      = db.Stat.latest_stats_by_service(service_ids=sids)
-    last_weekly_stats = db.Stat.latest_stats_by_service_by_time(time_delta=timedelta(days=7), service_ids=sids)
+    latest_stats      = db.PingLatest.find({'service_id':{'$in':sids}})#, {'service_id':1,
+                                                                       #  'last_operational_status':1,
+                                                                       #  'last_response_time':1,
+                                                                       #  'last_response_code':1,
+                                                                       #  'updated':1})
+    # map them down
+    latest_stats      = {p.service_id:p for p in latest_stats}
 
     for s in services:
         if s._id in latest_stats:
-            s.last_operational_status = latest_stats[s._id]['operational_status']
-            s.last_response_time      = latest_stats[s._id]['response_time']
-            s.last_response_code      = latest_stats[s._id]['response_code']
-            s.last_update             = latest_stats[s._id]['created']
+            stat = latest_stats[s._id]
+
+            s.last_operational_status = stat.last_operational_status
+            s.last_response_time      = stat.last_response_time
+            s.last_response_code      = stat.last_response_code
+            s.last_update             = stat.updated
+
+            # calc averages
+            #good_statuses = [x for x in stat.operational_statuses if x is not None]
+            good_responses = [x for x in stat.response_times if x is not None]
+
+            if len(good_responses):
+                total = len(stat.response_times)
+
+                #s.avg_operational_status  = float(good_statuses.count(True)) / total
+                s.avg_response_time       = float(sum(good_responses)) / total
+            else:
+                #s.avg_operational_status  = 0
+                s.avg_response_time       = None
         else:
             s.last_operational_status = 0
             s.last_response_time      = None
             s.last_response_code      = None
             s.last_update             = None
-
-        if s._id in last_weekly_stats:
-            s.avg_operational_status  = last_weekly_stats[s._id]['operational_status']
-            s.avg_response_time       = last_weekly_stats[s._id]['response_time']
-        else:
-            s.avg_operational_status  = 0
+            #s.avg_operational_status  = 0
             s.avg_response_time       = None
 
     if oformat is not None and oformat == 'json':
@@ -71,16 +86,13 @@ def services(filter_provider, filter_type, oformat):
 
     # get TLD grouped statistics
     tld_stats = {}
-    filter_ids = None
-    if len(filters):
-        filter_ids = [s._id for s in services]
 
-    tld_groups = db.Service.group_by_tld(filter_ids)
+    tld_groups = db.Service.group_by_tld(sids)
     for k, v in tld_groups.iteritems():
         tld_stats[k] = {'ok':0, 'total':0}
         for sid in v:
             tld_stats[k]['total'] += 1
-            if sid in latest_stats and int(latest_stats[sid]['operational_status']) == 1:
+            if sid in latest_stats and latest_stats[sid].last_operational_status:
                 tld_stats[k]['ok'] += 1
 
     # get list of unique providers in system
