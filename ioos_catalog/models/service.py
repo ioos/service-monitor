@@ -80,6 +80,7 @@ class Service(BaseDocument):
                                  args=(unicode(self._id),),
                                  interval=86400,
                                  repeat=None,
+                                 timeout=120,
                                  result_ttl=86400 * 2)
         self['harvest_job_id'] = unicode(job.id)
         self.save()
@@ -105,6 +106,7 @@ class Service(BaseDocument):
                                  args=(unicode(self._id),),
                                  interval=self.interval,
                                  repeat=None,
+                                 timeout=15,
                                  result_ttl=self.interval * 2)
         self['ping_job_id'] = unicode(job.id)
         self.save()
