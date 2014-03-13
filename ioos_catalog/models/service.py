@@ -180,21 +180,44 @@ class Service(BaseDocument):
             start_time = start_time.replace(tzinfo=pytz.utc)
         start_time = start_time.astimezone(pytz.utc)
 
-        service_stats = db.Stat.aggregate([{'$match':{'created':{'$gte':start_time,
-                                                                 '$lte':end_time}}},
-                                           {'$sort':{'created':1}},
-                                           {'$group':{'_id':'$service_id',
-                                                      'total': {'$sum':1},
-                                                      'status': {'$push':'$operational_status'},
-                                                      'current': {'$last':'$operational_status'}}},
-                                           {'$unwind':'$status'},
-                                           {'$match':{'status':0}},
-                                           {'$group':{'_id':'$_id',
-                                                      'total':{'$last':'$total'},
-                                                      'current':{'$last':'$current'},
-                                                      'fails':{'$sum':1}}}])
+        # can only support last 7 days with rolling window
+        aet = datetime.utcnow() - timedelta(days=7)
+        aet = aet.replace(tzinfo=pytz.utc)
 
-        failed_services = {x[u'_id']:(x[u'fails'], x[u'total'], x[u'current']) for x in service_stats}
+        if start_time < aet:
+            #raise ValueError("Can't support time more than 7 days ago")
+            return {}, [], end_time, start_time
+
+        # get all PLs
+        pls = db.PingLatest.find({}, {'service_id':1,
+                                      'last_operational_status': 1,
+                                      'operational_statuses': 1,
+                                      'last_good_time': 1})
+
+        failed_services = {}
+
+        for p in pls:
+
+            sidx = p.get_index(start_time)
+            eidx = p.get_index(end_time)
+
+            if sidx < eidx:
+                statuses = p.operational_statuses[sidx:eidx]
+            else:
+                statuses = p.operational_statuses[sidx:168] + p.operational_statuses[0:eidx]
+
+            count = 0
+            good = 0
+            for s in statuses:
+                if s is not None:
+                    count+=1
+                    if s:
+                        good+=1
+
+            if count == good:
+                continue
+
+            failed_services[p.service_id] = (good, count, p.last_operational_status)
 
         # retrieve all services
         services = list(db.Service.find({'_id':{'$in':failed_services.keys()}}).sort([('data_provider', 1), ('name', 1)]))
