@@ -1,1 +1,1 @@
-from ioos_catalog.models import service, stat, dataset, metadata, migrations
+from ioos_catalog.models import service, stat, dataset, ping_latest, migrations

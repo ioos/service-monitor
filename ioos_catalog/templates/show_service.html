@@ -65,18 +65,12 @@
     <dl class="dl-horizontal col-lg-4">
       <dt>Monitoring</dt>
       <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.ping_job_id else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
+      <dt>Last Attempt</dt>
+      <dd><abbr title="{{ last_ping['time'] | datetimeformat }}">{{ last_ping['time'] | prettydate }}</abbr></dd>
       <dt>Last Ping</dt>
-      <dd><abbr title="{{ pings['last'] | datetimeformat }}">{{ pings['last'] | prettydate }}</abbr></dd>      
-      <dt>Next Ping</dt>
-      <dd><abbr title="{{ pings['next'] | datetimeformat }}">{{ pings['next'] | prettydate }}</abbr></dd>
-
-      <br />
-      <dt>Harvesting</dt>
-      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.harvest_job_id else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
-      <dt>Last Harvest</dt>
-      <dd><abbr title="{{ harvests['last'] | datetimeformat }}">{{ harvests['last'] | prettydate }}</abbr></dd>      
-      <dt>Next Harvest</dt>
-      <dd><abbr title="{{ harvests['next'] | datetimeformat }}">{{ harvests['next'] | prettydate }}</abbr></dd>
+      <dd>{{ last_ping['response_time'] }}</dd>
+      <dt>Last Status</dt>
+      <dd>{{ last_ping['operational_status'] | status_icon | safe }}</dd>
     </dl>
   </div>
 

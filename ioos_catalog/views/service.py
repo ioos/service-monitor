@@ -101,40 +101,12 @@ def show_service(service_id):
 
     service = db.Service.find_one({'_id':service_id})
 
-    stats = list(db.Stat.find({'service_id':service_id,
-                          'created':{'$lte':now,
-                                     '$gte':week_ago}}).sort('created', DESCENDING))
-
-    avg_response_time = sum([x.response_time for x in stats if x.response_time]) / len(stats) if len(stats) else 0
-
-    ping_data = {'good':[], 'bad':[]}
-    for i, x in enumerate(reversed(stats)):
-        v = {'x':i, 'y':x.response_time or 250}
-        if x.operational_status:
-            ping_data['good'].append(v)
-            ping_data['bad'].append({'x':i,'y':0})
-        else:
-            ping_data['bad'].append(v)
-            ping_data['good'].append({'x':i,'y':0})
-
     # Organize datasets by type.  Include the UID and _id of each dataset in the output so we can link to them.
     datasets = db.Dataset.aggregate([
         {'$match'   : { 'services.service_id' : service_id }},
         {'$group'   : { '_id'       : '$services.asset_type',
                         'datasets'  : { '$push' : { 'uid' : '$uid', '_id' : '$_id' } } } }
-
     ])
-
-    harvests = { 'next' : None, 'last' : None }
-    pings    = { 'next' : None, 'last' : None }
-    for job in scheduler.get_jobs(with_times=True):
-        if job[0].id == service.harvest_job_id:
-            harvests['last'] = job[0].ended_at
-            harvests['next'] = job[1]
-        elif job[0].id == service.ping_job_id:
-            if len(stats) > 0:
-                pings['last'] = stats[0].created
-            pings['next'] = job[1]
 
     # get cc/metamap
     metadata_parent = db.Metadata.find_one({'ref_id':service._id})
@@ -142,7 +114,36 @@ def show_service(service_id):
     if metadata_parent:
         metadatas = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == service._id}
 
-    return render_template('show_service.html', service=service, stats=stats, avg_response_time=avg_response_time, ping_data=ping_data, datasets=datasets, harvests=harvests, pings=pings, metadatas=metadatas)
+    # get rolling ping window
+    ping_data = {'good':[], 'bad':[]}
+    last_ping = { 'time'               : None,
+                  'response_time'      : None,
+                  'operational_status' : None }
+
+    pl = db.PingLatest.find_one({'service_id':service._id})
+    if pl:
+        # set ping data for graph
+        latest_pings, latest_statuses = pl.get_current_data()
+        for i in xrange(0, len(latest_pings)):
+            v = {'x':i, 'y':latest_pings[i] or 0}
+            if latest_statuses[i]:
+                ping_data['good'].append(v)
+                ping_data['bad'].append({'x':i, 'y':0})
+            else:
+                ping_data['bad'].append(v)
+                ping_data['good'].append({'x':i, 'y':0})
+
+        # latest ping info
+        last_ping.update({'time':pl.updated,
+                          'response_time': pl.last_response_time,
+                          'operational_status': pl.last_operational_status})
+
+    return render_template('show_service.html',
+                           service=service,
+                           ping_data=ping_data,
+                           datasets=datasets,
+                           last_ping=last_ping,
+                           metadatas=metadatas)
 
 @app.route('/services/', methods=['POST'])
 def add_service():
