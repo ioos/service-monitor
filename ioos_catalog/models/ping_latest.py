@@ -68,13 +68,14 @@ class PingLatest(BaseDocument):
 
         You are responsible for saving.
 
-        Returns a 2-tuple: the index of the last operation, and a boolean if the service has flipped.
+        Returns a 2-tuple: if the data was new aka wasn't replacing a fresh ping value, and a boolean if the service has flipped.
         """
         s = db.Service.find_one({'_id':self.service_id})
         assert s is not None
 
-        last = self.last_operational_status
-        dt   = datetime.utcnow()
+        last     = self.last_operational_status
+        last_idx = self.get_index(self.updated)
+        dt       = datetime.utcnow()
 
         try:
             r = requests.get(s.url, timeout=15)
@@ -89,7 +90,7 @@ class PingLatest(BaseDocument):
 
         idx = self.set_ping_data(dt, response_time, response_code, operational_status)
 
-        return idx, last and (last != operational_status)
+        return last_idx != idx, last and (last != operational_status)
 
     def get_index(self, dt):
         weekday = dt.weekday()
