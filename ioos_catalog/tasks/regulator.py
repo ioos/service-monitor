@@ -13,21 +13,26 @@ from ioos_catalog.tasks.send_email import send_daily_report_email
 def regulate():
     with app.app_context():
 
+        # Get function and args of
+        jobs = scheduler.get_jobs()
+
         # Get services that have not been updated in two weeks and remove them.
         # The reindex job sets the 'updated' field.  The below logic should effectively remove
         # services that the reindex task has not seen in two weeks.
-        two_weeks_ago = (datetime.utcnow() - timedelta(weeks=2)).replace(tzinfo=pytz.utc)
-        deletes = [s for s in db.Service.find() if s.updated.replace(tzinfo=pytz.utc).astimezone(pytz.utc) < two_weeks_ago]
+        two_weeks_ago = datetime.utcnow() - timedelta(weeks=2)
+        #deletes = list(db.Service.find({'updated':{'$lte':two_weeks_ago}}))
+
+        # don't worry about DELETES right now
+        # @TODO: set inactive
+        deletes = []
         for d in deletes:
-            d.cancel_ping()
-            d.cancel_harvest()
+            pass
+            #d.cancel_ping()
+            #d.cancel_harvest()
             # I don't think we want to delete these.
             # Lets make deletion a manual process.
             #d.delete()
             # TODO: Now delete the stats that were collected for this service.
-
-        # Get function and args of
-        jobs = scheduler.get_jobs()
 
         # Make sure a daily report job is running
         daily_email_jobs = [job for job in jobs if job.func == send_daily_report_email]
@@ -62,10 +67,12 @@ def regulate():
                 timeout=1200                       # Default timeout of 180 seconds may not be enough
             )
 
+        all_services = list(db.Service.find())
+
         # Make sure each service has a ping job
         stat_jobs = [unicode(job.args[0]) for job in jobs if job.func == ping_service_task]
         # Get services that don't have jobs
-        need_ping = [s for s in db.Service.find() if unicode(s._id) not in stat_jobs]
+        need_ping = [s for s in all_services if unicode(s._id) not in stat_jobs]
         # Schedule the ones that do not
         for s in need_ping:
             s.schedule_ping(cancel=False)
@@ -73,7 +80,7 @@ def regulate():
         # Make sure each service has a harvest job
         harvest_jobs = [unicode(job.args[0]) for job in jobs if job.func == harvest]
         # Get services that don't have jobs
-        need_harvest = [s for s in db.Service.find() if unicode(s._id) not in harvest_jobs]
+        need_harvest = [s for s in all_services if unicode(s._id) not in harvest_jobs]
         # Schedule the ones that do not
         for s in need_harvest:
             s.schedule_harvest(cancel=False)
