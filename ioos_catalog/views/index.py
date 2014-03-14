@@ -69,18 +69,29 @@ def jobs():
 @app.route('/regulate', methods=['GET'])
 def reg():
 
-    jobs = map(lambda x: x.func, scheduler.get_jobs())
+    existed = False
 
-    if regulate not in jobs:
-        scheduler.schedule(
-            scheduled_time=datetime.utcnow(), # Time for first execution
-            func=regulate,                    # Function to be queued
-            interval=3600,                    # Time before the function is called again, in seconds
-            repeat=None,                      # Repeat this number of times (None means repeat forever)
-            result_ttl=3600*2                 # How long to keep the results
-        )
-        return jsonify({"message" : "regulated"})
-    return jsonify({ "message" : "no need to regulate" })
+    jobs = scheduler.get_jobs()
+    for j in jobs:
+        if j.func == regulate:
+            existed = True
+            scheduler.cancel(j)
+            break
+
+    scheduler.schedule(
+        scheduled_time=datetime.utcnow(), # Time for first execution
+        func=regulate,                    # Function to be queued
+        interval=3600,                    # Time before the function is called again, in seconds
+        repeat=None,                      # Repeat this number of times (None means repeat forever)
+        result_ttl=3600*2                 # How long to keep the results
+    )
+
+    if existed:
+        msg = "re-scheduled"
+    else:
+        msg = "regulated"
+
+    return jsonify({"message" : msg})
 
 @app.route('/crossdomain.xml', methods=['GET'])
 def crossdomain():
