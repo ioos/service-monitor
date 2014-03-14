@@ -82,7 +82,7 @@ class Service(BaseDocument):
                                  args=(unicode(self._id),),
                                  interval=self.interval,
                                  repeat=None,
-                                 timeout=15,
+                                 timeout=30,
                                  result_ttl=self.interval * 2)
         self['ping_job_id'] = unicode(job.id)
         self.save()
