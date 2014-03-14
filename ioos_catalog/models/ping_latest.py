@@ -83,7 +83,7 @@ class PingLatest(BaseDocument):
             response_time = r.elapsed.microseconds / 1000
             response_code = r.status_code
             operational_status = True if r.status_code in [200,400] else False
-        except (requests.ConnectionError, requests.HTTPError):
+        except (requests.ConnectionError, requests.HTTPError, requests.Timeout):
             response_time = None
             response_code = -1
             operational_status = False
