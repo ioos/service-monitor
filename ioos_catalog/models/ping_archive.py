@@ -62,7 +62,7 @@ class PingArchive(BaseDocument):
 
     def add_ping_data(self, response_time, operational_status):
         self.num_entries += 1
-        self.response_time_sum += response_time
+        self.response_time_sum += response_time or 0
         self.operational_status_sum += (1 if operational_status else 0)
 
     @property
