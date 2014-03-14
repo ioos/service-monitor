@@ -93,6 +93,8 @@ class PingLatest(BaseDocument):
         return last_idx != idx, last and (last != operational_status)
 
     def get_index(self, dt):
+        if dt is None:
+            return None
         weekday = dt.weekday()
         return weekday * 24 + dt.hour
 
