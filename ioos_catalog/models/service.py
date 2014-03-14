@@ -51,6 +51,10 @@ class Service(BaseDocument):
         if cancel is True:
             self.cancel_harvest()
 
+        # we only harvest DAP/SOS at the time being, don't waste job time here
+        if service_type not in ['DAP', 'SOS']:
+            return
+
         job = scheduler.schedule(scheduled_time=datetime.utcnow(),
                                  func=harvest,
                                  args=(unicode(self._id),),
