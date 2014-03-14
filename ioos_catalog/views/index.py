@@ -75,9 +75,9 @@ def reg():
         scheduler.schedule(
             scheduled_time=datetime.utcnow(), # Time for first execution
             func=regulate,                    # Function to be queued
-            interval=600,                     # Time before the function is called again, in seconds
+            interval=3600,                    # Time before the function is called again, in seconds
             repeat=None,                      # Repeat this number of times (None means repeat forever)
-            result_ttl=1200                   # How long to keep the results
+            result_ttl=3600*2                 # How long to keep the results
         )
         return jsonify({"message" : "regulated"})
     return jsonify({ "message" : "no need to regulate" })
