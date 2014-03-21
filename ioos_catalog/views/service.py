@@ -50,15 +50,22 @@ def services(filter_provider, filter_type, oformat):
                                                                        #  'updated':1})
     # map them down
     latest_stats      = {p.service_id:p for p in latest_stats}
+    service_stats     = {} # mapping of service ids to summary stats about that service, or blanked versions
 
     for s in services:
+        service_stats[s._id] = {'last_operational_status' : 0,
+                                'last_response_time'      : None,
+                                'last_response_code'      : None,
+                                'last_update'             : None,
+                                'avg_response_time'       : None}
+
         if s._id in latest_stats:
             stat = latest_stats[s._id]
 
-            s.last_operational_status = stat.last_operational_status
-            s.last_response_time      = stat.last_response_time
-            s.last_response_code      = stat.last_response_code
-            s.last_update             = stat.updated
+            service_stats[s._id]['last_operational_status'] = stat.last_operational_status
+            service_stats[s._id]['last_response_time']      = stat.last_response_time
+            service_stats[s._id]['last_response_code']      = stat.last_response_code
+            service_stats[s._id]['last_update']             = stat.updated
 
             # calc averages
             #good_statuses = [x for x in stat.operational_statuses if x is not None]
@@ -67,21 +74,14 @@ def services(filter_provider, filter_type, oformat):
             if len(good_responses):
                 total = len(stat.response_times)
 
-                #s.avg_operational_status  = float(good_statuses.count(True)) / total
-                s.avg_response_time       = float(sum(good_responses)) / total
+                #service_stats[s._id]['avg_operational_status  = float(good_statuses.count(True)) / total
+                service_stats[s._id]['avg_response_time']       = float(sum(good_responses)) / total
             else:
-                #s.avg_operational_status  = 0
-                s.avg_response_time       = None
-        else:
-            s.last_operational_status = 0
-            s.last_response_time      = None
-            s.last_response_code      = None
-            s.last_update             = None
-            #s.avg_operational_status  = 0
-            s.avg_response_time       = None
+                #service_stats[s._id]['avg_operational_status  = 0
+                service_stats[s._id]['avg_response_time']       = None
 
     if oformat is not None and oformat == 'json':
-        resp = json.dumps({'services':services}, default=json_util.default)
+        resp = json.dumps({'services':[dict(dict(s).items() + service_stats[s._id].items()) for s in services]}, default=json_util.default)
         return Response(resp, mimetype='application/json')
 
     # get TLD grouped statistics
@@ -98,7 +98,7 @@ def services(filter_provider, filter_type, oformat):
     # get list of unique providers in system
     providers = db["services"].distinct('data_provider')
 
-    return render_template('services.html', services=services, form=f, tld_stats=tld_stats, providers=providers, filters=filters)
+    return render_template('services.html', services=services, service_stats=service_stats, form=f, tld_stats=tld_stats, providers=providers, filters=filters)
 
 @app.template_filter('status_icon')
 def status_icon_helper(status_val):

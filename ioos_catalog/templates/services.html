@@ -52,15 +52,16 @@
               <td>{{ tld_stats[service_group.grouper]['ok'] }}/{{ tld_stats[service_group.grouper]['total'] }}</td>
             </tr>
             {%- for service in service_group.list %}
-            <tr class="{{ "danger" if service.last_operational_status == 0 and service.last_update }}">
+            {%- set ss = service_stats[service._id] %}
+            <tr class="{{ "danger" if ss['last_operational_status'] == 0 and ss['last_update'] }}">
                 <td>{{ service.data_provider }}</td>
                 <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
-                <td><abbr title="{{ service.last_update | datetimeformat }}">{{ service.last_update | prettydate }}</abbr></td>
-                <td>{{ service.last_response_code }}</td>
-                <td>{{ service.last_response_time }}</td>
-                <td>{{ service.avg_response_time | float | round }}</td>
-                <td>{{ service.last_operational_status | status_icon | safe }}</td>
+                <td><abbr title="{{ ss['last_update'] | datetimeformat }}">{{ ss['last_update'] | prettydate }}</abbr></td>
+                <td>{{ ss['last_response_code'] }}</td>
+                <td>{{ ss['last_response_time'] }}</td>
+                <td>{{ ss['avg_response_time'] | float | round }}</td>
+                <td>{{ ss['last_operational_status'] | status_icon | safe }}</td>
             </tr>
             {%- endfor %}
          </tbody>
