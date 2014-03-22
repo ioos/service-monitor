@@ -7,7 +7,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, R
 from wtforms import TextField, IntegerField, SelectField
 from bson import json_util
 
-from ioos_catalog import app, db, scheduler, support_jsonp
+from ioos_catalog import app, db, scheduler, support_jsonp, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
@@ -173,6 +173,7 @@ def add_service():
     return redirect(url_for('services'))
 
 @app.route('/services/<ObjectId:service_id>', methods=['POST'])
+@requires_auth
 def edit_service_submit(service_id):
     f = ServiceForm()
     service = db.Service.find_one({'_id':service_id})
@@ -190,6 +191,7 @@ def edit_service_submit(service_id):
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/delete', methods=['POST'])
+@requires_auth
 def delete_service(service_id):
     service = db.Service.find_one( { '_id' : service_id } )
     service.delete()
@@ -198,12 +200,14 @@ def delete_service(service_id):
     return redirect(url_for('services'))
 
 @app.route('/services/<ObjectId:service_id>/ping', methods=['GET'])
+@requires_auth
 def ping_service(service_id):
     ret = ping_service_task(service_id)
     flash("Ping returned: %s" % ret)
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/harvest', methods=['GET'])
+@requires_auth
 def harvest_service(service_id):
     s = db.Service.find_one({ '_id' : service_id })
 
@@ -212,6 +216,7 @@ def harvest_service(service_id):
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['POST'])
+@requires_auth
 def start_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
@@ -222,6 +227,7 @@ def start_monitoring_service(service_id):
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/stop_monitoring', methods=['POST'])
+@requires_auth
 def stop_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
@@ -232,6 +238,7 @@ def stop_monitoring_service(service_id):
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/start_harvesting', methods=['POST'])
+@requires_auth
 def start_harvesting_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
@@ -242,6 +249,7 @@ def start_harvesting_service(service_id):
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/stop_harvesting', methods=['POST'])
+@requires_auth
 def stop_harvesting_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
@@ -252,12 +260,14 @@ def stop_harvesting_service(service_id):
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/edit', methods=['GET'])
+@requires_auth
 def edit_service(service_id):
     service = db.Service.find_one({'_id':service_id})
     f = ServiceForm(obj=service)
     return render_template('edit_service.html', service=service, form=f)
 
 @app.route('/services/reindex', methods=['GET'])
+@requires_auth
 def reindex():
     jobs = scheduler.get_jobs()
 
@@ -298,6 +308,7 @@ def dev_atom_feed():
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
 
 @app.route('/services/schedule_all', methods=['GET'])
+@requires_auth
 def schedule_all():
     services = db.Service.find({'ping_job_id':None})
     map(lambda x: x.schedule_ping(), services)
@@ -306,6 +317,7 @@ def schedule_all():
     return redirect(url_for('services'))
 
 @app.route('/services/stop_all', methods=['GET'])
+@requires_auth
 def stop_all():
     services = db.Service.find({'ping_job_id': {'$ne':None}})
     map(lambda x: x.cancel_ping(), services)
