@@ -1,6 +1,8 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 import pytz
+import requests
+
 from ioos_catalog import app, db, scheduler
 from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.tasks.stat import ping_service_task
@@ -66,6 +68,23 @@ class Service(BaseDocument):
         self.save()
 
         return job.id
+
+    def ping(self, timeout=None):
+        """
+        Performs a service ping.
+
+        Returns a 2-tuple of response time in ms, response code.
+        """
+        url = self.url
+        if self.service_type == 'DAP':
+            url += '.dds'       # get a description of the data back from OPeNDAP (this gives proper http codes)
+
+        r = requests.get(url, timeout=timeout)
+
+        response_time = r.elapsed.microseconds / 1000
+        response_code = r.status_code
+
+        return response_time, response_code
 
     def schedule_ping(self, cancel=True):
         """

@@ -78,11 +78,8 @@ class PingLatest(BaseDocument):
         dt       = datetime.utcnow()
 
         try:
-            r = requests.get(s.url, timeout=15)
-
-            response_time = r.elapsed.microseconds / 1000
-            response_code = r.status_code
-            operational_status = True if r.status_code in [200,400] else False
+            response_time, response_code = s.ping(timeout=15)
+            operational_status = True if response_code in [200,400] else False
         except (requests.ConnectionError, requests.HTTPError, requests.Timeout):
             response_time = None
             response_code = -1
