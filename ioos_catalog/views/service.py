@@ -32,6 +32,13 @@ class ServiceForm(Form):
 @app.route('/services/filter/<path:filter_provider>/<filter_type>/<oformat>', methods=['GET'])
 @support_jsonp
 def services(filter_provider, filter_type, oformat):
+
+    # it's hard to get flask to route correctly with paths/json - fixup for "/" providers with no oformat
+    if oformat == "null":
+        filter_provider = "/".join([filter_provider, filter_type])
+        filter_type = "null"
+        oformat = None
+
     filters = {}
 
     if filter_provider is not None and filter_provider != "null":
