@@ -3,10 +3,10 @@ import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
-from flask import render_template, redirect, url_for, request, flash, jsonify, Response
+from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
 from wtforms import TextField, IntegerField, SelectField
 
-from ioos_catalog import app, db, scheduler
+from ioos_catalog import app, db, scheduler, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
@@ -16,15 +16,22 @@ class DatasetFilterForm(Form):
     asset_type = SelectField('Asset Type')
 
 @app.route('/datasets/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
-@app.route('/datasets/filter/<filter_provider>/<filter_type>', methods=['GET'])
+@app.route('/datasets/filter/<path:filter_provider>/<filter_type>', methods=['GET'])
 def datasets(filter_provider, filter_type):
     filters = {}
+    titleparts = []
 
     if filter_provider is not None and filter_provider != "null":
+        titleparts.append(filter_provider)
         filters['services.data_provider'] = filter_provider
 
     if filter_type is not None and filter_type != "null":
+        titleparts.append(filter_type)
         filters['services.asset_type'] = filter_type
+
+    # build title
+    titleparts.append("Datasets")
+    g.title = " ".join(titleparts)
 
     f          = DatasetFilterForm()
     datasets   = list(db.Dataset.find(filters))
@@ -41,6 +48,8 @@ def datasets(filter_provider, filter_type):
 def show_dataset(dataset_id):
     dataset = db.Dataset.find_one({'_id':dataset_id})
 
+    g.title = dataset.uid
+
     # get cc/metamap
     metadata_parent = db.Metadata.find_one({'ref_id':dataset._id})
 
@@ -53,6 +62,7 @@ def show_dataset(dataset_id):
     return render_template('show_dataset.html', dataset=dataset)
 
 @app.route('/datasets/removeall', methods=['GET'])
+@requires_auth
 def removeall():
     dataset = db.Dataset.find()
     for d in dataset:

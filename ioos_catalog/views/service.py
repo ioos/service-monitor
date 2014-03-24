@@ -3,7 +3,7 @@ import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
-from flask import render_template, redirect, url_for, request, flash, jsonify, Response
+from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
 from wtforms import TextField, IntegerField, SelectField
 from bson import json_util
 
@@ -40,12 +40,19 @@ def services(filter_provider, filter_type, oformat):
         oformat = None
 
     filters = {}
+    titleparts = []
 
     if filter_provider is not None and filter_provider != "null":
+        titleparts.append(filter_provider)
         filters['data_provider'] = filter_provider
 
     if filter_type is not None and filter_type != "null":
+        titleparts.append(filter_type)
         filters['service_type'] = filter_type
+
+    # build title
+    titleparts.append("Services")
+    g.title = " ".join(titleparts)
 
     f                 = ServiceForm()
     services          = list(db.Service.find(filters))
@@ -119,6 +126,8 @@ def show_service(service_id):
     week_ago = now - timedelta(days=7)
 
     service = db.Service.find_one({'_id':service_id})
+
+    g.title = service.name
 
     # Organize datasets by type.  Include the UID and _id of each dataset in the output so we can link to them.
     datasets = db.Dataset.aggregate([
@@ -270,6 +279,7 @@ def stop_harvesting_service(service_id):
 @requires_auth
 def edit_service(service_id):
     service = db.Service.find_one({'_id':service_id})
+    g.title = "Editing " + service.name
     f = ServiceForm(obj=service)
     return render_template('edit_service.html', service=service, form=f)
 
@@ -339,6 +349,8 @@ def daily(year, month, day):
     if year is not None and month is not None and day is not None:
         end_time = datetime.strptime("%s/%s/%s" % (year, month, day), "%Y/%m/%d")
 
+
     failed_services, services, end_time, start_time = db.Service.get_failures_in_time_range(end_time=end_time)
+    g.title = "Daily Report (%s)" % end_time.strftime("%Y-%m-%d")
     return render_template("daily_service_report_page.html", services=services, failed_services=failed_services, start_time=start_time, end_time=end_time)
 

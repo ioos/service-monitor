@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>IOOS Catalog</title>
+    <title>IOOS Catalog{% if g.title is defined %} - {{ g.title }}{%endif%}</title>
     {% block javascript %}
     <script type="text/javascript" src="{{ url_for('.static', filename='js/jquery.min.js') }}" /></script>
     <script type="text/javascript" src="{{ url_for('.static', filename='js/bootstrap.js') }}" /></script>
