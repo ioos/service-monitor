@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block page %}
+
+<div id="thumbnails"></div>
+<svg id="shared">
+</svg>
+
+
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
+
+<script type="text/javascript">
+
+var geos = {{ geojsons | tojson | safe }};
+
+var nested = d3.nest()
+  .key(function(d) { return d.properties.asset_type })
+  .entries(geos);
+
+$(function() {
+
+  var root = d3.select('#thumbnails');
+
+  var margin=10;
+
+  var projection = d3.geo.albers()
+    .scale(165)
+    .rotate([100, 0])
+    .translate([125, 125])
+    .center([0, 43])
+    ;
+
+  var path = d3.geo.path()
+    .projection(projection);
+
+  d3.json("{{ url_for('.static', filename='geojson/na_merged.geojson') }}", function (error, geojson) {
+
+    d3.select('#shared')
+      .append('defs')
+        .append("path")
+          .datum(geojson)
+          .attr("id", "geo")
+          .attr("d", path);
+
+    var newg = root.selectAll('g')
+      .data(nested)
+      .enter()
+      .append('g');
+
+    newg.append('div')
+      .attr('class', 'thumb title')
+      .text(function(d) { return d.key });
+
+    var svg = newg.selectAll('svg.thumb')
+      .data(function(d) { return d.values.slice(0, 5) })
+      .enter()
+      .append('svg')
+        .attr('id', function(d) { return 'habbt'; })
+        .attr('class', 'thumb dataset map')
+        .attr('preserveAspectRatio', 'xMaxYMax meet')
+        .attr('viewBox', function(d) {
+
+          // get the projected bounds
+          var bounds = path.bounds(d),
+          width = bounds[1][0] - bounds[0][0],
+          height = bounds[1][1] - bounds[0][1];
+
+          var x = bounds[0][0],
+              y = bounds[0][1];
+
+          // deal with points
+          if (width == 0 && height == 0) {
+            x = x - 20;
+            y = y - 20;
+
+            width = x + 20;
+            height = y + 20;
+          }
+          
+          var 
+          // get the proportion of the bounds' longest side
+          // to the container's shortest side
+          scale = Math.max(width, height) / Math.min(this.offsetWidth, this.offsetHeight),
+          // and multiply the desired margin by this
+          m = margin * scale;
+          return [
+            x - m,
+            y - m,
+            width + m * 2,
+            height + m * 2
+          ].join(" ");
+        });
+    svg.append('use')
+      .attr('xlink:href', '#geo');
+
+    svg.append('path')
+      .attr('class', 'dataset')
+      .attr('d', path);
+  });
+});
+</script>
+
+{% endblock %}
+
+

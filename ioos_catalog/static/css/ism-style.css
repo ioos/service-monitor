@@ -103,3 +103,42 @@ a {
   background-color: #0088cc;
   color: #fff;
 }
+
+/* asset map */
+.thumb {
+  width: 250px;
+  height: 250px;
+  display: block;
+  float: left;
+  margin: 5px 0 0 5px;
+
+  border: 1px dotted black;
+}
+
+.thumb.title {
+  background-color: #FFA855;
+  border-color: #EF7825;
+}
+
+h1.title {
+  clear: both;
+}
+
+svg.thumb use {
+  fill: #FFFADC;
+  stroke: #D6D1BE;
+  stroke-width: 1;
+}
+
+svg path.dataset {
+  fill: #F23128;
+  fill-opacity: 0.5;
+  stroke: #8C2E19;
+  stroke-opacity: 0.5;
+  stroke-width: 1.5;
+}
+
+#shared {
+  display: none;
+}
+
