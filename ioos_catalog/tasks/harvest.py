@@ -22,7 +22,7 @@ from compliance_checker.base import get_namespaces
 from wicken.xml_dogma import MultipleXmlDogma
 from wicken.netcdf_dogma import NetCDFDogma
 
-from shapely.geometry import mapping, box
+from shapely.geometry import mapping, box, Point
 
 import geojson
 import json
@@ -165,6 +165,8 @@ class SosHarvest(Harvester):
         XLINK_NS = "http://www.w3.org/1999/xlink"
 
         with app.app_context():
+
+            app.logger.info("process_station: %s", uid)
 
             metadata_value = etree.fromstring(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
             sensor_ml      = SensorML(metadata_value)
@@ -536,7 +538,14 @@ class DapHarvest(Harvester):
                 try:
                     # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
                     # Asterik magic to expland the tuple into positional arguments
-                    gj = mapping(box(*cd.get_bbox(var=v)))
+
+                    # handles "points" aka single position NCELLs
+                    bbox = cd.getbbox(var=v)
+                    if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
+                        gj = mapping(Point(bbox[0:2]))
+                    else:
+                        gj = mapping(box(*bbox))
+
                 except (AttributeError, AssertionError, ValueError):
                     pass
 
