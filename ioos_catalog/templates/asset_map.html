@@ -2,13 +2,33 @@
 
 {% block page %}
 
-<div id="thumbnails"></div>
-<svg id="shared">
-</svg>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2">
+      <select name="filter-provider" class="form-control">
+        <option value="null">-</option>
+        {% for region in regions %}
+          <option>{{ region }}</option>
+        {% endfor %}
+      </select>
+
+      <ul class="list-group" id="thumbnails"></ul>
+    </div>
+
+    <div class="col-md-10">
+      <svg id="map" style="width: 900px; height: 700px;"></svg>
+
+      <svg id="shared"></svg>
+    </div>
+  </div>
+
+</div>
 
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
 
 <script type="text/javascript">
 
@@ -19,85 +39,113 @@ var nested = d3.nest()
   .entries(geos);
 
 $(function() {
+  function setupFilters() {
+    {% if 'services.data_provider' in filters %}
+      $('select[name="filter-provider"]').val('{{ filters['services.data_provider'] }}');
+    {% endif %}
 
-  var root = d3.select('#thumbnails');
+    $('select[name^="filter"]').change(function() {
+      var provVal = $('select[name="filter-provider"]').val();
+      if (provVal == "null") {
+        //window.location = "{{ url_for("asset_map") }}";
+        console.log("michael jackson's beat it");
+        return;
+      }
+      var url = '/map/geojson/';
+      url += provVal + "/";
+
+      d3.json(url, addData);
+    })
+  }
+
+
+  setupFilters();
+
+  var root = d3.select('#map');
 
   var margin=10;
 
-  var projection = d3.geo.albers()
-    .scale(165)
+  var projection = d3.geo.stereographic()
+    .scale(650)
     .rotate([100, 0])
-    .translate([125, 125])
-    .center([0, 43])
+    .translate([450, 250])
+    .center([0, 60])
     ;
+
+    /*
+ var projection =  d3.geo.satellite()
+  .distance(1.1)
+  .scale(5500)
+  .rotate([76.00, -34.50, 32.12])
+    .center([-2, 5])
+    .tilt(25)
+   //.clipAngle(Math.acos(1 / 1.1) * 180 / Math.PI - 1e-6)
+    .precision(.1);
+    */
+
+  var graticule = d3.geo.graticule()
+    .extent([[-180, 0], [0, 90]])
+    .step([3, 3]);
+
 
   var path = d3.geo.path()
     .projection(projection);
 
-  d3.json("{{ url_for('.static', filename='geojson/na_merged.geojson') }}", function (error, geojson) {
+  d3.json("{{ url_for('.static', filename='geojson/ne_110m_coastline.geojson') }}", function (error, geojson) {
 
-    d3.select('#shared')
-      .append('defs')
-        .append("path")
-          .datum(geojson)
-          .attr("id", "geo")
-          .attr("d", path);
 
-    var newg = root.selectAll('g')
-      .data(nested)
-      .enter()
-      .append('g');
+    d3.select('#map')
+      .append("path")
+        .datum(geojson)
+        .attr("id", "geo")
+        .attr("d", path);
 
-    newg.append('div')
-      .attr('class', 'thumb title')
-      .text(function(d) { return d.key });
+    d3.select('#map')
+      .append("path")
+     .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
 
-    var svg = newg.selectAll('svg.thumb')
-      .data(function(d) { return d.values.slice(0, 5) })
-      .enter()
-      .append('svg')
-        .attr('id', function(d) { return 'habbt'; })
-        .attr('class', 'thumb dataset map')
-        .attr('preserveAspectRatio', 'xMaxYMax meet')
-        .attr('viewBox', function(d) {
-
-          // get the projected bounds
-          var bounds = path.bounds(d),
-          width = bounds[1][0] - bounds[0][0],
-          height = bounds[1][1] - bounds[0][1];
-
-          var x = bounds[0][0],
-              y = bounds[0][1];
-
-          // deal with points
-          if (width == 0 && height == 0) {
-            x = x - 20;
-            y = y - 20;
-
-            width = x + 20;
-            height = y + 20;
-          }
-          
-          var 
-          // get the proportion of the bounds' longest side
-          // to the container's shortest side
-          scale = Math.max(width, height) / Math.min(this.offsetWidth, this.offsetHeight),
-          // and multiply the desired margin by this
-          m = margin * scale;
-          return [
-            x - m,
-            y - m,
-            width + m * 2,
-            height + m * 2
-          ].join(" ");
-        });
-    svg.append('use')
-      .attr('xlink:href', '#geo');
-
-    svg.append('path')
-      .attr('class', 'dataset')
-      .attr('d', path);
   });
+
+  function addData(error, geojson) {
+
+    // on main map
+    var svg = root.selectAll('.dataset')
+      .data(geojson.features, function(d) { return d.properties.id;});
+
+    svg.exit().remove();
+
+    svg.enter()
+      .append('path')
+        .attr('id', function(d) { return d.properties.id; })
+        .attr('class', 'dataset')//function(d) { return (d.properties.asset_type == 'CGRID' || d.properties.asset_type == 'RGRID' || d.properties.asset_type=='NCELL') ? 'dataset' : 'point'})
+        .attr('d', path);
+
+    // on thumbnail index
+    var thumbs = d3.select('#thumbnails').selectAll('.list-group-item')
+      .data(geojson.features, function(d) { return d.properties.id; });
+
+    thumbs.exit().remove();
+
+    var ps = thumbs.enter()
+      .append('li')
+        .attr('class', 'list-group-item')
+        .text(function(d) { return d.properties.name || d.properties.id; });
+
+      ps.on('mouseout', function(d) {
+        d3.selectAll('#map path.dataset').classed({'active':false});
+        d3.select(this).classed({'list-group-item-info': false});
+      });
+
+      ps.on('mouseover', function(d) {
+        var sel = $('#map #' + d.properties.id);
+        d3.selectAll(sel).classed({'active':true});
+
+        d3.select(this).classed({'list-group-item-info': true});
+      });
+  }
+
 });
 </script>
 

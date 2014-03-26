@@ -105,7 +105,7 @@ a {
 }
 
 /* asset map */
-.thumb {
+.notthumb {
   width: 250px;
   height: 250px;
   display: block;
@@ -124,21 +124,47 @@ h1.title {
   clear: both;
 }
 
-svg.thumb use {
+svg #geo {
   fill: #FFFADC;
   stroke: #D6D1BE;
   stroke-width: 1;
 }
 
 svg path.dataset {
+  fill: #cccccc;
+  fill-opacity: 0.1;
+
+  stroke-width: 0.5;
+  stroke-opacity: 0.25;
+  stroke: #666;
+}
+
+svg path.point {
+  fill: #ffcc33;
+  fill-opacity: 0.25;
+  stroke-width: 0.5;
+  stroke-opacity: 1;
+  stroke: #ffff00;
+}
+
+svg path.dataset.active {
   fill: #F23128;
-  fill-opacity: 0.5;
+  fill-opacity: 0.6;
   stroke: #8C2E19;
-  stroke-opacity: 0.5;
-  stroke-width: 1.5;
+  stroke-opacity: 0.6;
+  stroke-width: 1;
 }
 
 #shared {
   display: none;
+}
+
+.graticule {
+  fill: none;
+  stroke: #efefef;
+}
+
+#thumbnails .list-group-item {
+  cursor: pointer;
 }
 
