@@ -32,18 +32,8 @@
 
 <script type="text/javascript">
 
-var geos = {{ geojsons | tojson | safe }};
-
-var nested = d3.nest()
-  .key(function(d) { return d.properties.asset_type })
-  .entries(geos);
-
 $(function() {
   function setupFilters() {
-    {% if 'services.data_provider' in filters %}
-      $('select[name="filter-provider"]').val('{{ filters['services.data_provider'] }}');
-    {% endif %}
-
     $('select[name^="filter"]').change(function() {
       var provVal = $('select[name="filter-provider"]').val();
       if (provVal == "null") {
