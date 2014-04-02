@@ -530,34 +530,46 @@ class DapHarvest(Harvester):
 
         # LOCATION (from Paegan)
         # Try POLYGON and fall back to BBOX
-        gj = None
-        for v in itertools.chain(std_variables, non_std_variables):
-            try:
-                gj = mapping(cd.getboundingpolygon(var=v))
-            except (AttributeError, AssertionError, ValueError):
-                try:
-                    # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
-                    # Asterik magic to expland the tuple into positional arguments
 
-                    # handles "points" aka single position NCELLs
-                    bbox = cd.getbbox(var=v)
-                    if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
-                        gj = mapping(Point(bbox[0:2]))
-                    else:
-                        gj = mapping(box(*bbox))
-
-                except (AttributeError, AssertionError, ValueError):
-                    pass
-
-            if gj is not None:
-                # We computed something, break out of loop.
-                messages.append(u"Variable %s was used to calculate geometry." % v)
+        # paegan does not support ugrid, so try to detect this condition and skip
+        is_ugrid = False
+        for vname, v in cd.nc.variables.iteritems():
+            if 'cf_role' in v.ncattrs() and v.getncattr('cf_role') == 'mesh_topology':
+                is_ugrid = True
                 break
 
-        if gj is None:
-            messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
-            messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
-            messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(itertools.chain(std_variables, non_std_variables)))
+        gj = None
+
+        if is_ugrid:
+            messages.append(u"The underlying 'Paegan' data access library does not support UGRID and cannot parse geometry.")
+        else:
+            for v in itertools.chain(std_variables, non_std_variables):
+                try:
+                    gj = mapping(cd.getboundingpolygon(var=v))
+                except (AttributeError, AssertionError, ValueError, KeyError):
+                    try:
+                        # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
+                        # Asterik magic to expland the tuple into positional arguments
+
+                        # handles "points" aka single position NCELLs
+                        bbox = cd.getbbox(var=v)
+                        if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
+                            gj = mapping(Point(bbox[0:2]))
+                        else:
+                            gj = mapping(box(*bbox))
+
+                    except (AttributeError, AssertionError, ValueError, KeyError):
+                        pass
+
+                if gj is not None:
+                    # We computed something, break out of loop.
+                    messages.append(u"Variable %s was used to calculate geometry." % v)
+                    break
+
+            if gj is None:
+                messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
+                messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
+                messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(itertools.chain(std_variables, non_std_variables)))
 
         # TODO: compute bounding box using global attributes
 
