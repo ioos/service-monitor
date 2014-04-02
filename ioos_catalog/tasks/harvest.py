@@ -133,6 +133,22 @@ class SosHarvest(Harvester):
     def __init__(self, service):
         Harvester.__init__(self, service)
 
+    def _describe_sensor(self, uid):
+        """
+        Issues a DescribeSensor request with fallback behavior for oddly-acting SOS servers.
+        """
+        kwargs = {'outputFormat':'text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"',
+                  'procedure':uid}
+
+        try:
+            return self.sos.describe_sensor(**kwargs)
+        except HTTPError as e:
+            # try again without the outputFormat
+            kwargs['outputFormat'] = ''
+
+            # if this raises, let it happen
+            return self.sos.describe_sensor(**kwargs)
+
     def harvest(self):
         self.sos = SensorObservationService(self.service.get('url'))
 
@@ -159,7 +175,7 @@ class SosHarvest(Harvester):
             # template:   urn:ioos:type:authority:id
             # sample:     ioos:station:wmo:21414
             if len(sp_uid) > 2 and sp_uid[2] == "network": # Network Offering
-                network_ds = IoosDescribeSensor(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
+                network_ds = IoosDescribeSensor(self._describe_sensor(uid))
                 # Iterate over stations in the network and process them individually
                 for proc in network_ds.procedures:
                     if proc is not None and proc.split(":")[2] == "station":
@@ -182,7 +198,7 @@ class SosHarvest(Harvester):
 
             app.logger.info("process_station: %s", uid)
 
-            metadata_value = etree.fromstring(self.sos.describe_sensor(outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"', procedure=uid))
+            metadata_value = etree.fromstring(self._describe_sensor(uid))
             sensor_ml      = SensorML(metadata_value)
             station_ds     = IoosDescribeSensor(metadata_value)
 
