@@ -3,6 +3,8 @@ from datetime import datetime
 from lxml import etree
 import itertools
 import re
+import requests
+from urllib2 import HTTPError
 
 from owslib.sos import SensorObservationService
 from owslib.swe.sensor.sml import SensorML
@@ -33,6 +35,18 @@ from ioos_catalog.tasks.send_email import send_service_down_email
 def harvest(service_id):
     with app.app_context():
         service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
+
+        # ping it first to see if alive
+        try:
+            _, response_code = service.ping(timeout=15)
+            operational_status = True if response_code in [200,400] else False
+        except (requests.ConnectionError, requests.HTTPError, requests.Timeout):
+            operational_status = False
+
+        if not operational_status:
+            # not a failure
+            # @TODO: record last attempt time/this message
+            return "Aborted harvest due to service down"
 
         if service.service_type == "DAP":
             return DapHarvest(service).harvest()
