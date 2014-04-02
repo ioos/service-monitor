@@ -394,10 +394,49 @@ class WcsHarvest(Harvester):
 
 class DapHarvest(Harvester):
 
+    METADATA_VAR_NAMES   = [u'crs',
+                            u'projection']
+
+    # CF standard names for Axis
+    STD_AXIS_NAMES       = [u'latitude',
+                            u'longitude',
+                            u'time',
+                            u'forecast_reference_time',
+                            u'forecast_period',
+                            u'ocean_sigma',
+                            u'ocean_s_coordinate_g1',
+                            u'ocean_s_coordinate_g2',
+                            u'ocean_s_coordinate',
+                            u'ocean_double_sigma',
+                            u'ocean_sigma_over_z',
+                            u'projection_y_coordinate',
+                            u'projection_x_coordinate']
+
+    # Some datasets don't define standard_names on axis variables.  This is used to weed them out based on the
+    # actual variable name
+    COMMON_AXIS_NAMES    = [u'x',
+                            u'y',
+                            u'lat',
+                            u'latitude',
+                            u'lon',
+                            u'longitude',
+                            u'time',
+                            u'time_run',
+                            u'time_offset',
+                            u'ntimes',
+                            u'lat_u',
+                            u'lon_u',
+                            u'lat_v',
+                            u'lon_v  ',
+                            u'lat_rho',
+                            u'lon_rho',
+                            u'lat_psi']
+
     def __init__(self, service):
         Harvester.__init__(self, service)
 
-    def get_standard_variables(self, dataset):
+    @classmethod
+    def get_standard_variables(cls, dataset):
         for d in dataset.variables:
             try:
                 yield unicode(dataset.variables[d].getncattr("standard_name"))
@@ -412,44 +451,6 @@ class DapHarvest(Harvester):
           * RGRID
           * DSG
         """
-
-        METADATA_VAR_NAMES   = [u'crs',
-                                u'projection']
-
-        # CF standard names for Axis
-        STD_AXIS_NAMES       = [u'latitude',
-                                u'longitude',
-                                u'time',
-                                u'forecast_reference_time',
-                                u'forecast_period',
-                                u'ocean_sigma',
-                                u'ocean_s_coordinate_g1',
-                                u'ocean_s_coordinate_g2',
-                                u'ocean_s_coordinate',
-                                u'ocean_double_sigma',
-                                u'ocean_sigma_over_z',
-                                u'projection_y_coordinate',
-                                u'projection_x_coordinate']
-
-        # Some datasets don't define standard_names on axis variables.  This is used to weed them out based on the
-        # actual variable name
-        COMMON_AXIS_NAMES    = [u'x',
-                                u'y',
-                                u'lat',
-                                u'latitude',
-                                u'lon',
-                                u'longitude',
-                                u'time',
-                                u'time_run',
-                                u'time_offset',
-                                u'ntimes',
-                                u'lat_u',
-                                u'lon_u',
-                                u'lat_v',
-                                u'lon_v  ',
-                                u'lat_rho',
-                                u'lon_rho',
-                                u'lat_psi']
 
         cd = CommonDataset.open(self.service.get('url'))
 
@@ -508,10 +509,10 @@ class DapHarvest(Harvester):
             pass
 
         # Get variables with a standard_name
-        std_variables = [cd.get_varname_from_stdname(x)[0] for x in self.get_standard_variables(cd.nc) if x not in STD_AXIS_NAMES and len(cd.nc.variables[cd.get_varname_from_stdname(x)[0]].shape) > 0]
+        std_variables = [cd.get_varname_from_stdname(x)[0] for x in self.get_standard_variables(cd.nc) if x not in self.STD_AXIS_NAMES and len(cd.nc.variables[cd.get_varname_from_stdname(x)[0]].shape) > 0]
 
         # Get variables that are not axis variables or metadata variables and are not already in the 'std_variables' variable
-        non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, METADATA_VAR_NAMES, COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
+        non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, self.METADATA_VAR_NAMES, self.COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
 
         """
         var_to_get_geo_from = None
