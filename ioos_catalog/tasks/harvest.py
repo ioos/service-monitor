@@ -549,7 +549,7 @@ class DapHarvest(Harvester):
         else:
             for v in itertools.chain(std_variables, non_std_variables):
                 try:
-                    gj = mapping(cd.getboundingpolygon(var=v))
+                    gj = mapping(cd.getboundingpolygon(var=v).simplify(0.5))
                 except (AttributeError, AssertionError, ValueError, KeyError):
                     try:
                         # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
