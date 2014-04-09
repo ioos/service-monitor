@@ -13,9 +13,11 @@ git+https://github.com/kwilcox/rq-scheduler.git@utc-time-with-master
 
 rq-dashboard==0.3.1
 
-git+https://github.com/asascience-open/pyoos.git
-OWSLib
+paegan>=1.1.1
+pyoos>=0.6.1
+# unreleased parsing fixes in OWSLib
+git+https://github.com/geopython/OWSLib.git
 geojson
-git+https://github.com/asascience-open/petulant-bear.git
-git+https://github.com/asascience-open/wicken.git
-git+https://github.com/asascience-open/compliance-checker.git
+petulant-bear>=0.1.2
+wicken>=0.1.2
+compliance-checker>=0.2.0

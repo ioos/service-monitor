@@ -18,8 +18,8 @@ from petulantbear.netcdf_etree import parse_nc_dataset_as_etree
 from petulantbear.netcdf_etree import namespaces as pb_namespaces
 from netCDF4 import Dataset
 
-from compliance_checker.suite import CheckSuite
-from compliance_checker.ioos import IOOSBaseCheck, IOOSSOSGCCheck, IOOSSOSDSCheck, IOOSNCCheck
+from compliance_checker.runner import ComplianceCheckerCheckSuite
+from compliance_checker.ioos import IOOSSOSGCCheck, IOOSSOSDSCheck, IOOSNCCheck
 from compliance_checker.base import get_namespaces
 from wicken.xml_dogma import MultipleXmlDogma
 from wicken.netcdf_dogma import NetCDFDogma
@@ -305,23 +305,9 @@ class SosHarvest(Harvester):
             scores = None
 
             try:
-
-                cs = CheckSuite()
-                # @TODO: bleh
-
-                checkers = cs._get_valid_checkers(self.sos, [IOOSBaseCheck])
-                if len(checkers) != 1:
-                    app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
-                    return
-
-                # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
-                checker = checkers[0]()
-                dsp = checker.load_datapair(self.sos)
-                checker.setup(dsp)
-                checks = cs._get_checks(checker)
-
-                vals = list(itertools.chain.from_iterable(map(lambda c: cs._run_check(c, dsp), checks)))
-                scores = cs.scores(vals)
+                cs = ComplianceCheckerCheckSuite()
+                groups = cs.run(self.sos, 'ioos')
+                scores = groups['ioos']
             except Exception as e:
                 app.logger.warn("Caught exception doing Compliance Checker on SOS service: %s", e)
 
@@ -361,22 +347,9 @@ class SosHarvest(Harvester):
         with app.app_context():
             scores = None
             try:
-                cs = CheckSuite()
-                # @TODO: bleh
-
-                checkers = cs._get_valid_checkers(sensor_ml, [IOOSBaseCheck])
-                if len(checkers) != 1:
-                    app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
-                    return
-
-                # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
-                checker = checkers[0]()
-                dsp = checker.load_datapair(sensor_ml)
-                checker.setup(dsp)
-                checks = cs._get_checks(checker)
-
-                vals = list(itertools.chain.from_iterable(map(lambda c: cs._run_check(c, dsp), checks)))
-                scores = cs.scores(vals)
+                cs = ComplianceCheckerCheckSuite()
+                groups = cs.run(sensor_ml, 'ioos')
+                scores = groups['ioos']
             except Exception as e:
                 app.logger.warn("Caught exception doing Compliance Checker on SOS station: %s", e)
 
@@ -649,26 +622,11 @@ class DapHarvest(Harvester):
         with app.app_context():
             scores = None
             try:
-                cs = CheckSuite()
-                # @TODO: bleh
-
-                checkers = cs._get_valid_checkers(ncdataset, [IOOSBaseCheck])
-                if len(checkers) != 1:
-                    app.logger.warn("No valid checkers found for 'ioos'/%s" % type(self.sos))
-                    return
-
-                # @TODO: break up the CC run, it's too monolithic and makes me do all this noise
-                checker = checkers[0]()
-                dsp = checker.load_datapair(ncdataset)
-                checker.setup(dsp)
-                checks = cs._get_checks(checker)
-
-                vals = list(itertools.chain.from_iterable(map(lambda c: cs._run_check(c, dsp), checks)))
-                scores = cs.scores(vals)
-            finally:
-                pass
-            #except Exception as e:
-            #    app.logger.warn("Caught exception doing Compliance Checker on Dataset: %s", e)
+                cs = ComplianceCheckerCheckSuite()
+                groups = cs.run(ncdataset, 'ioos')
+                scores = groups['ioos']
+            except Exception as e:
+                app.logger.warn("Caught exception doing Compliance Checker on Dataset: %s", e)
 
             return scores
 
