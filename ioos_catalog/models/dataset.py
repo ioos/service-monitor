@@ -72,7 +72,10 @@ class Dataset(BaseDocument):
             SOS -> 57
             ...
         """
+        # intersect with active services only
+        service_ids = [s._id for s in db.Service.find({'active':True}, {'_id':1})]
         counts = db.Dataset.aggregate([
+            { '$match' : {'services.service_id':{'$in':service_ids}}},
             { '$unwind' : '$services' },
             { '$group' : { '_id' : {'asset_type' : '$services.asset_type',
                                     'data_provider' : '$services.data_provider'},

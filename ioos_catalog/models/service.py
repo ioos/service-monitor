@@ -187,7 +187,8 @@ class Service(BaseDocument):
             SOS -> 57
             ...
         """
-        counts = db.Service.aggregate([{'$group':{'_id':{'service_type':'$service_type',
+        counts = db.Service.aggregate([{'$match': {'active':True}},
+                                       {'$group':{'_id':{'service_type':'$service_type',
                                                          'data_provider':'$data_provider'},
                                                   'cnt':{'$sum':1}}}])
 
