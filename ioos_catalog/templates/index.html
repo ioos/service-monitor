@@ -53,7 +53,7 @@
             <div id="dataset-type-btns">
               {%- for name, count in asset_counts.iteritems() %}
               <a class="btn btn-lg btn-default dataset-type-btn btn-block" data-type="{{name}}" href="{{url_for('datasets', filter_provider='null', filter_type=name) }}">
-                {{ "ALL" if name == "_all" else name }}
+                {{ "ALL" if name == "_all" else "Unknown" if name == 'null' else name }}
                 <span class="badge">0</span>
               </a>
               {% endfor %}
