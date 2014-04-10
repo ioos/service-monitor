@@ -49,9 +49,9 @@ def regulate():
                 timeout=1200                       # Default timeout of 180 seconds may not be enough
             )
 
-        all_services = list(db.Service.find())
+        all_services = list(db.Service.find({'active':True}))
 
-        # Make sure each service has a ping job
+        # Make sure each active service has a ping job
         stat_jobs = [unicode(job.args[0]) for job in jobs if job.func == ping_service_task]
         # Get services that don't have jobs
         need_ping = [s for s in all_services if unicode(s._id) not in stat_jobs]
@@ -59,7 +59,7 @@ def regulate():
         for s in need_ping:
             s.schedule_ping(cancel=False)
 
-        # Make sure each service has a harvest job
+        # Make sure each active service has a harvest job
         harvest_jobs = [unicode(job.args[0]) for job in jobs if job.func == harvest]
         # Get services that don't have jobs
         need_harvest = [s for s in all_services if unicode(s._id) not in harvest_jobs]
