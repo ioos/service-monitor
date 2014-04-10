@@ -36,6 +36,12 @@ def harvest(service_id):
     with app.app_context():
         service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
 
+        # make sure service is active before we harvest
+        s = db.Service.find_one({'_id':ObjectId(service_id)})
+        if not s.active:
+            s.cancel_harvest()
+            return "Service %s is not active, not harvesting" % service_id
+
         # ping it first to see if alive
         try:
             _, response_code = service.ping(timeout=15)
