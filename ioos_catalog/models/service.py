@@ -66,12 +66,14 @@ class Service(BaseDocument):
         if self.service_type not in ['DAP', 'SOS']:
             return
 
+        timeout = 600 if self.service_type == 'SOS' else 120
+
         job = scheduler.schedule(scheduled_time=datetime.utcnow(),
                                  func=harvest,
                                  args=(unicode(self._id),),
                                  interval=86400,
                                  repeat=None,
-                                 timeout=120,
+                                 timeout=timeout,
                                  result_ttl=86400 * 2)
         self['harvest_job_id'] = unicode(job.id)
         self.save()
@@ -171,7 +173,8 @@ class Service(BaseDocument):
 
     @classmethod
     def count_types(cls):
-        retval = db.Service.aggregate([{'$group':{'_id':'$service_type',
+        retval = db.Service.aggregate([{'$match': {'active':True}},
+                                       {'$group':{'_id':'$service_type',
                                                'count':{'$sum':1}}}])
         return retval
 
