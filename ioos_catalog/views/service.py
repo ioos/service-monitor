@@ -39,7 +39,7 @@ def services(filter_provider, filter_type, oformat):
         filter_type = "null"
         oformat = None
 
-    filters = {}
+    filters = {'active':True}
     titleparts = []
 
     if filter_provider is not None and filter_provider != "null":
