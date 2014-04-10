@@ -26,6 +26,9 @@ class Service(BaseDocument):
         'interval'              : int,     # interval (in s) between stat retrievals
         'ping_job_id'           : unicode, # id of continuous ping job (scheduled)
         'harvest_job_id'        : unicode, # id of harvest job (scheduled)
+        'active'                : bool,    # should this service be pinged/harvested?
+        'manual'                : bool,    # if True, don't allow reindex to control active flag, it means
+                                           # administrator controls active flag manually
         'created'               : datetime,
         'updated'               : datetime,
     }
@@ -48,10 +51,16 @@ class Service(BaseDocument):
         Starts a continuous harvest job via the rq scheduler.
         Cancels any existing job it can find regarding this service.
 
+        Harvest task will not run if the service is not active.
+
         Runs once per day (86400 seconds)
         """
         if cancel is True:
             self.cancel_harvest()
+
+            # if we cancelled and we know we aren't active, don't bother scheduling
+            if not self.active:
+                return
 
         # we only harvest DAP/SOS at the time being, don't waste job time here
         if self.service_type not in ['DAP', 'SOS']:
@@ -91,11 +100,17 @@ class Service(BaseDocument):
         Starts a continuous ping job via the rq scheduler.
         Cancels any existing job it can find regarding this service.
 
+        Ping task will not run if the service is not active.
+
         If self.interval is 0 or not set, does nothing.
         """
 
         if cancel is True:
             self.cancel_ping()
+
+            # if we cancelled and we know we aren't active, don't bother scheduling
+            if not self.active:
+                return
 
         if not self.interval:
             return None

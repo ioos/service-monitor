@@ -13,11 +13,13 @@ class ServiceMigration(DocumentMigration):
         self.target = {'ping_job_id':{'$exists': False}}
         self.update = {'$set':{'ping_job_id': None}}
 
-# Stats
-from ioos_catalog.models import stat
-class StatMigration(DocumentMigration):
-    # add any migrations here named "allmigration_*"
-    pass
+    def allmigration03__add_active_field(self):
+        self.target = {'active':{'$exists': False}}
+        self.update = {'$set':{'active':True}}
+
+    def allmigration04__add_manual_field(self):
+        self.target = {'manual':{'$exists':False}}
+        self.update = {'$set':{'manual':False}}
 
 # Datasets
 from ioos_catalog.models import dataset
@@ -28,9 +30,6 @@ class DatasetMigration(DocumentMigration):
 with app.app_context():
     migration = ServiceMigration(service.Service)
     migration.migrate_all(collection=db['services'])
-
-    migration = StatMigration(stat.Stat)
-    migration.migrate_all(collection=db['stats'])
 
     migration = DatasetMigration(dataset.Dataset)
     migration.migrate_all(collection=db['datasets'])

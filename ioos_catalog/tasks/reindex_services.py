@@ -48,7 +48,9 @@ def reindex_services():
 
         new_services    = []
         update_services = []
-        del_services    = []
+
+        # get a set of all non-manual, active services for possible deactivation later
+        current_services = set((s._id for s in db.Service.find({'manual':False, 'active':True}, {'_id':True})))
 
         for region,uuid in region_map.iteritems():
             # Setup uuid filter
@@ -91,6 +93,8 @@ def reindex_services():
                                     s               = db.Service()
                                     s.url           = url
                                     s.data_provider = unicode(region)
+                                    s.manual        = False
+                                    s.active        = True
 
                                     new_services.append(s)
                                 else:
@@ -105,6 +109,10 @@ def reindex_services():
                                 s.contact           = unicode(contact_email)
                                 s.metadata_url      = unicode(metadata_url)
 
+                                # if we see the service, this is "Active", unless we've set manual (then we don't touch)
+                                if not s.manual:
+                                    s.active = True
+
                                 s.save()
 
                                 s.schedule_harvest(True)
@@ -116,9 +124,16 @@ def reindex_services():
                 except Exception as e:
                     app.logger.warn("Could not save region info: %s", e)
 
-        # @TODO: handle deleted services (deactivate)
-        for s in del_services:
-            pass
+        # DEACTIVATE KNOWN SERVICES
+        updated_ids = set((s._id for s in update_services))
+        deactivate = list(current_services.difference(updated_ids))
 
-        return "New services: %s, updated services: %s, deleted services: %s" % (len(new_services), len(update_services), len(del_services))
+        # bulk update (using pymongo syntax)
+        db.services.update({'_id':{'$in':deactivate}},
+                           {'$set':{'active':False,
+                                    'updated':datetime.utcnow()}},
+                           multi=True,
+                           upsert=False)
+
+        return "New services: %s, updated services: %s, deactivated services: %s" % (len(new_services), len(update_services), len(deactivate))
 
