@@ -16,24 +16,6 @@ def regulate():
         # Get function and args of
         jobs = scheduler.get_jobs()
 
-        # Get services that have not been updated in two weeks and remove them.
-        # The reindex job sets the 'updated' field.  The below logic should effectively remove
-        # services that the reindex task has not seen in two weeks.
-        two_weeks_ago = datetime.utcnow() - timedelta(weeks=2)
-        #deletes = list(db.Service.find({'updated':{'$lte':two_weeks_ago}}))
-
-        # don't worry about DELETES right now
-        # @TODO: set inactive
-        deletes = []
-        for d in deletes:
-            pass
-            #d.cancel_ping()
-            #d.cancel_harvest()
-            # I don't think we want to delete these.
-            # Lets make deletion a manual process.
-            #d.delete()
-            # TODO: Now delete the stats that were collected for this service.
-
         # Make sure a daily report job is running
         daily_email_jobs = [job for job in jobs if job.func == send_daily_report_email]
         if len(daily_email_jobs) > 1:
@@ -86,4 +68,4 @@ def regulate():
             s.schedule_harvest(cancel=False)
 
 
-    return "Regulated %s reindex jobs, %s ping jobs, %s harvest jobs, and deleted %s old services" % (len(reindex_services_jobs), len(need_ping), len(need_harvest), len(deletes))
+    return "Regulated %s reindex jobs, %s ping jobs, %s harvest jobs" % (len(reindex_services_jobs), len(need_ping), len(need_harvest))
