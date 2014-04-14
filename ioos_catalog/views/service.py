@@ -153,7 +153,7 @@ def show_service(service_id):
         # set ping data for graph
         latest_pings, latest_statuses = pl.get_current_data()
         for i in xrange(0, len(latest_pings)):
-            v = {'x':i, 'y':latest_pings[i] or 0}
+            v = {'x':i, 'y':latest_pings[i] or 50}
             if latest_statuses[i]:
                 ping_data['good'].append(v)
                 ping_data['bad'].append({'x':i, 'y':0})
