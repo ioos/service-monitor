@@ -4,6 +4,7 @@ import os
 from copy import copy
 import time
 import urlparse
+import shutil
 
 """
     Call this with fab -c .fab TASK to pick up deploy variables
@@ -90,4 +91,27 @@ def create_index():
     # @TODO: this will likely error on first run as the collection won't exist
     run('mongo "%s" --eval "db.getCollection(\'stats\').ensureIndex({\'created\':-1})"' % MONGODB_DATABASE)
     run('mongo "%s" --eval "db.getCollection(\'metadatas\').ensureIndex({\'ref_id\':1, \'ref_type\':1})"' % MONGODB_DATABASE)
+
+def db_snapshot():
+    admin()
+
+    MONGO_URI = env.get('mongo_db')
+    url = urlparse.urlparse(MONGO_URI)
+    MONGODB_DATABASE = url.path[1:]
+
+    backup_name = time.strftime('%Y-%m-%d')
+
+    tmp = run('mktemp -d').strip()
+
+    with cd(tmp):
+        run('mongodump -d %s -o %s' % (MONGODB_DATABASE, backup_name))
+        run('tar cfvz %s.tar.gz %s' % (backup_name, backup_name))
+        get(remote_path="%s.tar.gz" % backup_name, local_path='db/%(path)s')
+
+    run('rm -r %s' % tmp)
+
+    # local restore
+    with lcd('db'): 
+        local('tar xfvz %s.tar.gz' % backup_name)
+        local('mongorestore -d catalog-%s %s' % (backup_name, os.path.join(backup_name, MONGODB_DATABASE)))
 

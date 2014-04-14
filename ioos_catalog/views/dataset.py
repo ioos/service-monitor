@@ -18,7 +18,10 @@ class DatasetFilterForm(Form):
 @app.route('/datasets/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
 @app.route('/datasets/filter/<path:filter_provider>/<filter_type>', methods=['GET'])
 def datasets(filter_provider, filter_type):
-    filters = {}
+
+    # only get datasets that are active for this list!
+    service_ids = [s._id for s in db.Service.find({'active':True}, {'_id':1})]
+    filters = {'services.service_id':{'$in':service_ids}}
     titleparts = []
 
     if filter_provider is not None and filter_provider != "null":

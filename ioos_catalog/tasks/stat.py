@@ -5,6 +5,13 @@ from ioos_catalog.tasks.send_email import send_service_down_email
 
 def ping_service_task(service_id):
     with app.app_context():
+
+        # make sure service is active before we ping
+        s = db.Service.find_one({'_id':ObjectId(service_id)})
+        if not s.active:
+            s.cancel_ping()
+            return "Service %s is not active, not pinging" % service_id
+
         pl = db.PingLatest.get_for_service(ObjectId(service_id))
         wasnew, flip = pl.ping_service()
         pl.save()

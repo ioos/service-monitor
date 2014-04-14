@@ -24,6 +24,8 @@ def index():
     asset_counts = defaultdict(int)
     for v in dataset_counts_by_provider.itervalues():
         for atn, atc in v.iteritems():
+            if not atn:
+                atn = 'null'
             asset_counts[atn] += atc
 
     return render_template('index.html',

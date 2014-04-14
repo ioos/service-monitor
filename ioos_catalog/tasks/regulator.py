@@ -16,24 +16,6 @@ def regulate():
         # Get function and args of
         jobs = scheduler.get_jobs()
 
-        # Get services that have not been updated in two weeks and remove them.
-        # The reindex job sets the 'updated' field.  The below logic should effectively remove
-        # services that the reindex task has not seen in two weeks.
-        two_weeks_ago = datetime.utcnow() - timedelta(weeks=2)
-        #deletes = list(db.Service.find({'updated':{'$lte':two_weeks_ago}}))
-
-        # don't worry about DELETES right now
-        # @TODO: set inactive
-        deletes = []
-        for d in deletes:
-            pass
-            #d.cancel_ping()
-            #d.cancel_harvest()
-            # I don't think we want to delete these.
-            # Lets make deletion a manual process.
-            #d.delete()
-            # TODO: Now delete the stats that were collected for this service.
-
         # Make sure a daily report job is running
         daily_email_jobs = [job for job in jobs if job.func == send_daily_report_email]
         if len(daily_email_jobs) > 1:
@@ -67,9 +49,9 @@ def regulate():
                 timeout=1200                       # Default timeout of 180 seconds may not be enough
             )
 
-        all_services = list(db.Service.find())
+        all_services = list(db.Service.find({'active':True}))
 
-        # Make sure each service has a ping job
+        # Make sure each active service has a ping job
         stat_jobs = [unicode(job.args[0]) for job in jobs if job.func == ping_service_task]
         # Get services that don't have jobs
         need_ping = [s for s in all_services if unicode(s._id) not in stat_jobs]
@@ -77,7 +59,7 @@ def regulate():
         for s in need_ping:
             s.schedule_ping(cancel=False)
 
-        # Make sure each service has a harvest job
+        # Make sure each active service has a harvest job
         harvest_jobs = [unicode(job.args[0]) for job in jobs if job.func == harvest]
         # Get services that don't have jobs
         need_harvest = [s for s in all_services if unicode(s._id) not in harvest_jobs]
@@ -86,4 +68,4 @@ def regulate():
             s.schedule_harvest(cancel=False)
 
 
-    return "Regulated %s reindex jobs, %s ping jobs, %s harvest jobs, and deleted %s old services" % (len(reindex_services_jobs), len(need_ping), len(need_harvest), len(deletes))
+    return "Regulated %s reindex jobs, %s ping jobs, %s harvest jobs" % (len(reindex_services_jobs), len(need_ping), len(need_harvest))
