@@ -24,7 +24,7 @@
 </div>
 
 <!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
-<svg id="map" viewBox="0 0 1500 1500" preserveAspectRatio="xMinYMin slice"></svg>
+<svg id="map" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice"></svg>
 
 <svg id="shared"></svg>
 
@@ -88,6 +88,20 @@ setupFilters();
 
 var root = d3.select('#map');
 
+// add points erry hundred
+/*
+for (var i = 0; i < 1000; i += 100) {
+
+  for (var j = 0; j < 1000; j += 100) {
+    root.append('circle')
+      .attr('cx', i)
+      .attr('cy', j)
+      .attr('r', 3)
+      .attr('fill', 'red');
+  }
+}
+*/
+
 var margin=10;
 
 // @TODO: browser resize
@@ -96,9 +110,9 @@ var width = Math.max(960, window.innerWidth * 0.7),
 
 var projection = d3.geo.orthographic()
   .scale((1 << 12) / 2 / Math.PI)
-  .translate([width/2, height/2])
+  .translate([500, 500])
   .clipAngle(90)
-  .rotate([110, -34, -5])
+  .rotate([100, -45])
   ;
 
 var smallProjection = d3.geo.mercator()
