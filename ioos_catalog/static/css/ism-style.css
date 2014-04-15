@@ -159,9 +159,4 @@ svg path.dataset.active {
   display: none;
 }
 
-.graticule {
-  fill: none;
-  stroke: #efefef;
-}
-
 

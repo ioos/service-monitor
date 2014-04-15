@@ -2,9 +2,9 @@
   cursor: pointer;
 }
 
-svg #geo {
-  fill: #ccc;
-  stroke: #ddd;
+#map #geo {
+  fill: #888;
+  stroke: #aaa;
 }
 
 svg {
@@ -15,15 +15,20 @@ svg {
   position: fixed;
   top: 0px;
   bottom: 0px;
-  left: 0px;
+  left: 30%;
   right: 0px;
+}
+
+.graticule {
+  fill: none;
+  stroke: #888;
 }
 
 #map_sidebar {
   z-index: 1;
   background-color: #efefef;
   position: fixed;
-  width: 300px;
+  width: 30%;
   height: 100%;
   border-right: 5px solid #9fabb7;
   top: 0px;
