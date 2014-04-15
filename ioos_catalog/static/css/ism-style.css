@@ -164,7 +164,4 @@ svg path.dataset.active {
   stroke: #efefef;
 }
 
-#thumbnails .list-group-item {
-  cursor: pointer;
-}
 

@@ -1,29 +1,34 @@
 {% extends "layout.html" %}
 
-{% block page %}
+{% block css %}
 
+<link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-md-2">
-      <select name="filter-provider" class="form-control">
-        <option value="null">-</option>
-        {% for region in regions %}
-          <option>{{ region }}</option>
-        {% endfor %}
-      </select>
+{% endblock %}
 
-      <ul class="list-group" id="thumbnails"></ul>
-    </div>
+{% block basepage %}
 
-    <div class="col-md-10">
-      <svg id="map" style="width: 900px; height: 700px;"></svg>
+<div id="map_infobar">
+  <dl></dl>
+</div>
 
-      <svg id="shared"></svg>
-    </div>
+<div id="map_sidebar">
+  <div id="filters">
+    <select name="filter-provider" class="form-control">
+      <option value="null">-</option>
+      {% for region in regions %}
+      <option>{{ region }}</option>
+      {% endfor %}
+    </select>
   </div>
 
+  <ul class="media-list" id="thumbnails"></ul>
 </div>
+
+<!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
+<svg id="map" viewBox="0 0 1500 1500" preserveAspectRatio="xMinYMin slice"></svg>
+
+<svg id="shared"></svg>
 
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
@@ -31,6 +36,37 @@
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
 
 <script type="text/javascript">
+
+function toggleInfo(did) {
+
+  if ($('#map_infobar').css('left') != '0px') {
+    $('#map_sidebar').animate({
+      'left': '+=250'
+    }, 150);
+    $('#map_infobar').animate({
+      'left': '-=50'
+    }, 150);
+
+    $('#map_infobar dl').empty();
+
+    return;
+  }
+
+  $('#map_sidebar').animate({
+    'left': '-=250'
+  }, 150, function() {});
+
+  $('#map_infobar').animate({
+    'left': '+=50'
+  }, 150, function() {});
+
+  $.getJSON('/datasets/'+did + '/json', function(data) {
+    var dl = $('#map_infobar dl');
+    $.each(data, function(k, v) {
+      dl.append('<dt>' + k + '</dt><dd>' + v + '</dd>');
+    });
+  });
+}
 
 $(function() {
   function setupFilters() {
@@ -56,9 +92,9 @@ $(function() {
   var margin=10;
 
   var projection = d3.geo.stereographic()
-    .scale(650)
+    .scale(950)
     .rotate([100, 0])
-    .translate([450, 250])
+    .translate([750, 750])
     .center([0, 60])
     ;
 
@@ -84,11 +120,16 @@ $(function() {
   d3.json("{{ url_for('.static', filename='geojson/ne_110m_coastline.geojson') }}", function (error, geojson) {
 
 
-    d3.select('#map')
+    d3.select('#shared')
+      .append('defs')
       .append("path")
         .datum(geojson)
         .attr("id", "geo")
         .attr("d", path);
+
+    d3.select('#map')
+      .append('use')
+      .attr('xlink:href', '#geo');
 
     d3.select('#map')
       .append("path")
@@ -113,15 +154,45 @@ $(function() {
         .attr('d', path);
 
     // on thumbnail index
-    var thumbs = d3.select('#thumbnails').selectAll('.list-group-item')
+    var thumbs = d3.select('#thumbnails').selectAll('li')
       .data(geojson.features, function(d) { return d.properties.id; });
 
     thumbs.exit().remove();
 
     var ps = thumbs.enter()
       .append('li')
-        .attr('class', 'list-group-item')
+        .attr('class', 'media');
+
+      var thumbs = ps.append('a')
+        .attr('class', 'pull-right')
+        .attr('href', '#')
+        .append('svg')
+        .attr('class', 'media-object')
+        .attr('width', 128)
+        .attr('height', 128);
+
+      thumbs.append('use')
+        .attr('xlink:href', '#geo');
+
+      thumbs.append('path')
+        .attr('id', function(d) { return 'thumb_' + d.properties.id })
+        .attr('class', 'dataset active')
+        .attr('d', path); 
+
+      thumbs.attr('viewBox', '0 0 800 700');
+      thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
+
+      var body = ps.append('div')
+        .attr('class', 'media-body');
+
+      body
+        .append('h4')
+        .attr('class', 'media-heading')
         .text(function(d) { return d.properties.name || d.properties.id; });
+
+      body
+        .append('p')
+        .text(function(d) { return d.properties.description || ""; });
 
       ps.on('mouseout', function(d) {
         d3.selectAll('#map path.dataset').classed({'active':false});
@@ -133,6 +204,10 @@ $(function() {
         d3.selectAll(sel).classed({'active':true});
 
         d3.select(this).classed({'list-group-item-info': true});
+      });
+
+      ps.on('click', function(d) {
+        toggleInfo(d.properties.id);
       });
   }
 

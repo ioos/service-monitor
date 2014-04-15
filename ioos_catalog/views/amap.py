@@ -39,7 +39,8 @@ def geoj(filter_provider):
 
                 feat = {'type':'Feature',
                         'properties':{'id':str(d._id),
-                                      'name':s['name']},
+                                      'name':s['name'],
+                                      'description':s['description']},
                         'geometry': s.get('geojson')}
 
                 features.append(feat)

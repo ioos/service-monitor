@@ -5,6 +5,7 @@ from pymongo import DESCENDING
 from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
 from wtforms import TextField, IntegerField, SelectField
+from bson import json_util
 
 from ioos_catalog import app, db, scheduler, requires_auth
 from ioos_catalog.models.stat import Stat
@@ -47,8 +48,9 @@ def datasets(filter_provider, filter_type):
     providers = db["services"].distinct('data_provider')
     return render_template('datasets.html', datasets=datasets, form=f, assettypes=assettypes, providers=providers, filters=filters)
 
-@app.route('/datasets/<ObjectId:dataset_id>', methods=['GET'])
-def show_dataset(dataset_id):
+@app.route('/datasets/<ObjectId:dataset_id>', defaults={'oformat':None})
+@app.route('/datasets/<ObjectId:dataset_id>/<oformat>', methods=['GET'])
+def show_dataset(dataset_id, oformat):
     dataset = db.Dataset.find_one({'_id':dataset_id})
 
     g.title = dataset.uid
@@ -61,6 +63,10 @@ def show_dataset(dataset_id):
         s['metadata'] = {}
         if metadata_parent:
             s['metadata'] = {m['checker']:m for m in metadata_parent.metadata if m['service_id'] == s['service_id']}
+
+    if oformat == 'json':
+        resp = json.dumps(dataset, default=json_util.default)
+        return Response(resp, mimetype='application/json')
 
     return render_template('show_dataset.html', dataset=dataset)
 
