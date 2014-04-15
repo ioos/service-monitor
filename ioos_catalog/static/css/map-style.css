@@ -44,12 +44,23 @@ svg path.dataset-trajectory.perm-active {
 }
 
 #map {
-  background-color: #666;
-  position: fixed;
+  /*
   top: 0px;
   bottom: 0px;
   left: 30%;
   width: 70%;
+
+  left: 0px;
+  right: 0px;
+  */
+  /*
+  width: 900px;
+  height: 600px;
+  */
+  position: fixed;
+  margin-left: 30%;
+  width: 70%;
+  height: 100%;
 }
 
 .graticule {

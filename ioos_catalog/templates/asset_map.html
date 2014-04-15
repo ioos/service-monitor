@@ -2,6 +2,7 @@
 
 {% block css %}
 <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
 {% endblock %}
 
 {% block basepage %}
@@ -107,7 +108,9 @@
 </div>
 
 <!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
-<svg id="map" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice"></svg>
+<!--<svg id="map" viewBox="0 0 1500 1500" preserveAspectRatio="xMinYMin slice"></svg>-->
+
+<div id="map"></div>
 
 <svg id="shared"></svg>
 
@@ -116,6 +119,7 @@
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.zoom.js') }}" /></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
 
 <script type="text/javascript">
 
@@ -201,6 +205,15 @@ function setupFilters() {
 
 setupFilters();
 
+var map = L.map('map').setView([44, -100], 4);
+
+var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+var osm = new L.TileLayer(osmUrl, {minZoom: 1, maxZoom: 12, attribution: osmAttrib}); 
+
+map.addLayer(osm);
+/*
+
 var root = d3.select('#map');
 
 // add points erry hundred
@@ -238,13 +251,6 @@ var smallProjection = d3.geo.mercator()
 
 var center = projection([-100, 40])
 
-/*
-  .scale(950)
-  .rotate([100, 0])
-  .translate([750, 750])
-  .center([0, 60])
-  ;
-  */
 
 var graticule = d3.geo.graticule()
   .extent([[-180, -90], [180, 90]])
@@ -274,7 +280,6 @@ var zoom = d3.geo.zoom()
 
 root.call(zoom);
 
-  /*
 var zoom = d3.behavior.zoom()
   .scale(projection.scale() * 2 * Math.PI)
   .scaleExtent([1 << 11, 1 << 14])
@@ -294,7 +299,6 @@ function zoomed() {
   root.selectAll('.dataset')
     .attr("d", path);
 }
-*/
 
 d3.json("{{ url_for('.static', filename='geojson/ne_110m_land.geojson') }}", function (error, geojson) {
 //d3.json("{{ url_for('.static', filename='geojson/ne_110m_admin_0_countries_lakes.geojson') }}", function (error, geojson) {
@@ -314,11 +318,15 @@ d3.json("{{ url_for('.static', filename='geojson/ne_110m_land.geojson') }}", fun
 
   //zoomed();
 });
+*/
 
 function addData(error, geojson) {
 
+  L.geoJson(geojson).addTo(map);
+
   // on main map
-  var svg = root.selectAll('.ioos-dataset')
+  /*
+     var svg = root.selectAll('.dataset')
     .data(geojson.features, function(d) { return d.properties.id;});
 
   svg.exit().remove();
@@ -331,6 +339,7 @@ function addData(error, geojson) {
 
   svg.classed('dataset', function(d) { return d.geometry.type != 'LineString'; });
   svg.classed('dataset-trajectory', function(d) { return d.geometry.type == 'LineString'; });
+      */
 
   // on thumbnail index
   var thumbs = d3.select('#thumbnails').selectAll('.media')
@@ -368,6 +377,7 @@ function addData(error, geojson) {
 
     //thumbs.attr('viewBox', '0 0 800 700');
     //thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
+   */
 
     var body = ps.append('div')
       .attr('class', 'media-body');
