@@ -1,9 +1,7 @@
 {% extends "layout.html" %}
 
 {% block css %}
-
 <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
-
 {% endblock %}
 
 {% block basepage %}
@@ -34,6 +32,7 @@
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.zoom.js') }}" /></script>
 
 <script type="text/javascript">
 
@@ -68,150 +67,185 @@ function toggleInfo(did) {
   });
 }
 
-$(function() {
-  function setupFilters() {
-    $('select[name^="filter"]').change(function() {
-      var provVal = $('select[name="filter-provider"]').val();
-      if (provVal == "null") {
-        //window.location = "{{ url_for("asset_map") }}";
-        console.log("michael jackson's beat it");
-        return;
-      }
-      var url = '/map/geojson/';
-      url += provVal + "/";
+function setupFilters() {
+  $('select[name^="filter"]').change(function() {
+    var provVal = $('select[name="filter-provider"]').val();
+    if (provVal == "null") {
+      //window.location = "{{ url_for("asset_map") }}";
+      console.log("michael jackson's beat it");
+      return;
+    }
+    var url = '/map/geojson/';
+    url += provVal + "/";
 
-      d3.json(url, addData);
-    })
-  }
-
-
-  setupFilters();
-
-  var root = d3.select('#map');
-
-  var margin=10;
-
-  var projection = d3.geo.stereographic()
-    .scale(950)
-    .rotate([100, 0])
-    .translate([750, 750])
-    .center([0, 60])
-    ;
-
-    /*
- var projection =  d3.geo.satellite()
-  .distance(1.1)
-  .scale(5500)
-  .rotate([76.00, -34.50, 32.12])
-    .center([-2, 5])
-    .tilt(25)
-   //.clipAngle(Math.acos(1 / 1.1) * 180 / Math.PI - 1e-6)
-    .precision(.1);
-    */
-
-  var graticule = d3.geo.graticule()
-    .extent([[-180, 0], [0, 90]])
-    .step([3, 3]);
+    d3.json(url, addData);
+  })
+}
 
 
-  var path = d3.geo.path()
-    .projection(projection);
+setupFilters();
 
-  d3.json("{{ url_for('.static', filename='geojson/ne_110m_coastline.geojson') }}", function (error, geojson) {
+var root = d3.select('#map');
 
+var margin=10;
 
-    d3.select('#shared')
-      .append('defs')
-      .append("path")
-        .datum(geojson)
-        .attr("id", "geo")
-        .attr("d", path);
+// @TODO: browser resize
+var width = Math.max(960, window.innerWidth),
+    height = Math.max(500, window.innerHeight);
 
-    d3.select('#map')
-      .append('use')
-      .attr('xlink:href', '#geo');
+var projection = d3.geo.azimuthalEqualArea()
+  .scale((1 << 12) / 2 / Math.PI)
+  .translate([width/2, height/2])
+  //.clipAngle(null)
+  .rotate([110, -34, -5])
+  ;
 
-    d3.select('#map')
-      .append("path")
-     .datum(graticule)
-    .attr("class", "graticule")
-    .attr("d", path);
+var center = projection([-100, 40])
 
+/*
+  .scale(950)
+  .rotate([100, 0])
+  .translate([750, 750])
+  .center([0, 60])
+  ;
+  */
+
+var graticule = d3.geo.graticule()
+  .extent([[-180, 0], [0, 90]])
+  .step([3, 3]);
+
+root.append("path")
+  .datum(graticule)
+  .attr("class", "graticule")
+  .attr("d", path);
+
+var vector = d3.select('#shared')
+  .append("defs")
+  .append("path")
+    .attr("id", "geo");
+
+root.append('use')
+  .attr('xlink:href', '#geo');
+
+var path = d3.geo.path()
+  .projection(projection);
+
+var zoom = d3.geo.zoom()
+  .projection(projection)
+  .on('zoom.redraw', function() {
+    d3.event.sourceEvent.preventDefault();
+    root.selectAll("path").attr("d", path);
+    vector.attr("d", path);
   });
 
-  function addData(error, geojson) {
+root.call(zoom);
 
-    // on main map
-    var svg = root.selectAll('.dataset')
-      .data(geojson.features, function(d) { return d.properties.id;});
+  /*
+var zoom = d3.behavior.zoom()
+  .scale(projection.scale() * 2 * Math.PI)
+  .scaleExtent([1 << 11, 1 << 14])
+  .translate([width - center[0], height - center[1]])
+  .on("zoom", zoomed);
 
-    svg.exit().remove();
+function zoomed() {
+  projection
+    .scale(zoom.scale() / 2 / Math.PI)
+    //.rotate(zoom.translate());
+    .translate(zoom.translate());
 
-    svg.enter()
-      .append('path')
-        .attr('id', function(d) { return d.properties.id; })
-        .attr('class', 'dataset')//function(d) { return (d.properties.asset_type == 'CGRID' || d.properties.asset_type == 'RGRID' || d.properties.asset_type=='NCELL') ? 'dataset' : 'point'})
-        .attr('d', path);
+  vector
+    .attr("d", path);
 
-    // on thumbnail index
-    var thumbs = d3.select('#thumbnails').selectAll('li')
-      .data(geojson.features, function(d) { return d.properties.id; });
+  // adjust any features we've added
+  root.selectAll('.dataset')
+    .attr("d", path);
+}
+*/
 
-    thumbs.exit().remove();
+d3.json("{{ url_for('.static', filename='geojson/ne_110m_land.geojson') }}", function (error, geojson) {
+//d3.json("{{ url_for('.static', filename='geojson/ne_110m_admin_0_countries_lakes.geojson') }}", function (error, geojson) {
+  //root.call(zoom);
+  vector
+    .datum(geojson)
+    .attr('d', path);
 
-    var ps = thumbs.enter()
-      .append('li')
-        .attr('class', 'media');
-
-      var thumbs = ps.append('a')
-        .attr('class', 'pull-right')
-        .attr('href', '#')
-        .append('svg')
-        .attr('class', 'media-object')
-        .attr('width', 128)
-        .attr('height', 128);
-
-      thumbs.append('use')
-        .attr('xlink:href', '#geo');
-
-      thumbs.append('path')
-        .attr('id', function(d) { return 'thumb_' + d.properties.id })
-        .attr('class', 'dataset active')
-        .attr('d', path); 
-
-      thumbs.attr('viewBox', '0 0 800 700');
-      thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
-
-      var body = ps.append('div')
-        .attr('class', 'media-body');
-
-      body
-        .append('h4')
-        .attr('class', 'media-heading')
-        .text(function(d) { return d.properties.name || d.properties.id; });
-
-      body
-        .append('p')
-        .text(function(d) { return d.properties.description || ""; });
-
-      ps.on('mouseout', function(d) {
-        d3.selectAll('#map path.dataset').classed({'active':false});
-        d3.select(this).classed({'list-group-item-info': false});
-      });
-
-      ps.on('mouseover', function(d) {
-        var sel = $('#map #' + d.properties.id);
-        d3.selectAll(sel).classed({'active':true});
-
-        d3.select(this).classed({'list-group-item-info': true});
-      });
-
-      ps.on('click', function(d) {
-        toggleInfo(d.properties.id);
-      });
-  }
-
+  //zoomed();
 });
+
+function addData(error, geojson) {
+
+  // on main map
+  var svg = root.selectAll('.dataset')
+    .data(geojson.features, function(d) { return d.properties.id;});
+
+  svg.exit().remove();
+
+  svg.enter()
+    .append('path')
+      .attr('id', function(d) { return d.properties.id; })
+      .attr('class', 'dataset')//function(d) { return (d.properties.asset_type == 'CGRID' || d.properties.asset_type == 'RGRID' || d.properties.asset_type=='NCELL') ? 'dataset' : 'point'})
+      .attr('d', path);
+
+  // on thumbnail index
+  var thumbs = d3.select('#thumbnails').selectAll('li')
+    .data(geojson.features, function(d) { return d.properties.id; });
+
+  thumbs.exit().remove();
+
+  var ps = thumbs.enter()
+    .append('li')
+      .attr('class', 'media');
+
+    var thumbs = ps.append('a')
+      .attr('class', 'pull-right')
+      .attr('href', '#')
+      .append('svg')
+      .attr('class', 'media-object')
+      .attr('width', 128)
+      .attr('height', 128);
+
+      /*
+    thumbs.append('use')
+      .attr('xlink:href', '#geo');
+
+    thumbs.append('path')
+      .attr('id', function(d) { return 'thumb_' + d.properties.id })
+      .attr('class', 'dataset active')
+      .attr('d', path); 
+
+    thumbs.attr('viewBox', '0 0 800 700');
+    thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
+    */
+
+    var body = ps.append('div')
+      .attr('class', 'media-body');
+
+    body
+      .append('h4')
+      .attr('class', 'media-heading')
+      .text(function(d) { return d.properties.name || d.properties.id; });
+
+    body
+      .append('p')
+      .text(function(d) { return d.properties.description || ""; });
+
+    ps.on('mouseout', function(d) {
+      d3.selectAll('#map path.dataset').classed({'active':false});
+      d3.select(this).classed({'list-group-item-info': false});
+    });
+
+    ps.on('mouseover', function(d) {
+      var sel = $('#map #' + d.properties.id);
+      d3.selectAll(sel).classed({'active':true});
+
+      d3.select(this).classed({'list-group-item-info': true});
+    });
+
+    ps.on('click', function(d) {
+      toggleInfo(d.properties.id);
+    });
+}
+
 </script>
 
 {% endblock %}

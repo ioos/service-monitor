@@ -2,7 +2,16 @@
   cursor: pointer;
 }
 
+svg #geo {
+  fill: #ccc;
+  stroke: #ddd;
+}
+
+svg {
+}
+
 #map {
+  background-color: #666;
   position: fixed;
   top: 0px;
   bottom: 0px;
