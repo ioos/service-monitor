@@ -6,4 +6,4 @@ logs/*
 build/*
 .DS_Store
 .*.swo
-
+db/*
