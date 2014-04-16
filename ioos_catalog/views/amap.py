@@ -33,12 +33,13 @@ def geoj(filter_provider):
 
     for d in datasets:
         if not d.uid.startswith('urn'):
-            for s in d.services:
+            for idx, s in enumerate(d.services):
                 if s.get('geojson', None) is None:
                     continue
 
                 feat = {'type':'Feature',
                         'properties':{'id':str(d._id),
+                                      'sindex': idx,        # service index
                                       'name':s['name'],
                                       'description':s['description']},
                         'geometry': s.get('geojson')}
@@ -77,4 +78,32 @@ def geoj(filter_provider):
            'features':features}
 
     return jsonify(doc)
+
+@app.route('/map/details/<ObjectId:dataset_id>/<int:sindex>', methods=['GET'])
+def details(dataset_id, sindex):
+    dataset = db.Dataset.find_one({'_id':dataset_id})
+    s = dataset.services[sindex]
+
+    # get details from service
+    service = db.Service.find_one({'_id':s['service_id']})
+    pl      = db.PingLatest.find_one({'service_id':s['service_id']})
+
+    retval = {'name':s.get('name', 'UNKNOWN'),
+              'description':s.get('description', ''),
+              'data_provider':s.get('data_provider', ''),
+              'asset_type': s.get('asset_type', 'UNKNOWN'),
+              'updated':str(s['updated']),
+              'uid':dataset.uid,
+              'variables':s.get('variables', []),
+              'keywords':s.get('keywords', []),
+              'dataset_link':url_for('show_dataset', dataset_id=dataset_id),
+              'service_link':url_for('show_service', service_id=s['service_id']),
+              'service_name':service.name,
+              'service_type':service.service_type,
+              'service_last_ping_time':str(pl.updated),
+              'service_last_status':pl.last_operational_status,
+              'service_recent_uptime':'',
+              'cc_score':''}
+
+    return jsonify(retval)
 

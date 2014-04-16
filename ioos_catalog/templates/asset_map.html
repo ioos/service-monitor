@@ -7,7 +7,57 @@
 {% block basepage %}
 
 <div id="map_infobar">
-  <dl></dl>
+  <button id="show_geo" class="btn btn-lg btn-primary pull-right">
+    <span class="glyphicon glyphicon-search"></span>
+  </button>
+  <h4 id="name"></h4>
+  <p id="description"></p>
+
+  <h5>Service Endpoint</h5>
+
+  <div class="btn-group pull-right">
+    <button class="btn btn-default">
+      <span class="label label-info" id="service_type"></span>
+    </button>
+    <button class="btn btn-default">
+      <span class="glyphicon glyphicon-ok-circle"></span>
+    </button>
+    <a href="#" id="service_link" target="_blank" class="btn btn-info">
+      <span class="glyphicon glyphicon-new-window"></span>
+    </a>
+  </div>
+
+  <dl>
+    <dt>Name</dt>
+    <dd id="service_name"></dd>
+    <dt>Last Pinged</dt>
+    <dd id="service_last_ping_time"></dd>
+  </dl>
+
+
+
+  <h5>Dataset Info</h5>
+
+
+  <a href="#" id="dataset_link" target="_blank" class="btn btn-info">
+    <span class="glyphicon glyphicon-new-window"></span>
+    Dataset
+  </a>
+
+  <dl>
+    <dt>Asset Type</dt>
+    <dd id="asset_type" class="list-unstyled"></dd>
+    <dt>Variables</dt>
+    <dd>
+      <ul id="variables" class="list-unstyled"></ul>
+    </dd>
+
+    <dt>Keywords</dt>
+    <dd>
+      <ul id="keywords"></ul>
+    </dd>
+
+  </dl>
 </div>
 
 <div id="map_sidebar">
@@ -37,8 +87,9 @@
 
 <script type="text/javascript">
 
-function toggleInfo(did) {
+function toggleInfo(did, sindex) {
 
+  /*
   if ($('#map_infobar').css('left') != '0px') {
     $('#map_sidebar').animate({
       'left': '+=250'
@@ -59,12 +110,42 @@ function toggleInfo(did) {
   $('#map_infobar').animate({
     'left': '+=50'
   }, 150, function() {});
+  */
+  $.getJSON('/map/details/'+did +'/'+sindex, function(data) {
+    var ib = $('#map_infobar');
 
-  $.getJSON('/datasets/'+did + '/json', function(data) {
-    var dl = $('#map_infobar dl');
-    $.each(data, function(k, v) {
-      dl.append('<dt>' + k + '</dt><dd>' + v + '</dd>');
-    });
+    $('#name', ib).text(data.name);
+    $('#description', ib).text(data.description);
+
+    // links
+    $('#dataset_link', ib).attr('href', data.dataset_link);
+    $('#service_link', ib).attr('href', data.service_link);
+
+    // service
+    $('#service_name', ib).text(data.service_name);
+    $('#service_last_ping_time', ib).text(data.service_last_ping_time);
+    $('#service_type', ib).text(data.service_type);
+
+    // general dl
+    $('#asset_type', ib).text(data.asset_type);
+
+    // lists
+    var variables = d3.select('#map_infobar').select('#variables').selectAll('li')
+      .data(data.variables);
+
+    variables.exit().remove();
+    variables.enter()
+      .append('li')
+      .text(function(d) { return d; });
+
+    var keywords = d3.select('#map_infobar').select('#keywords').selectAll('li')
+      .data(data.keywords);
+
+    keywords.exit().remove();
+    keywords.enter()
+      .append('li')
+      .text(function(d) { return d; });
+
   });
 }
 
@@ -268,7 +349,7 @@ function addData(error, geojson) {
     });
 
     ps.on('click', function(d) {
-      toggleInfo(d.properties.id);
+      toggleInfo(d.properties.id, d.properties.sindex);
     });
 }
 

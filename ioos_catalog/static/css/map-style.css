@@ -25,7 +25,7 @@ svg {
 }
 
 #map_sidebar {
-  z-index: 1;
+  z-index: 10;
   background-color: #efefef;
   position: fixed;
   width: 30%;
@@ -50,13 +50,15 @@ svg {
 }
 
 #map_infobar {
-  z-index: 0;
+  z-index: 5;
   position: fixed;
-  background-color: white;
-  width: 300px;
-  height: 100%;
-  top: 0px;
-  left: 0px;
+  background-color: #efefef;
+  width: 20%;
+  height: 50%;
+  top: 50%;
+  left: 30%;
   border-right: 5px solid #9fabb7;
+  border-top: 5px solid #9fabb7;
+  padding: 5px;
 }
 
