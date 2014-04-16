@@ -217,8 +217,8 @@ var center = projection([-100, 40])
   */
 
 var graticule = d3.geo.graticule()
-  .extent([[-180, 0], [0, 90]])
-  .step([3, 3]);
+  .extent([[-180, -90], [180, 90]])
+  .step([5, 5]);
 
 var vector = root.append('path')
   .attr('id', 'geo');
