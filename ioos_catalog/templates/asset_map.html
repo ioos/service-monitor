@@ -74,7 +74,28 @@
     </select>
   </div>
 
-  <ul class="media-list" id="thumbnails"></ul>
+  <div class="btn-group pull-right" data-toggle="buttons">
+    <label class="btn btn-default btn-xs active">
+      <input type="radio" name="viewopts" value="list">
+        <span class="glyphicon glyphicon-th-list"></span>
+      </input>
+    </label>
+
+    <label class="btn btn-default btn-xs">
+      <input type="radio" name="viewopts" value="thumbs">
+        <span class="glyphicon glyphicon-th-large"></span>
+      </input>
+    </label>
+
+  </div>
+
+  <hr />
+
+
+  <!--<ul class="media-list" id="thumbnails"></ul>-->
+  <div id="thumbnails">
+
+  </div>
 </div>
 
 <!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
@@ -202,7 +223,7 @@ var projection = d3.geo.orthographic()
 
 var smallProjection = d3.geo.mercator()
   .scale(60)
-  .translate([64, 64])
+  .translate([32, 32])
   .rotate([100, -50])
   ;
 
@@ -300,22 +321,30 @@ function addData(error, geojson) {
       .attr('d', path);
 
   // on thumbnail index
-  var thumbs = d3.select('#thumbnails').selectAll('li')
+  var thumbs = d3.select('#thumbnails').selectAll('.media')
     .data(geojson.features, function(d) { return d.properties.id; });
 
   thumbs.exit().remove();
 
   var ps = thumbs.enter()
-    .append('li')
+    .append('div')
       .attr('class', 'media');
+
+  if ($('input[name="viewopts"]:checked').val() == 'thumbs') {
+    ps.classed({'media-grid':true});
+  }
 
     var thumbs = ps.append('a')
       .attr('class', 'pull-right')
       .attr('href', '#')
       .append('svg')
       .attr('class', 'media-object')
-      .attr('width', 128)
-      .attr('height', 128);
+      .attr('viewBox', '0 0 64 64')
+      /*
+      .attr('width', '100%')
+      .attr('height', '100%');
+     */
+      ;
 
     thumbs.append('use')
       .attr('xlink:href', '#basegeo');
@@ -357,6 +386,8 @@ function addData(error, geojson) {
     });
 }
 
+/* standard controls */
+
 $('#sidebar-toggle').click(function() {
   var map = $('#map');
   if (map.css('left') == '0px') {
@@ -378,6 +409,18 @@ $('#sidebar-toggle').click(function() {
   }
 });
 
+$('input[name="viewopts"]').on('change', function() {
+  var val = $(this).val();
+
+  if (val == "list") {
+    $('#thumbnails .media').removeClass('media-grid');
+  } else if (val == "thumbs") {
+    $('#thumbnails .media').addClass('media-grid');
+  }
+});
+
+
+/* debug */
 $(function() {
   $('select').val('SECOORA', true).trigger('change');
 

@@ -75,3 +75,41 @@ svg {
   padding: 5px;
 }
 
+/* can't specify w/h in source */
+.media svg {
+  width: 64px;
+  height: 64px;
+}
+
+/* cobbled together from http://www.mademyday.de/css-height-equals-width-with-pure-css.html */
+.media-grid {
+  width: 25%;
+  float: left;
+  margin-top: 0px;
+
+  position: relative;
+}
+
+.media-grid:before {
+  content: "";
+  display: block;
+  padding-top: 100%;
+}
+
+.media-grid .pull-right {
+  float: none;
+  margin-left: 0px;
+}
+
+.media-grid svg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  left: 0;
+  width: 100%;
+
+}
+
+.media-grid .media-body {
+  display: none;
+}
