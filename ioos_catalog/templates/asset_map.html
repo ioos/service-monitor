@@ -370,7 +370,7 @@ function addData(error, geojson) {
       .text(function(d) { return d.properties.description || ""; });
 
     ps.on('mouseout', function(d) {
-      d3.selectAll('#map path.dataset').classed({'active':false});
+      d3.selectAll('#map path.dataset.active').classed({'active':false});
       d3.select(this).classed({'list-group-item-info': false});
     });
 
@@ -382,6 +382,15 @@ function addData(error, geojson) {
     });
 
     ps.on('click', function(d) {
+      var sel = $('#map .perm-active');
+      d3.selectAll(sel).classed({'perm-active':false});
+
+      var sel = $('#map #' + d.properties.id);
+      d3.selectAll(sel).classed({'perm-active':true});
+
+      $(this).siblings().removeClass('active');
+      $(this).addClass('active');
+
       toggleInfo(d.properties.id, d.properties.sindex);
     });
 }
