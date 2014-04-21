@@ -132,3 +132,25 @@ svg path.dataset.perm-active {
 .media-grid .media-body {
   display: none;
 }
+
+#branding {
+  position: fixed;
+  top: 0px;
+  right: 15px;
+  height: 42px;
+  width: 110px;
+
+  z-index: 15;
+
+  border: 1px solid black;
+  border-top-width: 0px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  background-color: #3696ef;
+  box-shadow: 0px 0px 10px black;
+  text-align: center;
+}
+
+#branding img {
+  width: 100px;
+}
