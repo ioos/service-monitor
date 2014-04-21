@@ -66,8 +66,12 @@ svg path.dataset.perm-active {
 }
 
 #map_sidebar #thumbnails .media-object {
-  background-color: #ccc;
+  background-color: #666;
   border: 1px dotted #666;
+
+  fill: #888;
+  stroke: #aaa;
+  stroke-width: 0.5px;
 }
 
 #map_sidebar #thumbnails .active {
