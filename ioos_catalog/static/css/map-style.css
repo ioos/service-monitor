@@ -74,6 +74,10 @@ svg path.dataset.perm-active {
   background-color: #9fabb7;
 }
 
+#map_sidebar .media {
+  cursor: pointer;
+}
+
 #map_infobar {
   z-index: 5;
   position: fixed;
@@ -91,6 +95,8 @@ svg path.dataset.perm-active {
 .media svg {
   width: 64px;
   height: 64px;
+
+  pointer-events: none;  /* no interaction on these svgs, interferes with scrolling */
 }
 
 /* cobbled together from http://www.mademyday.de/css-height-equals-width-with-pure-css.html */
