@@ -17,7 +17,8 @@
 </div>
 
 <div id="map_infobar">
-  <button id="show_geo" class="btn btn-lg btn-primary pull-right">
+  <button type="button" class="btn btn-lg pull-right close">&times;</button>
+  <button id="show_geo" class="btn btn-lg btn-primary">
     <span class="glyphicon glyphicon-search"></span>
   </button>
   <h4 id="name"></h4>
@@ -144,6 +145,8 @@ function toggleInfo(did, sindex) {
   */
   $.getJSON('/map/details/'+did +'/'+sindex, function(data) {
     var ib = $('#map_infobar');
+
+    ib.show();
 
     $('#name', ib).text(data.name);
     $('#description', ib).text(data.description);
@@ -402,6 +405,10 @@ function addData(error, geojson) {
 }
 
 /* standard controls */
+
+$('#map_infobar .close').click(function() {
+  $('#map_infobar').hide();
+});
 
 $('#sidebar-toggle').click(function() {
   var map = $('#map');

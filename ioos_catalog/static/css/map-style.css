@@ -89,6 +89,8 @@ svg path.dataset.perm-active {
   border-right: 5px solid #9fabb7;
   border-top: 5px solid #9fabb7;
   padding: 5px;
+  display: none;
+  overflow: auto;
 }
 
 /* can't specify w/h in source */
