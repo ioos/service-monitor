@@ -39,10 +39,13 @@ services =      {'SOS'              : 'urn:x-esri:specification:ServiceType:sos:
 
 endpoint = 'http://www.ngdc.noaa.gov/geoportal/csw' # NGDC Geoportal
 
-def reindex_services():
+def reindex_services(filter_regions=None, filter_service_types=None):
     c = csw.CatalogueServiceWeb(endpoint, timeout=120)
 
     ns = Namespaces()
+
+    filter_regions = filter_regions or region_map.keys()
+    filter_service_types = filter_service_types or services.keys()
 
     with app.app_context():
 
@@ -50,9 +53,16 @@ def reindex_services():
         update_services = []
 
         # get a set of all non-manual, active services for possible deactivation later
-        current_services = set((s._id for s in db.Service.find({'manual':False, 'active':True}, {'_id':True})))
+        current_services = set((s._id for s in db.Service.find({'manual':False, 'active':True, 'data_provider':{'$in':filter_regions}}, {'_id':True})))
 
         for region,uuid in region_map.iteritems():
+
+            if region not in filter_regions:
+                app.logger.info("Skipping region %s due to filter", region)
+                continue
+
+            app.logger.info("Requesting region %s", region)
+
             # Setup uuid filter
             uuid_filter = fes.PropertyIsEqualTo(propertyname='sys.siteuuid', literal="{%s}" % uuid)
 
