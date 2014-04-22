@@ -17,6 +17,7 @@ from petulantbear.netcdf2ncml import *
 from petulantbear.netcdf_etree import parse_nc_dataset_as_etree
 from petulantbear.netcdf_etree import namespaces as pb_namespaces
 from netCDF4 import Dataset
+import numpy as np
 
 from compliance_checker.runner import ComplianceCheckerCheckSuite
 from compliance_checker.ioos import IOOSSOSGCCheck, IOOSSOSDSCheck, IOOSNCCheck
@@ -24,7 +25,7 @@ from compliance_checker.base import get_namespaces
 from wicken.xml_dogma import MultipleXmlDogma
 from wicken.netcdf_dogma import NetCDFDogma
 
-from shapely.geometry import mapping, box, Point
+from shapely.geometry import mapping, box, Point, LineString
 
 import geojson
 import json
@@ -543,15 +544,54 @@ class DapHarvest(Harvester):
 
         # paegan does not support ugrid, so try to detect this condition and skip
         is_ugrid = False
+        is_trajectory = False
         for vname, v in cd.nc.variables.iteritems():
-            if 'cf_role' in v.ncattrs() and v.getncattr('cf_role') == 'mesh_topology':
-                is_ugrid = True
-                break
+            if 'cf_role' in v.ncattrs():
+                if v.getncattr('cf_role') == 'mesh_topology':
+                    is_ugrid = True
+                    break
+                elif v.getncattr('cf_role') == 'trajectory_id':
+                    is_trajectory = True
+                    break
 
         gj = None
 
         if is_ugrid:
             messages.append(u"The underlying 'Paegan' data access library does not support UGRID and cannot parse geometry.")
+        elif is_trajectory:
+            coord_names = {}
+            for v in itertools.chain(std_variables, non_std_variables):
+                try:
+                    coord_names = cd.get_coord_names(v)
+
+                    if coord_names['zname'] is not None and \
+                       coord_names['xname'] is not None and \
+                       coord_names['yname'] is not None:
+                        break
+                except (AssertionError, AttributeError, ValueError, KeyError):
+                    pass
+            else:
+                messages.append(u"Trajectory discovered but could not detect coordinate variables using the underlying 'Paegan' data access library.")
+
+            if 'zname' in coord_names:
+                try:
+                    zvar = cd.nc.variables[coord_names['zname']]
+                    xvar = cd.nc.variables[coord_names['xname']]
+                    yvar = cd.nc.variables[coord_names['yname']]
+
+                    zidx = np.where(zvar[:] <= 0.0)
+
+                    xs = xvar[zidx]
+                    ys = yvar[zidx]
+
+                    gj = mapping(LineString(zip(xs, ys)))
+
+                    messages.append(u"Variable %s was used to calculate trajectory geometry." % v)
+
+                except (AssertionError, AttributeError, ValueError, KeyError) as e:
+                    app.logger.warn("Trajectory error occured: %s", e)
+                    messages.append(u"Trajectory discovered but could not create a geometry.")
+
         else:
             for v in itertools.chain(std_variables, non_std_variables):
                 try:
