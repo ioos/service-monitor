@@ -4,6 +4,7 @@ from lxml import etree
 import itertools
 import re
 import requests
+import math
 from urllib2 import HTTPError
 
 from owslib.sos import SensorObservationService
@@ -25,7 +26,7 @@ from compliance_checker.base import get_namespaces
 from wicken.xml_dogma import MultipleXmlDogma
 from wicken.netcdf_dogma import NetCDFDogma
 
-from shapely.geometry import mapping, box, Point, LineString
+from shapely.geometry import mapping, box, Point, asLineString
 
 import geojson
 import json
@@ -564,8 +565,7 @@ class DapHarvest(Harvester):
                 try:
                     coord_names = cd.get_coord_names(v)
 
-                    if coord_names['zname'] is not None and \
-                       coord_names['xname'] is not None and \
+                    if coord_names['xname'] is not None and \
                        coord_names['yname'] is not None:
                         break
                 except (AssertionError, AttributeError, ValueError, KeyError):
@@ -573,20 +573,22 @@ class DapHarvest(Harvester):
             else:
                 messages.append(u"Trajectory discovered but could not detect coordinate variables using the underlying 'Paegan' data access library.")
 
-            if 'zname' in coord_names:
+            if 'xname' in coord_names:
                 try:
-                    zvar = cd.nc.variables[coord_names['zname']]
                     xvar = cd.nc.variables[coord_names['xname']]
                     yvar = cd.nc.variables[coord_names['yname']]
 
-                    zidx = np.where(zvar[:] <= 0.0)
+                    slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)   # one less order of magnitude eg 390000 -> 10000
 
-                    xs = xvar[zidx]
-                    ys = yvar[zidx]
+                    xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
+                    ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
 
-                    gj = mapping(LineString(zip(xs, ys)))
+                    xs = xs[~np.isnan(xs)]
+                    ys = ys[~np.isnan(ys)]
 
-                    messages.append(u"Variable %s was used to calculate trajectory geometry." % v)
+                    gj = mapping(asLineString(np.dstack((xs, ys))[0]))
+
+                    messages.append(u"Variable %s was used to calculate trajectory geometry, and is a naive sampling." % v)
 
                 except (AssertionError, AttributeError, ValueError, KeyError) as e:
                     app.logger.warn("Trajectory error occured: %s", e)

@@ -66,7 +66,7 @@ class Service(BaseDocument):
         if self.service_type not in ['DAP', 'SOS']:
             return
 
-        timeout = 600 if self.service_type == 'SOS' else 120
+        timeout = 600
 
         job = scheduler.schedule(scheduled_time=datetime.utcnow(),
                                  func=harvest,
