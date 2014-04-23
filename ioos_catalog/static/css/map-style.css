@@ -26,6 +26,23 @@ svg path.dataset.perm-active {
   stroke-width: 1;
 }
 
+svg path.dataset-trajectory {
+  fill: none;
+  stroke: #666;
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+}
+
+svg path.dataset-trajectory.active {
+  stroke: #f23128;
+  stroke-width: 5;
+}
+
+svg path.dataset-trajectory.perm-active {
+  stroke: #8c2e19;
+  stroke-width: 5;
+}
+
 #map {
   background-color: #666;
   position: fixed;

@@ -318,7 +318,7 @@ d3.json("{{ url_for('.static', filename='geojson/ne_110m_land.geojson') }}", fun
 function addData(error, geojson) {
 
   // on main map
-  var svg = root.selectAll('.dataset')
+  var svg = root.selectAll('.ioos-dataset')
     .data(geojson.features, function(d) { return d.properties.id;});
 
   svg.exit().remove();
@@ -326,8 +326,11 @@ function addData(error, geojson) {
   svg.enter()
     .append('path')
       .attr('id', function(d) { return d.properties.id; })
-      .attr('class', 'dataset')//function(d) { return (d.properties.asset_type == 'CGRID' || d.properties.asset_type == 'RGRID' || d.properties.asset_type=='NCELL') ? 'dataset' : 'point'})
+      .attr('class', 'ioos-dataset')
       .attr('d', path);
+
+  svg.classed('dataset', function(d) { return d.geometry.type != 'LineString'; });
+  svg.classed('dataset-trajectory', function(d) { return d.geometry.type == 'LineString'; });
 
   // on thumbnail index
   var thumbs = d3.select('#thumbnails').selectAll('.media')
@@ -379,7 +382,7 @@ function addData(error, geojson) {
       .text(function(d) { return d.properties.description || ""; });
 
     ps.on('mouseout', function(d) {
-      d3.selectAll('#map path.dataset.active').classed({'active':false});
+      d3.selectAll('#map path.active').classed({'active':false});
       d3.select(this).classed({'list-group-item-info': false});
     });
 
