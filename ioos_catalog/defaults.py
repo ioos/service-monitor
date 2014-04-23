@@ -4,6 +4,7 @@ import urlparse
 DEBUG = False
 TESTING = False
 LOG_FILE = True
+JSONIFY_PRETTYPRINT_REGULAR = False
 
 WEB_PASSWORD = os.environ.get("WEB_PASSWORD")
 SECRET_KEY = os.environ.get("SECRET_KEY")
