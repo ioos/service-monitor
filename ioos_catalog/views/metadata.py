@@ -11,8 +11,18 @@ from wtforms import TextField, IntegerField, SelectField
 from ioos_catalog import app, db, scheduler
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
-from ioos_catalog.tasks.reindex_services import reindex_services
+from ioos_catalog.tasks.reindex_services import reindex_services, region_map
 from ioos_catalog.tasks.harvest import harvest
+
+class MetadataForm(Form):
+    start_date    = TextField(u'Start Date', description="Coming soon")
+    end_date      = TextField(u'End Date', description="Coming soon")
+    data_provider = SelectField(u'Data Provider')
+    service_type  = SelectField(u'Service Type', choices=[(u'WMS', u'WMS'),
+                                                          (u'DAP', u'DAP'),
+                                                          (u'WCS', u'WCS'),
+                                                          (u'SOS', u'SOS')])
+    asset_type    = SelectField(u'Asset Type')
 
 def get_service_ids(filters=None):
     """
@@ -102,8 +112,8 @@ def get_metadatas(service_ids, filters=None):
 
     return metadatas, cols, list(dids)
 
-@app.route('/metadata/')
-def metadatas():
+@app.route('/metadata/view')
+def view_metadatas():
     sids = get_service_ids()
     metadatas, cols, dids = get_metadatas(sids)
 
@@ -117,9 +127,26 @@ def metadatas():
                            #datasets=datasets,
                            columns=list(cols))
 
+@app.route('/metadata/')
+def metadatas():
+    """
+    Presents a form for the user to view/download.
+    """
+    f                 = MetadataForm()
+    f.data_provider.choices = zip(sorted(region_map.iterkeys()), sorted(region_map.iterkeys()))
+    f.asset_type.choices = []
+
+    return render_template("metadata_form.html",
+                           form=f)
+
 @app.route('/metadata/csv/', defaults={'filter_provider':None}, methods=['GET'])
 @app.route('/metadata/csv/<path:filter_provider>', methods=['GET'])
+@app.route('/metadata/csv/', defaults={'filter_provider':None}, methods=['POST'])
 def metadatas_csv(filter_provider):
+
+    # was posted? get from there
+    if request.method == 'POST':
+        filter_provider = request.form['data_provider']
 
     service_filters = {}
     if filter_provider is not None:
