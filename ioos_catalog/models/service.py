@@ -2,6 +2,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import pytz
 import requests
+import urllib
+import urlparse
 
 from ioos_catalog import app, db, scheduler
 from ioos_catalog.models.base_document import BaseDocument
@@ -88,7 +90,15 @@ class Service(BaseDocument):
         """
         url = self.url
         if self.service_type == 'DAP':
-            url += '.dds'       # get a description of the data back from OPeNDAP (this gives proper http codes)
+            url += '.das'       # get a description of the data back from OPeNDAP (this gives proper http codes)
+        elif self.service_type == 'SOS':
+            # modify url to request specific subsection - a ping does not care about data, just that it works
+            p                 = list(urlparse.urlparse(url))
+            qdict             = dict(urlparse.parse_qsl(p[4]))        # parse_qs gives us lists back, we don't want that here
+            qdict['sections'] = 'ServiceIdentification'
+            p[4]              = urllib.urlencode(qdict)
+
+            url               = urlparse.urlunparse(p)
 
         r = requests.get(url, timeout=timeout)
 
