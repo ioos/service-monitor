@@ -65,7 +65,7 @@ def update_crontab():
 
     # crontab
     put('deploy/catalog_crontab.txt', '/home/monitoring/crontab.txt')
-    run("crontab %s" % dst_file)
+    run("crontab %s" % "/home/monitoring/crontab.txt")
 
 def restart_nginx():
     admin()
