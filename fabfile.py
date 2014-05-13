@@ -61,7 +61,7 @@ def update_crontab():
     upload_template('deploy/dotenv', '/home/monitoring/.env', context=copy(env), use_jinja=True, use_sudo=False, backup=False, mirror_local_mode=True)
 
     # manage.sh
-    put('deploy/manage.sh', '/home/monitoring/manage.sh', mode=755)
+    put('deploy/manage.sh', '/home/monitoring/manage.sh')
 
     # crontab
     put('deploy/catalog_crontab.txt', '/home/monitoring/crontab.txt')
