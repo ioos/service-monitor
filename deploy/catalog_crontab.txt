@@ -1,0 +1,13 @@
+# pings are hourly
+@hourly manage.sh queue_pings
+
+# harvests start nightly at 7:10am UTC (2:10am eastern)
+10 7 * * * manage.sh queue_harvests
+
+# reindex daily daily at 6:30am UTC (1:30am eastern)
+30 6 * * * manage.sh queue_reindex
+
+# daily status emails at 6:20am UTC (1:20am eastern)
+20 6 * * * manage.sh queue_daily_status
+
+#END

@@ -1,0 +1,16 @@
+PORT=8000
+WEB_PASSWORD={{webpass}}
+REDIS_URI={{redis_db}}
+MONGO_URI={{mongo_db}}
+SECRET_KEY={{secret_key}}
+APPLICATION_SETTINGS=production.py
+MAIL_SERVER={{mail_server}}
+MAIL_PORT={{mail_port}}
+MAIL_USERNAME={{mail_username}}
+MAIL_PASSWORD={{mail_password}}
+MAIL_DEFAULT_SENDER={{mail_default_sender}}
+MAILER_DEBUG={{mailer_debug}}
+MAIL_DEFAULT_TO={{mail_default_to}}
+MAIL_DEFAULT_LIST={{mail_default_list}}
+SERVER_NAME={{server_name}}
+

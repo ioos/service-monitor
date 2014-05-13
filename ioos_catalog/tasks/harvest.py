@@ -31,17 +31,27 @@ from shapely.geometry import mapping, box, Point, asLineString
 import geojson
 import json
 
-from ioos_catalog import app, db
+from ioos_catalog import app, db, queue
 from ioos_catalog.tasks.send_email import send_service_down_email
+
+def queue_harvest_tasks():
+    """
+    Generate a number of harvet tasks.
+
+    Meant to be called via cron. Only queues services that are active.
+    """
+    with app.app_context():
+        sids = [s._id for s in db.Service.find({'active':True}, {'_id':True})]
+        for sid in sids:
+            queue.enqueue(harvest, sid)
 
 def harvest(service_id):
     with app.app_context():
         service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
 
         # make sure service is active before we harvest
-        s = db.Service.find_one({'_id':ObjectId(service_id)})
-        if not s.active:
-            s.cancel_harvest()
+        if not service.active:
+            #service.cancel_harvest()
             return "Service %s is not active, not harvesting" % service_id
 
         # ping it first to see if alive

@@ -40,6 +40,7 @@ def deploy():
         run("git pull origin master")
         update_supervisord()
         update_libs()
+        update_crontab()
         #create_index()
         start_supervisord()
         run("supervisorctl -c ~/supervisord.conf start all")
@@ -54,6 +55,17 @@ def update_libs(paegan=None):
     with cd(code_dir):
         with settings(warn_only=True):
             run("pip install -r requirements.txt")
+
+def update_crontab():
+    # .env
+    upload_template('deploy/dotenv', '/home/monitoring/.env', context=copy(env), use_jinja=True, use_sudo=False, backup=False, mirror_local_mode=True)
+
+    # manage.sh
+    put('deploy/manage.sh', '/home/monitoring/manage.sh', mode=755)
+
+    # crontab
+    put('deploy/catalog_crontab.txt', '/home/monitoring/crontab.txt')
+    run("crontab %s" % dst_file)
 
 def restart_nginx():
     admin()

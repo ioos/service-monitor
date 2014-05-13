@@ -6,12 +6,6 @@ from ioos_catalog.tasks.send_email import send_service_down_email
 def ping_service_task(service_id):
     with app.app_context():
 
-        # make sure service is active before we ping
-        s = db.Service.find_one({'_id':ObjectId(service_id)})
-        if not s.active:
-            s.cancel_ping()
-            return "Service %s is not active, not pinging" % service_id
-
         pl = db.PingLatest.get_for_service(ObjectId(service_id))
         wasnew, flip = pl.ping_service()
         pl.save()
@@ -28,3 +22,15 @@ def ping_service_task(service_id):
             queue.enqueue(send_service_down_email, ObjectId(service_id))
 
         return pl.last_response_time
+
+def queue_ping_tasks():
+    """
+    Generate a number of ping tasks.
+
+    Meant to be called via cron. Only queues services that are active.
+    """
+    with app.app_context():
+        sids = [s._id for s in db.Service.find({'active':True}, {'_id':True})]
+        for sid in sids:
+            queue.enqueue(ping_service_task, sid)
+
