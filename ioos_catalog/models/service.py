@@ -5,7 +5,7 @@ import requests
 import urllib
 import urlparse
 
-from ioos_catalog import app, db, scheduler
+from ioos_catalog import app, db
 from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.harvest import harvest
@@ -48,40 +48,6 @@ class Service(BaseDocument):
         by_tld = cls.aggregate(query)
         return {a['_id']:a['ids'] for a in by_tld}
 
-    def schedule_harvest(self, cancel=True):
-        """
-        Starts a continuous harvest job via the rq scheduler.
-        Cancels any existing job it can find regarding this service.
-
-        Harvest task will not run if the service is not active.
-
-        Runs once per day (86400 seconds)
-        """
-        if cancel is True:
-            self.cancel_harvest()
-
-            # if we cancelled and we know we aren't active, don't bother scheduling
-            if not self.active:
-                return
-
-        # we only harvest DAP/SOS at the time being, don't waste job time here
-        if self.service_type not in ['DAP', 'SOS']:
-            return
-
-        timeout = 600
-
-        job = scheduler.schedule(scheduled_time=datetime.utcnow(),
-                                 func=harvest,
-                                 args=(unicode(self._id),),
-                                 interval=86400,
-                                 repeat=None,
-                                 timeout=timeout,
-                                 result_ttl=86400 * 2)
-        self['harvest_job_id'] = unicode(job.id)
-        self.save()
-
-        return job.id
-
     def ping(self, timeout=None):
         """
         Performs a service ping.
@@ -106,80 +72,6 @@ class Service(BaseDocument):
         response_code = r.status_code
 
         return response_time, response_code
-
-    def schedule_ping(self, cancel=True):
-        """
-        Starts a continuous ping job via the rq scheduler.
-        Cancels any existing job it can find regarding this service.
-
-        Ping task will not run if the service is not active.
-
-        If self.interval is 0 or not set, does nothing.
-        """
-
-        if cancel is True:
-            self.cancel_ping()
-
-            # if we cancelled and we know we aren't active, don't bother scheduling
-            if not self.active:
-                return
-
-        if not self.interval:
-            return None
-
-        job = scheduler.schedule(scheduled_time=datetime.utcnow(),
-                                 func=ping_service_task,
-                                 args=(unicode(self._id),),
-                                 interval=self.interval,
-                                 repeat=None,
-                                 timeout=30,
-                                 result_ttl=self.interval * 2)
-        self['ping_job_id'] = unicode(job.id)
-        self.save()
-
-        return job.id
-
-    def get_ping_job_id(self):
-        for job in scheduler.get_jobs():
-            if job.func == ping_service_task and unicode(job.args[0]) == unicode(self._id):
-                return job.id
-
-    def get_harvest_job_id(self):
-        for job in scheduler.get_jobs():
-            if job.func == harvest and unicode(job.args[0]) == unicode(self._id):
-                return job.id
-
-    def cancel_harvest(self):
-        """
-        Cancels any scheduled harvest jobs for this service.
-        """
-        try:
-            scheduler.cancel(self.harvest_job_id)
-        except AttributeError:
-            # "full nuclear" - make sure there are no other scheduled jobs that are for this service
-            try:
-                scheduler.cancel(self.get_harvest_job_id())
-            except BaseException:
-                pass
-        finally:
-            self['harvest_job_id'] = None
-            self.save()
-
-    def cancel_ping(self):
-        """
-        Cancels any scheduled ping job for this service.
-        """
-        try:
-            scheduler.cancel(self.ping_job_id)
-        except AttributeError:
-            # "full nuclear" - make sure there are no other scheduled jobs that are for this service
-            try:
-                scheduler.cancel(self.get_ping_job_id())
-            except BaseException:
-                pass
-        finally:
-            self['ping_job_id'] = None
-            self.save()
 
     @classmethod
     def count_types(cls):

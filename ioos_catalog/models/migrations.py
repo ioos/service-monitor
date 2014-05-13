@@ -21,6 +21,14 @@ class ServiceMigration(DocumentMigration):
         self.target = {'manual':{'$exists':False}}
         self.update = {'$set':{'manual':False}}
 
+    def allmigration05__add_harvest_job_id_field(self):
+        self.target = {'harvest_job_id':{'$exists': True}}
+        self.update = {'$unset':{'harvest_job_id': ""}}
+
+    def allmigration06__remove_ping_job_id_field(self):
+        self.target = {'ping_job_id':{'$exists': True}}
+        self.update = {'$unset':{'ping_job_id': ""}}
+
 # Datasets
 from ioos_catalog.models import dataset
 class DatasetMigration(DocumentMigration):

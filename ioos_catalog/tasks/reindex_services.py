@@ -125,9 +125,6 @@ def reindex_services(filter_regions=None, filter_service_types=None):
 
                                 s.save()
 
-                                s.schedule_harvest(True)
-                                s.schedule_ping(True)
-
                         except Exception as e:
                             app.logger.warn("Could not save service: %s", e)
 

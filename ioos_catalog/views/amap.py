@@ -10,7 +10,7 @@ from collections import defaultdict
 from itertools import chain
 import shapely.geometry
 
-from ioos_catalog import app, db, scheduler, support_jsonp, requires_auth
+from ioos_catalog import app, db, support_jsonp, requires_auth
 from ioos_catalog.tasks.reindex_services import region_map
 
 @app.route('/map/', methods=['GET'])

@@ -32,11 +32,9 @@ redis_pool = redis.ConnectionPool(host=app.config.get('REDIS_HOST'),
                                   db=app.config.get('REDIS_DATABASE'))
 redis_connection = redis.Redis(connection_pool=redis_pool)
 
-# rq/scheduler
+# rq
 from rq import Queue
-from rq_scheduler import Scheduler
 queue = Queue('default', connection=redis_connection)
-scheduler = Scheduler('default', connection=redis_connection)
 
 # Create the database connection
 from flask.ext.mongokit import MongoKit

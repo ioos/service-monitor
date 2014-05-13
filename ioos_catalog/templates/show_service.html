@@ -13,15 +13,10 @@
     <li><a href="{{ url_for('edit_service', service_id=service._id) }}">Edit</a></li>
     <li class="divider"></li>
     <li>
-      {% if not service.ping_job_id %}
+      {% if not service.active %}
         <a id="start-monitoring-link" href="#">Start Monitoring</a>
       {% else %}
         <a id="stop-monitoring-link" href="#">Stop Monitoring</a>
-      {% endif %}
-      {% if not service.harvest_job_id %}
-        <a id="start-harvesting-link" href="#">Start Harvesting</a>
-      {% else %}
-        <a id="stop-harvesting-link" href="#">Stop Harvesting</a>
       {% endif %}
     </li>
     <li><a href="#" id="delete-link">Delete</a></li>
@@ -30,10 +25,6 @@
 <form id="start-monitoring-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('start_monitoring_service', service_id=service._id) }}">
 </form>
 <form id="stop-monitoring-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('stop_monitoring_service', service_id=service._id) }}">
-</form>
-<form id="start-harvesting-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('start_harvesting_service', service_id=service._id) }}">
-</form>
-<form id="stop-harvesting-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('stop_harvesting_service', service_id=service._id) }}">
 </form>
 <form id="delete-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
 </form>
@@ -63,8 +54,8 @@
       <dd><a href="{{ service.metadata_url }}">{{ service.metadata_url | truncate(90, true) }}</a></dd>
     </dl>
     <dl class="dl-horizontal col-lg-4">
-      <dt>Monitoring</dt>
-      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.ping_job_id else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
+      <dt>Active</dt>
+      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.active else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
       <dt>Last Attempt</dt>
       <dd><abbr title="{{ last_ping['time'] | datetimeformat }}">{{ last_ping['time'] | prettydate }}</abbr></dd>
       <dt>Last Ping</dt>

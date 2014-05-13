@@ -7,7 +7,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, R
 from wtforms import TextField, IntegerField, SelectField
 from bson import json_util
 
-from ioos_catalog import app, db, scheduler, support_jsonp, requires_auth
+from ioos_catalog import app, db, queue, support_jsonp, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
@@ -183,8 +183,6 @@ def add_service():
     service.tld = url.hostname
     service.save()
 
-    service.schedule_ping()
-
     flash("Service '%s' Registered" % service.name, 'success')
     return redirect(url_for('services'))
 
@@ -200,8 +198,6 @@ def edit_service_submit(service_id):
     url = urlparse.urlparse(service.url)
     service.tld = url.hostname
     service.save()
-
-    service.schedule_ping()
 
     flash("Service '%s' updated" % service.name, 'success')
     return redirect(url_for('show_service', service_id=service_id))
@@ -237,7 +233,8 @@ def start_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    s.schedule_ping()
+    s.active = True
+    s.save()
 
     flash("Started monitoring the '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
@@ -248,7 +245,8 @@ def stop_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    s.cancel_ping()
+    s.active = False()
+    s.save()
 
     flash("Stopped monitoring the '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
@@ -259,7 +257,8 @@ def start_harvesting_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    s.schedule_harvest()
+    s.active = True
+    s.save()
 
     flash("Started harvesting the '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
@@ -270,7 +269,8 @@ def stop_harvesting_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    s.cancel_harvest()
+    s.active = False()
+    s.save()
 
     flash("Stopped harvesting the '%s' service" % s.name)
     return redirect(url_for('show_service', service_id=service_id))
@@ -286,22 +286,8 @@ def edit_service(service_id):
 @app.route('/services/reindex', methods=['GET'])
 @requires_auth
 def reindex():
-    jobs = scheduler.get_jobs()
-
-    for job in jobs:
-        if job.func == reindex_services or job.description == "ioos_catalog.views.services.reindex()":
-           scheduler.cancel(job)
-
-    scheduler.schedule(
-        scheduled_time=datetime.utcnow(), # Time for first execution
-        func=reindex_services,            # Function to be queued
-        interval=21600,                   # Time before the function is called again, in seconds
-        repeat=None,                      # Repeat this number of times (None means repeat forever)
-        result_ttl=40000,                 # How long to keep the results
-        timeout=1200                      # Default timeout of 180 seconds may not be enough
-    )
-
-    return jsonify({"message" : "scheduled"})
+    queue.enqueue(reindex_services)
+    return jsonify({"message" : "queued"})
 
 @app.route('/services/feed.xml', methods=['GET'])
 def atom_feed():
@@ -323,24 +309,6 @@ def dev_atom_feed():
         s.contact = app.config.get("MAIL_DEFAULT_TO")
 
     return Response(render_template('feed.xml', services=services), mimetype='text/xml')
-
-@app.route('/services/schedule_all', methods=['GET'])
-@requires_auth
-def schedule_all():
-    services = db.Service.find({'ping_job_id':None})
-    map(lambda x: x.schedule_ping(), services)
-
-    flash("Scheduled %d pings" % services.count())
-    return redirect(url_for('services'))
-
-@app.route('/services/stop_all', methods=['GET'])
-@requires_auth
-def stop_all():
-    services = db.Service.find({'ping_job_id': {'$ne':None}})
-    map(lambda x: x.cancel_ping(), services)
-
-    flash("Stopped %d pings" % services.count())
-    return redirect(url_for('services'))
 
 @app.route('/services/daily', methods=['GET'], defaults={'year':None, 'month':None, 'day':None})
 @app.route('/services/daily/<int:year>/<int:month>/<int:day>', methods=['GET'])

@@ -7,7 +7,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, R
 from wtforms import TextField, IntegerField, SelectField
 from bson import json_util
 
-from ioos_catalog import app, db, scheduler, requires_auth
+from ioos_catalog import app, db, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services

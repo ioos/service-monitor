@@ -2,7 +2,7 @@ from bson import ObjectId
 from collections import defaultdict
 from datetime import datetime, timedelta, time
 import pytz
-from ioos_catalog import app, db, scheduler
+from ioos_catalog import app, db
 from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.harvest import harvest

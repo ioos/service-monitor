@@ -2,7 +2,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
 from ioos_catalog.models.base_document import BaseDocument
-from ioos_catalog import app, db, scheduler
+from ioos_catalog import app, db
 
 @db.register
 class Metadata(BaseDocument):
