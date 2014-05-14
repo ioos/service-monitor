@@ -37,6 +37,8 @@ services =      {'SOS'              : 'urn:x-esri:specification:ServiceType:sos:
                  'WCS'              : 'urn:x-esri:specification:ServiceType:wcs:url',
                  'DAP'              : 'urn:x-esri:specification:ServiceType:odp:url' }
 
+opendap_form_schema = 'urn:x-esri:specification:ServiceType:distribution:url'       # used to pull additional data from DAP types
+
 endpoint = 'http://www.ngdc.noaa.gov/geoportal/csw' # NGDC Geoportal
 
 def reindex_services(filter_regions=None, filter_service_types=None):
@@ -118,6 +120,12 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                 s.updated           = datetime.utcnow()
                                 s.contact           = unicode(contact_email)
                                 s.metadata_url      = unicode(metadata_url)
+
+                                # grab opendap form url if present
+                                if s.service_type == 'DAP':
+                                    possible_refs = [r['url'] for r in record.references if r['scheme'] == opendap_form_schema]
+                                    if len(possible_refs):
+                                        s.extra_url = unicode(possible_refs[0])
 
                                 # if we see the service, this is "Active", unless we've set manual (then we don't touch)
                                 if not s.manual:

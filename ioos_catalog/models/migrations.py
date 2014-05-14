@@ -29,6 +29,10 @@ class ServiceMigration(DocumentMigration):
         self.target = {'ping_job_id':{'$exists': True}}
         self.update = {'$unset':{'ping_job_id': ""}}
 
+    def allmigration07__add_extra_url_field(self):
+        self.target = {'extra_url':{'$exists': False}}
+        self.update = {'$set':{'extra_url': None}}
+
 # Datasets
 from ioos_catalog.models import dataset
 class DatasetMigration(DocumentMigration):

@@ -46,8 +46,17 @@
       <dd><a href="{{ url_for("services", filter_provider=service.data_provider, filter_type='null') }}">{{ service.data_provider }}</a></dd>
       <dt>Type</dt>
       <dd><a href="{{ url_for("services", filter_provider='null', filter_type=service.service_type) }}">{{ service.service_type }}</a></dd>
+      {% if service.service_type == 'DAP' %}
+      {% if service.extra_url %}
+      <dt>URL</dt>
+      <dd><a href="{{ service.extra_url }}">{{ service.extra_url | truncate(90, true) }}</a></dd>
+      {% endif %}
+      <dt>Data Access URL</dt>
+      <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+      {% else %}
       <dt>URL</dt>
       <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+      {% endif %}
       <dt>Contact(s)</dt>
       <dd>{{ service.contact | default('None',true) }}</dd>
       <dt>Source Metadata URL</dt>

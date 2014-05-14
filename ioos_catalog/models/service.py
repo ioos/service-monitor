@@ -23,6 +23,7 @@ class Service(BaseDocument):
         'service_id'            : unicode, # id of the service
         'service_type'          : unicode, # service type
         'metadata_url'          : unicode, # link to raw ISO document the service was pulled from
+        'extra_url'             : unicode, # extra URL, such as an OPeNDAP form URL in the case of DAP
         'data_provider'         : unicode, # who provides the data
         'contact'               : unicode, # comma separated list of email addresses to contact when down
         'interval'              : int,     # interval (in s) between stat retrievals
