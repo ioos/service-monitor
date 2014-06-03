@@ -174,6 +174,7 @@ def show_service(service_id):
                            metadatas=metadatas)
 
 @app.route('/services/', methods=['POST'])
+@requires_auth
 def add_service():
     f = ServiceForm()
     service = db.Service()
