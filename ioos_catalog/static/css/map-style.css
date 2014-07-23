@@ -18,7 +18,13 @@
 svg {
 }
 
-svg path.dataset.perm-active {
+svg path.area {
+  fill: #1E313D;
+  fill-opacity: 0.09;
+  stroke: #1E313D;
+}
+
+svg path.area.perm-active {
   fill: #E3B5B2;
   fill-opacity: 0.6;
   stroke: #8C2E19;
@@ -26,21 +32,26 @@ svg path.dataset.perm-active {
   stroke-width: 1;
 }
 
-svg path.dataset-trajectory {
+svg path.trajectory {
   fill: none;
   stroke: #666;
   stroke-opacity: 0.6;
   stroke-width: 1;
 }
 
-svg path.dataset-trajectory.active {
+svg path.trajectory.active {
   stroke: #f23128;
   stroke-width: 5;
 }
 
-svg path.dataset-trajectory.perm-active {
+svg path.trajectory.perm-active {
   stroke: #8c2e19;
   stroke-width: 5;
+}
+
+svg path.point {
+  fill: #FFC883;
+  stroke: #1E313D;
 }
 
 #map {

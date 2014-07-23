@@ -228,13 +228,13 @@ var transform = d3.geo.transform({point:projectPoint}),
          path = d3.geo.path().projection(transform);
 
 var datapaths = null,
-  features = null;
+  geoj_data = null;
 
 function reset() {
   // fixup group to correct size
-  if (!features) { return; }
+  if (!geoj_data) { return; }
 
-  var      bounds = path.bounds(features),
+  var      bounds = path.bounds(geoj_data),
           topLeft = bounds[0],
       bottomRight = bounds[1];
 
@@ -255,12 +255,13 @@ map.on('viewreset', reset);
 
 function addData(error, geojson) {
 
-  //L.geoJson(geojson).addTo(map);
+  // DEBUG:
+  // L.geoJson(geojson).addTo(map);
 
-  features = geojson;
+  geoj_data = geojson;
 
   // on main map
-  datapaths = g.selectAll('.dataset')
+  datapaths = g.selectAll('.ioos-dataset')
     .data(geojson.features, function(d) { return d.properties.id;});
 
   datapaths.exit().remove();
@@ -270,9 +271,17 @@ function addData(error, geojson) {
       .attr('id', function(d) { return d.properties.id; })
       .attr('class', 'ioos-dataset')
 
-  datapaths.classed('dataset', function(d) { return d.geometry.type != 'LineString'; });
-  datapaths.classed('dataset-trajectory', function(d) { return d.geometry.type == 'LineString'; });
+  var classmap = {
+    LineString: 'trajectory',
+    Point: 'point',
+    MultiPoint: 'point'
+  };
 
+  datapaths.classed('point', function(d) { return d.geometry.type == 'Point' || d.geometry.type == 'MultiPoint' });
+  datapaths.classed('trajectory', function(d) { return d.geometry.type == 'LineString'; });
+  datapaths.classed('area', function(d) { return !classmap.hasOwnProperty(d.geometry.type) });
+
+  // adjust overlay
   reset();
 
   // on thumbnail index
