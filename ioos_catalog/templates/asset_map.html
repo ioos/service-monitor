@@ -207,139 +207,73 @@ setupFilters();
 
 var map = L.map('map').setView([44, -100], 4);
 
-var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
-var osm = new L.TileLayer(osmUrl, {minZoom: 1, maxZoom: 12, attribution: osmAttrib}); 
+//var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
+//var baseAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+var base = new L.TileLayer(baseUrl, {minZoom: 1, maxZoom: 12, /*attribution: baseAttrib*/}); 
 
-map.addLayer(osm);
-/*
+map.addLayer(base);
 
-var root = d3.select('#map');
+/* add hook layers for d3 involvement */
+var svg = d3.select(map.getPanes().overlayPane).append('svg'),
+      g = svg.append('g').attr('class', 'leaflet-zoom-hide');
 
-// add points erry hundred
-/*
-for (var i = 0; i < 1000; i += 100) {
-
-  for (var j = 0; j < 1000; j += 100) {
-    root.append('circle')
-      .attr('cx', i)
-      .attr('cy', j)
-      .attr('r', 3)
-      .attr('fill', 'red');
-  }
-}
-*/
-
-var margin=10;
-
-// @TODO: browser resize
-var width = Math.max(960, window.innerWidth * 0.7),
-    height = Math.max(500, window.innerHeight);
-
-var projection = d3.geo.orthographic()
-  .scale((1 << 12) / 2 / Math.PI)
-  .translate([500, 500])
-  .clipAngle(90)
-  .rotate([100, -45])
-  ;
-
-var smallProjection = d3.geo.mercator()
-  .scale(60)
-  .translate([32, 32])
-  .rotate([100, -50])
-  ;
-
-var center = projection([-100, 40])
-
-
-var graticule = d3.geo.graticule()
-  .extent([[-180, -90], [180, 90]])
-  .step([5, 5]);
-
-var vector = root.append('path')
-  .attr('id', 'geo');
-  
-var baseshare = d3.select('#shared')
-  .append("defs")
-  .append("path")
-    .attr("id", "basegeo");
-
-var path = d3.geo.path()
-  .projection(projection);
-
-var smallPath = d3.geo.path()
-  .projection(smallProjection);
-
-var zoom = d3.geo.zoom()
-  .projection(projection)
-  .on('zoom.redraw', function() {
-    d3.event.sourceEvent.preventDefault();
-    root.selectAll("path").attr("d", path);
-    vector.attr("d", path);
-  });
-
-root.call(zoom);
-
-var zoom = d3.behavior.zoom()
-  .scale(projection.scale() * 2 * Math.PI)
-  .scaleExtent([1 << 11, 1 << 14])
-  .translate([width - center[0], height - center[1]])
-  .on("zoom", zoomed);
-
-function zoomed() {
-  projection
-    .scale(zoom.scale() / 2 / Math.PI)
-    //.rotate(zoom.translate());
-    .translate(zoom.translate());
-
-  vector
-    .attr("d", path);
-
-  // adjust any features we've added
-  root.selectAll('.dataset')
-    .attr("d", path);
+// adapter code for leaflet from http://bost.ocks.org/mike/leaflet/
+function projectPoint(x, y) {
+  var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+  this.stream.point(point.x, point.y);
 }
 
-d3.json("{{ url_for('.static', filename='geojson/ne_110m_land.geojson') }}", function (error, geojson) {
-//d3.json("{{ url_for('.static', filename='geojson/ne_110m_admin_0_countries_lakes.geojson') }}", function (error, geojson) {
-  //root.call(zoom);
+var transform = d3.geo.transform({point:projectPoint}),
+         path = d3.geo.path().projection(transform);
 
-  baseshare.datum(geojson)
-    .attr('d', smallPath);
+var datapaths = null,
+  features = null;
 
-  root.append("path")
-    .datum(graticule)
-    .attr("class", "graticule")
-    .attr("d", path);
+function reset() {
+  // fixup group to correct size
+  if (!features) { return; }
 
-  vector
-    .datum(geojson)
-    .attr('d', path);
+  var      bounds = path.bounds(features),
+          topLeft = bounds[0],
+      bottomRight = bounds[1];
 
-  //zoomed();
-});
-*/
+  svg
+    .attr('width', bottomRight[0] - topLeft[0])
+    .attr('height', bottomRight[1] - topLeft[1])
+    .style('left', topLeft[0] + 'px')
+    .style('top', topLeft[1] + 'px')
+    ;
+
+  g.attr('transform', 'translate(' + -topLeft[0] + ',' + -topLeft[1] + ')');
+
+  // do paths
+  datapaths.attr('d', path);
+}
+
+map.on('viewreset', reset);
 
 function addData(error, geojson) {
 
-  L.geoJson(geojson).addTo(map);
+  //L.geoJson(geojson).addTo(map);
+
+  features = geojson;
 
   // on main map
-  /*
-     var svg = root.selectAll('.dataset')
+  datapaths = g.selectAll('.dataset')
     .data(geojson.features, function(d) { return d.properties.id;});
 
-  svg.exit().remove();
+  datapaths.exit().remove();
 
-  svg.enter()
+  datapaths.enter()
     .append('path')
       .attr('id', function(d) { return d.properties.id; })
       .attr('class', 'ioos-dataset')
-      .attr('d', path);
 
-  svg.classed('dataset', function(d) { return d.geometry.type != 'LineString'; });
-  svg.classed('dataset-trajectory', function(d) { return d.geometry.type == 'LineString'; });
-      */
+  datapaths.classed('dataset', function(d) { return d.geometry.type != 'LineString'; });
+  datapaths.classed('dataset-trajectory', function(d) { return d.geometry.type == 'LineString'; });
+
+  reset();
 
   // on thumbnail index
   var thumbs = d3.select('#thumbnails').selectAll('.media')
@@ -373,11 +307,10 @@ function addData(error, geojson) {
     thumbs.append('path')
       .attr('id', function(d) { return 'thumb_' + d.properties.id })
       .attr('class', 'dataset active')
-      .attr('d', smallPath); 
+      ;
 
     //thumbs.attr('viewBox', '0 0 800 700');
     //thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
-   */
 
     var body = ps.append('div')
       .attr('class', 'media-body');
