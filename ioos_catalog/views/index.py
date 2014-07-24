@@ -1,5 +1,5 @@
 from datetime import datetime
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from flask import render_template, make_response, redirect, jsonify
 from ioos_catalog import app, db
@@ -12,7 +12,7 @@ def index():
     services     = {s._id:s for s in services}
 
     # temp
-    providers = sorted(db['services'].distinct('data_provider'))
+    providers = [u'All'] + sorted(db['services'].distinct('data_provider'))
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider()
@@ -25,6 +25,20 @@ def index():
             if not atn:
                 atn = 'null'
             asset_counts[atn] += atc
+
+    # service sum for "all RAs"
+    c = Counter()
+    for scounts in counts_by_provider.itervalues():
+        c.update(scounts)
+
+    counts_by_provider[u'All'] = dict(c.items())
+
+    # dataset sum for an "all RAs"
+    c = Counter()
+    for dscounts in dataset_counts_by_provider.itervalues():
+        c.update(dscounts)
+
+    dataset_counts_by_provider[u'All'] = dict(c.items())
 
     return render_template('index.html',
                            counts=counts,

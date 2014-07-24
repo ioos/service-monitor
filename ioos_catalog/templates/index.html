@@ -171,7 +171,8 @@ function updateTypeBtns() {
 
     // update hrefs of buttons to include service provider
     var ltype = (dtype == "_all") ? "null" : dtype;
-    el.attr('href', '/services/filter/' + region + '/' + ltype);
+    var rtype = (region == "All") ? "null" : region;
+    el.attr('href', '/services/filter/' + rtype + '/' + ltype);
   });
 
   // update count badges on buttons, disable those with none?
@@ -200,7 +201,8 @@ function updateTypeBtns() {
 
     // update hrefs of buttons to include service provider
     var ltype = (dtype == "_all") ? "null" : dtype;
-    el.attr('href', '/datasets/filter/' + region + '/' + ltype);
+    var rtype = (region == "All") ? "null" : region;
+    el.attr('href', '/datasets/filter/' + rtype + '/' + ltype);
   });
 
 }
