@@ -2,6 +2,7 @@
 
 {% block css %}
 <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
 {% endblock %}
 
 {% block basepage %}
@@ -82,32 +83,15 @@
     </select>
   </div>
 
-  <div class="btn-group pull-right" data-toggle="buttons">
-    <label class="btn btn-default btn-xs active">
-      <input type="radio" name="viewopts" value="list">
-        <span class="glyphicon glyphicon-th-list"></span>
-      </input>
-    </label>
-
-    <label class="btn btn-default btn-xs">
-      <input type="radio" name="viewopts" value="thumbs">
-        <span class="glyphicon glyphicon-th-large"></span>
-      </input>
-    </label>
-
-  </div>
-
-  <hr />
-
-
-  <!--<ul class="media-list" id="thumbnails"></ul>-->
-  <div id="thumbnails">
+  <div id="thumbnails" class="list-group">
 
   </div>
 </div>
 
 <!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
-<svg id="map" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice"></svg>
+<!--<svg id="map" viewBox="0 0 1500 1500" preserveAspectRatio="xMinYMin slice"></svg>-->
+
+<div id="map"></div>
 
 <svg id="shared"></svg>
 
@@ -116,6 +100,7 @@
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.zoom.js') }}" /></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
 
 <script type="text/javascript">
 
@@ -201,210 +186,129 @@ function setupFilters() {
 
 setupFilters();
 
-var root = d3.select('#map');
+var map = L.map('map').setView([44, -100], 4);
 
-// add points erry hundred
-/*
-for (var i = 0; i < 1000; i += 100) {
+//var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
+//var baseAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+var base = new L.TileLayer(baseUrl, {minZoom: 1, maxZoom: 12, /*attribution: baseAttrib*/}); 
 
-  for (var j = 0; j < 1000; j += 100) {
-    root.append('circle')
-      .attr('cx', i)
-      .attr('cy', j)
-      .attr('r', 3)
-      .attr('fill', 'red');
-  }
+map.addLayer(base);
+
+/* add hook layers for d3 involvement */
+var svg = d3.select(map.getPanes().overlayPane).append('svg'),
+      g = svg.append('g').attr('class', 'leaflet-zoom-hide');
+
+// adapter code for leaflet from http://bost.ocks.org/mike/leaflet/
+function projectPoint(x, y) {
+  var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+  this.stream.point(point.x, point.y);
 }
-*/
 
-var margin=10;
+var transform = d3.geo.transform({point:projectPoint}),
+         path = d3.geo.path().projection(transform);
 
-// @TODO: browser resize
-var width = Math.max(960, window.innerWidth * 0.7),
-    height = Math.max(500, window.innerHeight);
+var datapaths = null,
+  geoj_data = null;
 
-var projection = d3.geo.orthographic()
-  .scale((1 << 12) / 2 / Math.PI)
-  .translate([500, 500])
-  .clipAngle(90)
-  .rotate([100, -45])
-  ;
+function reset() {
+  // fixup group to correct size
+  if (!geoj_data) { return; }
 
-var smallProjection = d3.geo.mercator()
-  .scale(60)
-  .translate([32, 32])
-  .rotate([100, -50])
-  ;
+  var      bounds = path.bounds(geoj_data),
+          topLeft = bounds[0],
+      bottomRight = bounds[1];
 
-var center = projection([-100, 40])
+  svg
+    .attr('width', bottomRight[0] - topLeft[0])
+    .attr('height', bottomRight[1] - topLeft[1])
+    .style('left', topLeft[0] + 'px')
+    .style('top', topLeft[1] + 'px')
+    ;
 
-/*
-  .scale(950)
-  .rotate([100, 0])
-  .translate([750, 750])
-  .center([0, 60])
-  ;
-  */
+  g.attr('transform', 'translate(' + -topLeft[0] + ',' + -topLeft[1] + ')');
 
-var graticule = d3.geo.graticule()
-  .extent([[-180, -90], [180, 90]])
-  .step([5, 5]);
-
-var vector = root.append('path')
-  .attr('id', 'geo');
-  
-var baseshare = d3.select('#shared')
-  .append("defs")
-  .append("path")
-    .attr("id", "basegeo");
-
-var path = d3.geo.path()
-  .projection(projection);
-
-var smallPath = d3.geo.path()
-  .projection(smallProjection);
-
-var zoom = d3.geo.zoom()
-  .projection(projection)
-  .on('zoom.redraw', function() {
-    d3.event.sourceEvent.preventDefault();
-    root.selectAll("path").attr("d", path);
-    vector.attr("d", path);
-  });
-
-root.call(zoom);
-
-  /*
-var zoom = d3.behavior.zoom()
-  .scale(projection.scale() * 2 * Math.PI)
-  .scaleExtent([1 << 11, 1 << 14])
-  .translate([width - center[0], height - center[1]])
-  .on("zoom", zoomed);
-
-function zoomed() {
-  projection
-    .scale(zoom.scale() / 2 / Math.PI)
-    //.rotate(zoom.translate());
-    .translate(zoom.translate());
-
-  vector
-    .attr("d", path);
-
-  // adjust any features we've added
-  root.selectAll('.dataset')
-    .attr("d", path);
+  // do paths
+  datapaths.attr('d', path);
 }
-*/
 
-d3.json("{{ url_for('.static', filename='geojson/ne_110m_land.geojson') }}", function (error, geojson) {
-//d3.json("{{ url_for('.static', filename='geojson/ne_110m_admin_0_countries_lakes.geojson') }}", function (error, geojson) {
-  //root.call(zoom);
-
-  baseshare.datum(geojson)
-    .attr('d', smallPath);
-
-  root.append("path")
-    .datum(graticule)
-    .attr("class", "graticule")
-    .attr("d", path);
-
-  vector
-    .datum(geojson)
-    .attr('d', path);
-
-  //zoomed();
-});
+map.on('viewreset', reset);
 
 function addData(error, geojson) {
 
+  // DEBUG:
+  // L.geoJson(geojson).addTo(map);
+
+  geoj_data = geojson;
+
   // on main map
-  var svg = root.selectAll('.ioos-dataset')
+  datapaths = g.selectAll('.ioos-dataset')
     .data(geojson.features, function(d) { return d.properties.id;});
 
-  svg.exit().remove();
+  datapaths.exit().remove();
 
-  svg.enter()
+  datapaths.enter()
     .append('path')
       .attr('id', function(d) { return d.properties.id; })
       .attr('class', 'ioos-dataset')
-      .attr('d', path);
 
-  svg.classed('dataset', function(d) { return d.geometry.type != 'LineString'; });
-  svg.classed('dataset-trajectory', function(d) { return d.geometry.type == 'LineString'; });
+  var classmap = {
+    LineString: 'trajectory',
+    Point: 'point',
+    MultiPoint: 'point'
+  };
+
+  datapaths.classed('point', function(d) { return d.geometry.type == 'Point' || d.geometry.type == 'MultiPoint' });
+  datapaths.classed('trajectory', function(d) { return d.geometry.type == 'LineString'; });
+  datapaths.classed('area', function(d) { return !classmap.hasOwnProperty(d.geometry.type) });
+
+  // adjust overlay
+  reset();
 
   // on thumbnail index
-  var thumbs = d3.select('#thumbnails').selectAll('.media')
+  var thumbs = d3.select('#thumbnails').selectAll('.list-group-item')
     .data(geojson.features, function(d) { return d.properties.id; });
 
   thumbs.exit().remove();
 
   var ps = thumbs.enter()
     .append('div')
-      .attr('class', 'media');
+      .attr('class', 'list-group-item');
 
-  if ($('input[name="viewopts"]:checked').val() == 'thumbs') {
-    ps.classed({'media-grid':true});
-  }
+  ps
+    .append('h4')
+    .attr('class', 'list-group-item-heading')
+    .text(function(d) { return d.properties.name || d.properties.id; });
 
-    var thumbs = ps.append('a')
-      .attr('class', 'pull-right')
-      .attr('href', '#')
-      .append('svg')
-      .attr('class', 'media-object')
-      .attr('viewBox', '0 0 64 64')
-      /*
-      .attr('width', '100%')
-      .attr('height', '100%');
-     */
-      ;
+  ps
+    .append('p')
+    .attr('class', 'list-group-item-text')
+    .text(function(d) { return d.properties.description || ""; });
 
-    thumbs.append('use')
-      .attr('xlink:href', '#basegeo');
+  ps.on('mouseout', function(d) {
+    d3.selectAll('#map path.active').classed({'active':false});
+    d3.select(this).classed({'list-group-item-info': false});
+  });
 
-    thumbs.append('path')
-      .attr('id', function(d) { return 'thumb_' + d.properties.id })
-      .attr('class', 'dataset active')
-      .attr('d', smallPath); 
+  ps.on('mouseover', function(d) {
+    var sel = $('#map #' + d.properties.id);
+    d3.selectAll(sel).classed({'active':true});
 
-    //thumbs.attr('viewBox', '0 0 800 700');
-    //thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
+    d3.select(this).classed({'list-group-item-info': true});
+  });
 
-    var body = ps.append('div')
-      .attr('class', 'media-body');
+  ps.on('click', function(d) {
+    var sel = $('#map .perm-active');
+    d3.selectAll(sel).classed({'perm-active':false});
 
-    body
-      .append('h4')
-      .attr('class', 'media-heading')
-      .text(function(d) { return d.properties.name || d.properties.id; });
+    var sel = $('#map #' + d.properties.id);
+    d3.selectAll(sel).classed({'perm-active':true});
 
-    body
-      .append('p')
-      .text(function(d) { return d.properties.description || ""; });
+    $(this).siblings().removeClass('active');
+    $(this).addClass('active');
 
-    ps.on('mouseout', function(d) {
-      d3.selectAll('#map path.active').classed({'active':false});
-      d3.select(this).classed({'list-group-item-info': false});
-    });
-
-    ps.on('mouseover', function(d) {
-      var sel = $('#map #' + d.properties.id);
-      d3.selectAll(sel).classed({'active':true});
-
-      d3.select(this).classed({'list-group-item-info': true});
-    });
-
-    ps.on('click', function(d) {
-      var sel = $('#map .perm-active');
-      d3.selectAll(sel).classed({'perm-active':false});
-
-      var sel = $('#map #' + d.properties.id);
-      d3.selectAll(sel).classed({'perm-active':true});
-
-      $(this).siblings().removeClass('active');
-      $(this).addClass('active');
-
-      toggleInfo(d.properties.id, d.properties.sindex);
-    });
+    toggleInfo(d.properties.id, d.properties.sindex);
+  });
 }
 
 /* standard controls */
@@ -433,17 +337,6 @@ $('#sidebar-toggle').click(function() {
     }, 150);
   }
 });
-
-$('input[name="viewopts"]').on('change', function() {
-  var val = $(this).val();
-
-  if (val == "list") {
-    $('#thumbnails .media').removeClass('media-grid');
-  } else if (val == "thumbs") {
-    $('#thumbnails .media').addClass('media-grid');
-  }
-});
-
 
 /* debug */
 $(function() {

@@ -18,7 +18,21 @@
 svg {
 }
 
-svg path.dataset.perm-active {
+svg path.area {
+  fill: #1E313D;
+  fill-opacity: 0.09;
+  stroke: #1E313D;
+}
+
+svg path.area.active {
+  fill: #F23128;
+  fill-opacity: 0.6;
+  stroke: #8C2E19;
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+}
+
+svg path.area.perm-active {
   fill: #E3B5B2;
   fill-opacity: 0.6;
   stroke: #8C2E19;
@@ -26,30 +40,62 @@ svg path.dataset.perm-active {
   stroke-width: 1;
 }
 
-svg path.dataset-trajectory {
+svg path.trajectory {
   fill: none;
   stroke: #666;
   stroke-opacity: 0.6;
   stroke-width: 1;
 }
 
-svg path.dataset-trajectory.active {
+svg path.trajectory.active {
   stroke: #f23128;
   stroke-width: 5;
 }
 
-svg path.dataset-trajectory.perm-active {
+svg path.trajectory.perm-active {
   stroke: #8c2e19;
   stroke-width: 5;
 }
 
+svg path.point {
+  fill: #FFC883;
+  stroke: #1E313D;
+}
+
+svg path.point.active {
+  fill: #F23128;
+  fill-opacity: 0.6;
+  stroke: #8C2E19;
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+}
+
+svg path.point.perm-active {
+    fill: #E3B5B2;
+  fill-opacity: 0.6;
+  stroke: #8C2E19;
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+}
+
 #map {
-  background-color: #666;
-  position: fixed;
+  /*
   top: 0px;
   bottom: 0px;
   left: 30%;
   width: 70%;
+
+  left: 0px;
+  right: 0px;
+  */
+  /*
+  width: 900px;
+  height: 600px;
+  */
+  position: fixed;
+  margin-left: 30%;
+  width: 70%;
+  height: 100%;
 }
 
 .graticule {
@@ -82,23 +128,6 @@ svg path.dataset-trajectory.perm-active {
   height: 95%;
 }
 
-#map_sidebar #thumbnails .media-object {
-  background-color: #666;
-  border: 1px dotted #666;
-
-  fill: #888;
-  stroke: #aaa;
-  stroke-width: 0.5px;
-}
-
-#map_sidebar #thumbnails .active {
-  background-color: #9fabb7;
-}
-
-#map_sidebar .media {
-  cursor: pointer;
-}
-
 #map_infobar {
   z-index: 5;
   position: fixed;
@@ -114,46 +143,10 @@ svg path.dataset-trajectory.perm-active {
   overflow: auto;
 }
 
-/* can't specify w/h in source */
-.media svg {
-  width: 64px;
-  height: 64px;
-
-  pointer-events: none;  /* no interaction on these svgs, interferes with scrolling */
-}
-
-/* cobbled together from http://www.mademyday.de/css-height-equals-width-with-pure-css.html */
-.media-grid {
-  width: 25%;
-  float: left;
-  margin-top: 0px;
-
-  position: relative;
-}
-
-.media-grid:before {
-  content: "";
-  display: block;
-  padding-top: 100%;
-}
-
-.media-grid .pull-right {
-  float: none;
-  margin-left: 0px;
-}
-
-.media-grid svg {
-  margin: 5%;
-  position: absolute;
-  top: 0;
-  height: 90%;
-  left: 0;
-  width: 90%;
-
-}
-
-.media-grid .media-body {
-  display: none;
+#map_sidebar #thumbnails p.list-group-item-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #branding {
