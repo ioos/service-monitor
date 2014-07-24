@@ -1,5 +1,5 @@
 # pings are hourly
-@hourly $HOME/manage.sh queue_pings
+#@hourly $HOME/manage.sh queue_pings
 
 # harvests start nightly at 7:10am UTC (2:10am eastern)
 10 7 * * * $HOME/manage.sh queue_harvests
