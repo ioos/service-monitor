@@ -83,26 +83,7 @@
     </select>
   </div>
 
-  <div class="btn-group pull-right" data-toggle="buttons">
-    <label class="btn btn-default btn-xs active">
-      <input type="radio" name="viewopts" value="list">
-        <span class="glyphicon glyphicon-th-list"></span>
-      </input>
-    </label>
-
-    <label class="btn btn-default btn-xs">
-      <input type="radio" name="viewopts" value="thumbs">
-        <span class="glyphicon glyphicon-th-large"></span>
-      </input>
-    </label>
-
-  </div>
-
-  <hr />
-
-
-  <!--<ul class="media-list" id="thumbnails"></ul>-->
-  <div id="thumbnails">
+  <div id="thumbnails" class="list-group">
 
   </div>
 </div>
@@ -285,78 +266,49 @@ function addData(error, geojson) {
   reset();
 
   // on thumbnail index
-  var thumbs = d3.select('#thumbnails').selectAll('.media')
+  var thumbs = d3.select('#thumbnails').selectAll('.list-group-item')
     .data(geojson.features, function(d) { return d.properties.id; });
 
   thumbs.exit().remove();
 
   var ps = thumbs.enter()
     .append('div')
-      .attr('class', 'media');
+      .attr('class', 'list-group-item');
 
-  if ($('input[name="viewopts"]:checked').val() == 'thumbs') {
-    ps.classed({'media-grid':true});
-  }
+  ps
+    .append('h4')
+    .attr('class', 'list-group-item-heading')
+    .text(function(d) { return d.properties.name || d.properties.id; });
 
-    var thumbs = ps.append('a')
-      .attr('class', 'pull-right')
-      .attr('href', '#')
-      .append('svg')
-      .attr('class', 'media-object')
-      .attr('viewBox', '0 0 64 64')
-      /*
-      .attr('width', '100%')
-      .attr('height', '100%');
-     */
-      ;
+  ps
+    .append('p')
+    .attr('class', 'list-group-item-text')
+    .text(function(d) { return d.properties.description || ""; });
 
-    thumbs.append('use')
-      .attr('xlink:href', '#basegeo');
+  ps.on('mouseout', function(d) {
+    d3.selectAll('#map path.active').classed({'active':false});
+    d3.select(this).classed({'list-group-item-info': false});
+  });
 
-    thumbs.append('path')
-      .attr('id', function(d) { return 'thumb_' + d.properties.id })
-      .attr('class', 'dataset active')
-      ;
+  ps.on('mouseover', function(d) {
+    var sel = $('#map #' + d.properties.id);
+    d3.selectAll(sel).classed({'active':true});
 
-    //thumbs.attr('viewBox', '0 0 800 700');
-    //thumbs.attr('preserveAspectRatio', 'xMidYMid slice');
+    d3.select(this).classed({'list-group-item-info': true});
+  });
 
-    var body = ps.append('div')
-      .attr('class', 'media-body');
+  ps.on('click', function(d) {
+    var sel = $('#map .perm-active');
+    d3.selectAll(sel).classed({'perm-active':false});
 
-    body
-      .append('h4')
-      .attr('class', 'media-heading')
-      .text(function(d) { return d.properties.name || d.properties.id; });
+    var sel = $('#map #' + d.properties.id);
+    d3.selectAll(sel).classed({'perm-active':true});
 
-    body
-      .append('p')
-      .text(function(d) { return d.properties.description || ""; });
+    $(this).siblings().removeClass('active');
+    $(this).addClass('active');
 
-    ps.on('mouseout', function(d) {
-      d3.selectAll('#map path.active').classed({'active':false});
-      d3.select(this).classed({'list-group-item-info': false});
-    });
-
-    ps.on('mouseover', function(d) {
-      var sel = $('#map #' + d.properties.id);
-      d3.selectAll(sel).classed({'active':true});
-
-      d3.select(this).classed({'list-group-item-info': true});
-    });
-
-    ps.on('click', function(d) {
-      var sel = $('#map .perm-active');
-      d3.selectAll(sel).classed({'perm-active':false});
-
-      var sel = $('#map #' + d.properties.id);
-      d3.selectAll(sel).classed({'perm-active':true});
-
-      $(this).siblings().removeClass('active');
-      $(this).addClass('active');
-
-      toggleInfo(d.properties.id, d.properties.sindex);
-    });
+    toggleInfo(d.properties.id, d.properties.sindex);
+  });
 }
 
 /* standard controls */
@@ -385,17 +337,6 @@ $('#sidebar-toggle').click(function() {
     }, 150);
   }
 });
-
-$('input[name="viewopts"]').on('change', function() {
-  var val = $(this).val();
-
-  if (val == "list") {
-    $('#thumbnails .media').removeClass('media-grid');
-  } else if (val == "thumbs") {
-    $('#thumbnails .media').addClass('media-grid');
-  }
-});
-
 
 /* debug */
 $(function() {
