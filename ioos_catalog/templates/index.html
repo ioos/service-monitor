@@ -75,24 +75,19 @@
       <table class="table table-striped table-condensed">
         <thead>
           <tr>
-            <th></th>
-            <th>Service</th>
+            <th>Name</th>
             <th style="width: 6em;">Updated</th>
-            <th>Code</th>
-            <th>ms</th>
+            <th>&nbsp;</th>
           </tr>
         </thead>
         <tbody>
-        {%- for stat in stats %}
-        <tr class="{{ "danger" if not stat.last_operational_status }}">
-          <td></td>
+        {%- for upd in (updates|sort(True, attribute='updated'))[:8] %}
+        <tr>
           <td>
-            <a href="{{url_for('show_service', service_id=stat.service_id)}}">{{ services[stat.service_id].name }}</a><br />
-            <small>{{ services[stat.service_id].data_provider }} &middot; {{ services[stat.service_id].service_type }}</small>
+            <a href="{{ upd.url }}">{{ upd.name }}</a><br />
+            <small>{{ upd.data_provider }} &middot; {{ upd.service_type }} &middot; {{ upd.update_type }}</small>
           </td>
-          <td>{{ stat.updated | prettydate }}</td>
-          <td>{{ stat.last_response_code }}</td>
-          <td>{{ stat.last_response_time }}</td>
+          <td>{{ upd.updated | prettydate }}</td>
         </tr>
         {%- endfor %}
         </tbody>
@@ -140,6 +135,7 @@
 
 var countsByProvider   = {{ counts_by_provider | tojson }};
 var datasetsByProvider = {{ dataset_counts_by_provider | tojson }};
+var updates            = {{ updates | tojson }};
 
 function updateTypeBtns() {
   var region = $('#region-select').val();
