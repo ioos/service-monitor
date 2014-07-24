@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict, Counter
 
 from flask import render_template, make_response, redirect, jsonify, url_for
-from ioos_catalog import app, db
+from ioos_catalog import app, db, prettydate
 
 @app.route('/', methods=['GET'])
 def index():
@@ -52,7 +52,8 @@ def index():
                         'name': services[s._id].name,
                         'service_type': services[s._id].service_type,
                         'update_type': 'ping',
-                        'updated': s.updated,
+                        'updated': int(s.updated.strftime('%s')),
+                        'updated_display': prettydate(s.updated),
                         'data': {'code':s.last_response_code,
                                  'time':s.last_response_time},
                         '_id': str(s._id),
@@ -68,7 +69,8 @@ def index():
                             'name':s['name'],
                             'service_type': s['service_type'],
                             'update_type':'harvest',
-                            'updated':d.updated,
+                            'updated': int(d.updated.strftime('%s')),
+                            'updated_display': prettydate(d.updated),
                             'data':{},
                             'id':str(d._id),
                             'url':url_for('show_dataset', dataset_id=d._id)})
