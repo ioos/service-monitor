@@ -76,7 +76,8 @@
 
   <div id="filters">
     <select name="filter-provider" class="form-control">
-      <option value="null">-</option>
+      <option value="-">-</option>
+      <option value="null">All</option>
       {% for region in regions %}
       <option>{{ region }}</option>
       {% endfor %}
@@ -171,9 +172,7 @@ function toggleInfo(did, sindex) {
 function setupFilters() {
   $('select[name^="filter"]').change(function() {
     var provVal = $('select[name="filter-provider"]').val();
-    if (provVal == "null") {
-      //window.location = "{{ url_for("asset_map") }}";
-      console.log("michael jackson's beat it");
+    if (provVal == "-") {
       return;
     }
     var url = '/map/geojson/';

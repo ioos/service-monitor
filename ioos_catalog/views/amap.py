@@ -24,10 +24,12 @@ def asset_map():
 
 @app.route('/map/geojson/<path:filter_provider>/', methods=['GET'])
 def geoj(filter_provider):
-    if filter_provider == 'CARICOOS':
-        raise StandardError("can't do cari yet")
 
-    datasets = list(db.Dataset.find({'services.data_provider':filter_provider}))
+    query_params = {}
+    if filter_provider != 'null':
+        query_params['services.data_provider'] = filter_provider
+
+    datasets = list(db.Dataset.find(query_params))
 
     features = []
 
