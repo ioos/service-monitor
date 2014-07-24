@@ -12,7 +12,7 @@ def index():
     providers = [u'All'] + sorted(db['services'].distinct('data_provider'))
 
     # service counts by provider
-    counts_by_provider = db.Service.count_types_by_provider()
+    counts_by_provider = db.Service.count_types_by_provider_flat()
     dataset_counts_by_provider = db.Dataset.count_types_by_provider()
 
     # asset counts (not by provider)
@@ -22,13 +22,6 @@ def index():
             if not atn:
                 atn = 'null'
             asset_counts[atn] += atc
-
-    # service sum for "all RAs"
-    c = Counter()
-    for scounts in counts_by_provider.itervalues():
-        c.update(scounts)
-
-    counts_by_provider[u'All'] = dict(c.items())
 
     # dataset sum for an "all RAs"
     c = Counter()

@@ -36,16 +36,6 @@
           <div class="col-lg-6">
             <p><strong>Services</strong></p>
             <div id="service-type-btns">
-              <a class="btn btn-lg btn-default service-type-btn btn-block" data-type="_all" href="{{url_for('services', filter_provider='null', filter_type='null')}}">
-                ALL
-                <span class="badge">0</span>
-              </a>
-              {%- for count in counts %}
-              <a class="btn btn-lg btn-default service-type-btn btn-block" data-type="{{count._id}}" href="{{url_for('services', filter_provider='null', filter_type=count._id) }}">
-                {{ count._id }}
-                <span class="badge">0</span>
-              </a>
-              {% endfor %}
             </div>
           </div>
           <div class="col-lg-6">
@@ -88,16 +78,7 @@
     <div class="col-lg-4">
       <div id="overview">
         <h3>Service Overview</h3>
-        <div>
-          <ul class="list-group">
-          {%- for count in counts %}
-          <li class="list-group-item">
-            <span class="badge">{{ count.count }}</span>
-            {{ count._id }}
-          </li>
-          {%- endfor %}
-          </ul>
-        </div>
+        <ul class="list-group"></ul>
       </div>
 
       <div id="assettypes">
@@ -127,36 +108,86 @@
 function updateTypeBtns() {
   var region = $('#region-select').val();
 
-  // Service Buttons
-  // update count badges on buttons, disable those with none?
-  var svcbtns = $('.service-type-btn')
-    .removeClass('btn-success')
-    .addClass('btn-default')
-    .removeAttr('disabled');
+  // GET DATA
+  var data = countsByProvider;
+  if (region != 'All') {
+    data = data.filter(function(d) { return d.data_provider == region; });
+  }
 
-  svcbtns.each(function(idx, el) {
-    var el = $(el);
-    var cnt = null;
-    var dtype = el.data('type');
-    try {
-      cnt = countsByProvider[region][dtype] || 0;
-    } catch(err) {
-      cnt = 0;
-    }
-    $('.badge', el).text(cnt);
+  var allsum = d3.sum(data, function(d) { return d.cnt });
 
-    if (cnt > 0) {
-      el.addClass('btn-success')
-        .removeClass('btn-default');
-    } else {
-      el.attr('disabled', 'disabled');
-    }
+  var entries = d3.nest()
+    .key(function(d) { return d.service_type; })
+    .rollup(function(ents) { return d3.sum(ents, function(d) { return d.cnt; }); })
+    .entries(data);
 
-    // update hrefs of buttons to include service provider
-    var ltype = (dtype == "_all") ? "null" : dtype;
+  entries.unshift({key: 'All', values: allsum})
+
+  // UPDATE BUTTONS
+  var svcbtns = d3.select('#service-type-btns').selectAll('.service-type-btn')
+    .data(entries, function(d) { return d.key; });
+
+  // disable exiting items
+  svcbtns.exit()
+    .classed({
+      'btn-success': false,
+      'btn-default': true
+    })
+    .attr('disabled', 'disabled')
+    .select('.badge')
+      .text("0");
+
+  svcbtns.enter()
+    .append('a')
+      .classed({
+        'service-type-btn': true,
+        'btn':true,
+        'btn-lg': true,
+        'btn-block': true,
+      })
+      .text(function(d) { return d.key + " "; })
+    .append('span')
+      .attr('class', 'badge');
+
+  // both new and existing badges get updated
+  svcbtns.select('.badge')
+    .text(function(d) { return d.values; });
+
+  // both new and existing hrefs get updated
+  svcbtns.attr('href', function(d) {
+    var ltype = (d.key == "All") ? "null" : d.key;
     var rtype = (region == "All") ? "null" : region;
-    el.attr('href', '/services/filter/' + rtype + '/' + ltype);
+    return '/services/filter/' + rtype + '/' + ltype;
   });
+
+  // remove disabled, add class
+  svcbtns
+    .classed({
+        'btn-success': true,
+        'btn-default': false,
+    })
+    .attr('disabled', null);
+
+  // UPDATE SERVICE OVERVIEW
+  var ovitems = d3.select('#overview').select('ul.list-group').selectAll('.list-group-item')
+    .data(entries, function(d) { return d.key; });
+
+  ovitems.exit()
+    .select('.badge')
+    .text("0");
+
+  ovitems.enter()
+    .append('li')
+      .attr('class', 'list-group-item')
+      .text(function(d) { return d.key; })
+    .append('span')
+      .attr('class', 'badge');
+
+  // always update badge number
+  ovitems.select('.badge')
+    .text(function(d) { return d.values; });
+
+  // DATASET BUTTONS
 
   // update count badges on buttons, disable those with none?
   var dsbtns = $('.dataset-type-btn')

@@ -82,6 +82,23 @@ class Service(BaseDocument):
         return retval
 
     @classmethod
+    def count_types_by_provider_flat(cls):
+        """
+        Returns a flat list of service providers and types ie
+        [
+            MARACOOS, SOS, 22
+            MARACOOS, DAP, 23
+            ...
+        ]
+        """
+        counts = db.Service.aggregate([{'$match': {'active':True}},
+                                       {'$group':{'_id':{'service_type':'$service_type',
+                                                         'data_provider':'$data_provider'},
+                                                  'cnt':{'$sum':1}}}])
+
+        return [{'cnt':x['cnt'], 'data_provider':x['_id']['data_provider'], 'service_type':x['_id']['service_type']} for x in counts]
+
+    @classmethod
     def count_types_by_provider(cls):
         """
         Groups by Service Provider then Service Type.
@@ -93,15 +110,12 @@ class Service(BaseDocument):
             SOS -> 57
             ...
         """
-        counts = db.Service.aggregate([{'$match': {'active':True}},
-                                       {'$group':{'_id':{'service_type':'$service_type',
-                                                         'data_provider':'$data_provider'},
-                                                  'cnt':{'$sum':1}}}])
+        counts = cls.count_types_by_provider_flat()
 
         # transform into slightly friendlier structure.  could likely do this in mongo but no point
         retval = defaultdict(dict)
         for val in counts:
-            retval[val['_id']['data_provider']][val['_id']['service_type']] = val['cnt']
+            retval[val['data_provider']][val['service_type']] = val['cnt']
 
         retval = dict(retval)
 
