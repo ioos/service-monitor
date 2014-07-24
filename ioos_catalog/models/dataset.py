@@ -92,3 +92,24 @@ class Dataset(BaseDocument):
             retval[provider]['_all'] = sum(dscounts.itervalues())
 
         return retval
+
+    @classmethod
+    def count_types_by_provider_flat(cls):
+        """
+        Flattens out list of types by provider.
+        """
+        counts = cls.count_types_by_provider()
+
+        ret_val = []
+
+        for data_provider, typecounts in counts.iteritems():
+            for asset_type, count in typecounts.iteritems():
+                if asset_type == '_all':
+                    continue
+
+                ret_val.append({'data_provider': data_provider,
+                                'asset_type' : asset_type or "(NONE)",
+                                'cnt': count})
+
+        return ret_val
+

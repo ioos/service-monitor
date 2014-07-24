@@ -41,12 +41,6 @@
           <div class="col-lg-6">
             <p><strong>Datasets</strong></p>
             <div id="dataset-type-btns">
-              {%- for name, count in asset_counts.iteritems() %}
-              <a class="btn btn-lg btn-default dataset-type-btn btn-block" data-type="{{name}}" href="{{url_for('datasets', filter_provider='null', filter_type=name) }}">
-                {{ "ALL" if name == "_all" else "Unknown" if name == 'null' else name }}
-                <span class="badge">0</span>
-              </a>
-              {% endfor %}
             </div>
           </div>
         </div>
@@ -85,12 +79,6 @@
         <h3>Dataset Overview</h3>
         <div>
           <ul class="list-group">
-          {%- for name, count in asset_counts.iteritems() %}
-          <li class="list-group-item">
-            <span class="badge">{{ count }}</span>
-            {{ "ALL" if name == "_all" else name }}
-          </li>
-          {%- endfor %}
           </ul>
         </div>
       </div>
@@ -105,11 +93,11 @@
 
 <script type="text/javascript">
 
-function updateTypeBtns() {
+function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel) {
   var region = $('#region-select').val();
 
   // GET DATA
-  var data = countsByProvider;
+  var data = srcData;
   if (region != 'All') {
     data = data.filter(function(d) { return d.data_provider == region; });
   }
@@ -117,14 +105,14 @@ function updateTypeBtns() {
   var allsum = d3.sum(data, function(d) { return d.cnt });
 
   var entries = d3.nest()
-    .key(function(d) { return d.service_type; })
+    .key(keyFunc)
     .rollup(function(ents) { return d3.sum(ents, function(d) { return d.cnt; }); })
     .entries(data);
 
   entries.unshift({key: 'All', values: allsum})
 
   // UPDATE BUTTONS
-  var svcbtns = d3.select('#service-type-btns').selectAll('.service-type-btn')
+  var svcbtns = d3.select(btnContainerSel).selectAll('.type-btn')
     .data(entries, function(d) { return d.key; });
 
   // disable exiting items
@@ -140,7 +128,7 @@ function updateTypeBtns() {
   svcbtns.enter()
     .append('a')
       .classed({
-        'service-type-btn': true,
+        'type-btn': true,
         'btn':true,
         'btn-lg': true,
         'btn-block': true,
@@ -157,7 +145,7 @@ function updateTypeBtns() {
   svcbtns.attr('href', function(d) {
     var ltype = (d.key == "All") ? "null" : d.key;
     var rtype = (region == "All") ? "null" : region;
-    return '/services/filter/' + rtype + '/' + ltype;
+    return '/' + urlBase + '/filter/' + rtype + '/' + ltype;
   });
 
   // remove disabled, add class
@@ -168,8 +156,8 @@ function updateTypeBtns() {
     })
     .attr('disabled', null);
 
-  // UPDATE SERVICE OVERVIEW
-  var ovitems = d3.select('#overview').select('ul.list-group').selectAll('.list-group-item')
+  // UPDATE OVERVIEW
+  var ovitems = d3.select(overviewSel).select('ul.list-group').selectAll('.list-group-item')
     .data(entries, function(d) { return d.key; });
 
   ovitems.exit()
@@ -186,38 +174,6 @@ function updateTypeBtns() {
   // always update badge number
   ovitems.select('.badge')
     .text(function(d) { return d.values; });
-
-  // DATASET BUTTONS
-
-  // update count badges on buttons, disable those with none?
-  var dsbtns = $('.dataset-type-btn')
-    .removeClass('btn-success')
-    .addClass('btn-default')
-    .removeAttr('disabled');
-
-  dsbtns.each(function(idx, el) {
-    var el = $(el);
-    var cnt = null;
-    var dtype = el.data('type');
-    try {
-      cnt = datasetsByProvider[region][dtype] || 0;
-    } catch(err) {
-      cnt = 0;
-    }
-    $('.badge', el).text(cnt);
-
-    if (cnt > 0) {
-      el.addClass('btn-success')
-        .removeClass('btn-default');
-    } else {
-      el.attr('disabled', 'disabled');
-    }
-
-    // update hrefs of buttons to include service provider
-    var ltype = (dtype == "_all") ? "null" : dtype;
-    var rtype = (region == "All") ? "null" : region;
-    el.attr('href', '/datasets/filter/' + rtype + '/' + ltype);
-  });
 }
 
 function updateRecentUpdates() {
@@ -264,7 +220,24 @@ function updateRecentUpdates() {
 }
 
 $(function() {
-  $('#region-select').on('change', updateTypeBtns);
+  $('#region-select').on('change', function() {
+    updateTypeBtns(
+      countsByProvider,
+      function(d) { return d.service_type; },
+      '#service-type-btns',
+      'services',
+      '#overview'
+      );
+  });
+  $('#region-select').on('change', function() {
+    updateTypeBtns(
+      datasetsByProvider,
+      function(d) { return d.asset_type; },
+      '#dataset-type-btns',
+      'datasets',
+      '#assettypes'
+      );
+  });
   $('#region-select').on('change', updateRecentUpdates);
   $('#region-select').change();
 });

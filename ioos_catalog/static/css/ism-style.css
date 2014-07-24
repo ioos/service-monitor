@@ -35,7 +35,7 @@ svg .dataset path {
 
 /* override some bootstrap colors/styles */
 
-.dataset-type-btn, .service-type-btn {
+.type-btn {
   margin-bottom: 10px;
 }
 
@@ -82,9 +82,6 @@ svg .dataset path {
 
 a {
   color: #567EBB;
-}
-
-.service-type-btn {
 }
 
 #pings {

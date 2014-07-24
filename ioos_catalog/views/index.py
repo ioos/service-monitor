@@ -6,29 +6,12 @@ from ioos_catalog import app, db, prettydate
 
 @app.route('/', methods=['GET'])
 def index():
-    counts       = db.Service.count_types()
-
-    # temp
+    # provider list
     providers = [u'All'] + sorted(db['services'].distinct('data_provider'))
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider_flat()
-    dataset_counts_by_provider = db.Dataset.count_types_by_provider()
-
-    # asset counts (not by provider)
-    asset_counts = defaultdict(int)
-    for v in dataset_counts_by_provider.itervalues():
-        for atn, atc in v.iteritems():
-            if not atn:
-                atn = 'null'
-            asset_counts[atn] += atc
-
-    # dataset sum for an "all RAs"
-    c = Counter()
-    for dscounts in dataset_counts_by_provider.itervalues():
-        c.update(dscounts)
-
-    dataset_counts_by_provider[u'All'] = dict(c.items())
+    dataset_counts_by_provider = db.Dataset.count_types_by_provider_flat()
 
     # get list of most recent updates since yesterday
     since        = datetime.utcnow() - timedelta(hours=24)
@@ -69,8 +52,6 @@ def index():
                             'url':url_for('show_dataset', dataset_id=d._id)})
 
     return render_template('index.html',
-                           counts=counts,
-                           asset_counts=dict(asset_counts),
                            counts_by_provider=counts_by_provider,
                            dataset_counts_by_provider=dataset_counts_by_provider,
                            updates=updates,
