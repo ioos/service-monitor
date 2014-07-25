@@ -239,12 +239,25 @@ $(function() {
       );
   });
   $('#region-select').on('change', updateRecentUpdates);
+  $('#region-select').on('change', updateMap);
   $('#region-select').change();
 
   $('#region-select').chosen({
     placeholder_text_multiple: "No filters selected..."
   });
 });
+
+function updateMap() {
+  // updates the map to show active/inactive dots based on what's currently selected
+  var curVals = $('#region-select').val();
+
+  if (curVals && curVals.length) {
+    d3.selectAll('g.ioos > g').classed({inactive:function(d) { return $.inArray(d.properties.region, curVals) == -1; }});
+  } else {
+    // turn inactive off of all
+    d3.selectAll('g.ioos > g').classed({inactive:false});
+  }
+}
 
 var width = 600,
     height = 400;
@@ -279,13 +292,18 @@ queue()
 
     var regions = svg.append("g")
       .attr('class', 'ioos')
-      .selectAll("path")
-        .data(ioos.features);
+      .selectAll("g.ra")
+      .data(ioos.features);
 
-    regions.enter().append("path")
-      .attr("d", path);
+    var rgs = regions.enter()
+      .append('g')
+        .attr('id', function(d) { return 'map-' + d.properties.region; })
 
-    var textg = regions.enter().append("g")
+    rgs
+      .append("path")
+        .attr("d", path);
+
+    var textg = rgs.append("g")
       .attr("transform", function(d) { var proj = projection(d.geometry.coordinates); proj[0] += 5; proj[1] += 5; return "translate(" + proj[0] + "," + proj[1] + ")"; })
       .on('click', function() {
         var region = d3.select(this).datum().properties.region,
@@ -311,7 +329,8 @@ queue()
       .attr("class", "first");
 
     textg.append("text")
-      .text(function(d) { return d.properties.region; });
+      .text(function(d) { return d.properties.region; })
+      .attr("class", "main");
 
   });
 

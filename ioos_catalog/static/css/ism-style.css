@@ -25,6 +25,20 @@ svg .ioos path {
   fill: #EF7825;
 }
 
+svg .ioos .inactive path {
+  fill: #ccc;
+  stroke: #666;
+  stroke-width: 1;
+}
+
+svg .ioos .inactive .main {
+  fill: #ccc;
+}
+
+svg .ioos .inactive .first {
+  opacity: 0.3;
+}
+
 svg .dataset path {
   fill: #F23128;
   fill-opacity: 0.5;
