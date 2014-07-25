@@ -31,6 +31,11 @@ def datasets(filter_provider, filter_type):
 
     if filter_type is not None and filter_type != "null":
         titleparts.append(filter_type)
+
+        # @TODO: pretty hacky
+        if filter_type == "(NONE)":
+            filter_type = None
+
         filters['services.asset_type'] = filter_type
 
     # build title
