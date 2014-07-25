@@ -27,7 +27,7 @@ def datasets(filter_provider, filter_type):
 
     if filter_provider is not None and filter_provider != "null":
         titleparts.append(filter_provider)
-        filters['services.data_provider'] = filter_provider
+        filters['services.data_provider'] = {'$in': filter_provider.split(',')}
 
     if filter_type is not None and filter_type != "null":
         titleparts.append(filter_type)

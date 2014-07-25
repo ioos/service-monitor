@@ -44,7 +44,7 @@ def services(filter_provider, filter_type, oformat):
 
     if filter_provider is not None and filter_provider != "null":
         titleparts.append(filter_provider)
-        filters['data_provider'] = filter_provider
+        filters['data_provider'] = {'$in': filter_provider.split(',')}
 
     if filter_type is not None and filter_type != "null":
         titleparts.append(filter_type)
