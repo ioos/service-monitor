@@ -8,11 +8,8 @@ from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, make_response
 from wtforms import TextField, IntegerField, SelectField
 
-from ioos_catalog import app, db, scheduler
-from ioos_catalog.models.stat import Stat
-from ioos_catalog.tasks.stat import ping_service_task
-from ioos_catalog.tasks.reindex_services import reindex_services, region_map
-from ioos_catalog.tasks.harvest import harvest
+from ioos_catalog import app, db
+from ioos_catalog.tasks.reindex_services import region_map
 
 class MetadataForm(Form):
     start_date    = TextField(u'Start Date', description="Coming soon")
