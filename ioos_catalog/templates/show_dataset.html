@@ -3,7 +3,9 @@
 
 {% block jumbo %}
 
-<h3><a href="{{ url_for('show_dataset', dataset_id=dataset._id) }}">{{ dataset.uid | truncate(70, true) }}</a><br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('datasets') }}">Datasets</a></small></h3>
+<h3>
+  <a href="{{ url_for('show_dataset', dataset_id=dataset._id) }}">{{ dataset.uid | truncate(70, true) }}</a>
+</h3>
 
 {% endblock %}
 

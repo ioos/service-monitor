@@ -29,7 +29,13 @@
 <form id="delete-form" class="form-inline" style="float: right;" method="POST" action="{{ url_for('delete_service', service_id=service._id) }}">
 </form>
 
-<h3><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name }}</a><br/><small><a href="/">IOOS Catalog &#187; <a href="{{ url_for('services') }}">Services</a></small></h3>
+<h3>
+  <a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name }}</a>
+  <br/>
+  <small>
+    <a href="{{ url_for('services', filter_provider=service.data_provider) }}">{{ service.data_provider }} &middot; <a href="{{ url_for('services', filter_provider=service.data_provider, filter_type=service.service_type) }}">{{ service.service_type }}</a>
+  </small>
+</h3>
 
 {% endblock %}
 

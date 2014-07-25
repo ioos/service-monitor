@@ -2,11 +2,11 @@
 
 {% block jumbo %}
 <div class="row">
-  <div class="col-lg-6">
-    <h3> <a href="{{ url_for('services') }}">Services</a><br/><small><a href="/">IOOS Catalog</a></small></h3>
+  <div class="col-sm-4">
+    <h3><a href="{{ url_for('services') }}">Services</a></h3>
   </div>
   <form class="form-inline">
-    <div class="col-lg-3">
+    <div class="col-sm-8" style="text-align: right;">
       <label for="filter-provider">By Provider</label>
       <select name="filter-provider" class="form-control">
         <option value="null">-</option>
@@ -14,8 +14,7 @@
         <option>{{ provider }}</option>
         {%- endfor %}
       </select>
-    </div>
-    <div class="col-lg-3">
+      &nbsp;
       <label for="filter-type">By Type</label>
       <select name="filter-type" class="form-control">
         <option value="null">-</option>
