@@ -324,20 +324,18 @@ $('#map_infobar .close').click(function() {
 
 $('#sidebar-toggle').click(function() {
   var map = $('#map');
-  if (map.css('margin-left') == '0px') {
+  if (map.css('left') == '0px') {
     $('#map_sidebar').show();
 
     map.animate({
-      'margin-left': '30%',
-      'width': '70%'
+      'left': '300px',
     }, 150);
 
   } else {
     $('#map_sidebar').hide();
     $('#map_infobar').hide();
     map.animate({
-      'margin-left': '0px',
-      'width': '100%'
+      'left': '0px',
     }, 150);
   }
 });
