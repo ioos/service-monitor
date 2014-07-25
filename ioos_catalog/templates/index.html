@@ -6,7 +6,9 @@
   <a href="/"><h1>IOOS Catalog</h1></a>
 </div>
 <div class="col-lg-2">
-  <a style="margin-top: 10px;display: block;text-align:right;" href="{{ url_for('daily') }}">Daily Report</a>
+  <a style="margin-top: 10px;display: inline-block;text-align:right;" href="{{ url_for('daily') }}">Daily Report</a>
+  |
+  <a style="margin-top: 10px;display: inline-block;text-align:right;" href="{{ url_for('help') }}">Help</a>
 </div>
 
 {% endblock %}

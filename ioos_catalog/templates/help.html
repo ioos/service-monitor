@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <div class="col-lg-6">
+    <h3> <a href="{{ url_for('help') }}">Help</a><br/><small><a href="/">IOOS Catalog</a></small></h3>
+  </div>
+</div>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+  <h2>Frequently Asked Questions</h2>
+
+  <h4>What is a Service?</h4>
+
+  <p>A service or service endpoint is an accessible URL providing data access via a standard (e.g. SOS, DAP, WCS). Services are harvested via CSW from the NGDC geoportal on a nightly basis. The IOOS Catalog provides monitoring for uptime statistics and uses these services to extract Datasets.</p>
+
+  <p>The current supported services are DAP, SOS, WCS, and WMS.</p>
+
+  <h4>What is a Dataset?</h4>
+
+  <p>A dataset is some form of data produced by a service. Gridded data, point data, and observation data are just some of the datasets harvested from a service. A single service may produce one or more datasets.</p>
+
+  <div class="alert alert-info">Only DAP and SOS dataset are currently supported.</div>
+
+  <h4>Why do some regions/groups have many services while others don't?</h4>
+
+  <p>RAs have many options in their DMAC implementations depending on their workflows.  Different services offer different capabilities; for instance, an SOS deployment via <a href="http://ioossos.axiomalaska.com">i52N</a> allows a single Service endpoint to produce a large number of Datasets.  Providing SOS via <a href="http://github.com/asascience-open/ncsos">NcSOS</a> via THREDDS results in a 1:1 mapping between service endpoint and dataset.</p>
+
+</div>
+
+{% endblock %}
