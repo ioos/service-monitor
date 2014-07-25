@@ -190,7 +190,8 @@ function setupFilters() {
 
 setupFilters();
 
-var map = L.map('map').setView([44, -100], 4);
+var map = L.map('map', { zoomControl: false} ).setView([44, -100], 4);
+new L.Control.Zoom({ position: 'topright' }).addTo(map);
 
 //var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
