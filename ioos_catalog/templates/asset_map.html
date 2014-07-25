@@ -323,12 +323,11 @@ $('#map_infobar .close').click(function() {
 
 $('#sidebar-toggle').click(function() {
   var map = $('#map');
-  if (map.css('left') == '0px') {
+  if (map.css('margin-left') == '0px') {
     $('#map_sidebar').show();
-    $('#map_infobar').show();
 
     map.animate({
-      'left': '30%',
+      'margin-left': '30%',
       'width': '70%'
     }, 150);
 
@@ -336,7 +335,7 @@ $('#sidebar-toggle').click(function() {
     $('#map_sidebar').hide();
     $('#map_infobar').hide();
     map.animate({
-      'left': '0px',
+      'margin-left': '0px',
       'width': '100%'
     }, 150);
   }
