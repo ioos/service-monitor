@@ -51,8 +51,8 @@
     <script type="text/javascript">
       $(function() {
 
-        {% if 'services.data_provider' in filters %}
-          $('select[name="filter-provider"]').val('{{ filters['services.data_provider'] }}');
+        {% if 'services.data_provider' in filters and filters['services.data_provider']['$in']|length == 1 %}
+          $('select[name="filter-provider"]').val('{{ filters['services.data_provider']['$in'][0] }}');
         {% endif %}
 
         {% if 'services.asset_type' in filters %}
