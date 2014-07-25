@@ -22,9 +22,9 @@
       <div class="col-lg-6">
         <h3 style="margin-top: 0px">Explore Services</h3>
 
-        <p>1. Pick a region using the dropdown or the map:</p>
+        <p>1. Pick region(s) using the dropdown or the map:</p>
 
-        <select id="region-select" class="form-control">
+        <select id="region-select" class="form-control" multiple="multiple">
           {%- for provider in providers %}
           <option>{{ provider }}</option>
           {%- endfor %}
@@ -98,8 +98,8 @@ function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel)
 
   // GET DATA
   var data = srcData;
-  if (region != 'All') {
-    data = data.filter(function(d) { return d.data_provider == region; });
+  if (region && region.length) {
+    data = data.filter(function(d) { return $.inArray(d.data_provider, region) != -1; });
   }
 
   var allsum = d3.sum(data, function(d) { return d.cnt });
@@ -143,8 +143,8 @@ function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel)
 
   // both new and existing hrefs get updated
   svcbtns.attr('href', function(d) {
-    var ltype = (d.key == "All") ? "null" : d.key;
-    var rtype = (region == "All") ? "null" : region;
+    var ltype = (d.key != "All") ? d.key : "null";
+    var rtype = (region && region.length) ? region : 'null';
     return '/' + urlBase + '/filter/' + rtype + '/' + ltype;
   });
 
@@ -182,9 +182,9 @@ function updateRecentUpdates() {
 
   // filter
   var data = updates;
-  if (region != 'All') {
+  if (region && region.length) {
     data = data.filter(function(v) {
-      return v.data_provider == region;
+      return $.inArray(v.data_provider, region) != -1;
     });
   }
 
@@ -240,6 +240,10 @@ $(function() {
   });
   $('#region-select').on('change', updateRecentUpdates);
   $('#region-select').change();
+
+  $('#region-select').chosen({
+    placeholder_text_multiple: "No filters selected..."
+  });
 });
 
 var width = 600,

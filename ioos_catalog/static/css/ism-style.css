@@ -156,4 +156,19 @@ svg path.dataset.active {
   display: none;
 }
 
+#region_select_chosen {
+  margin-bottom: 6px;
+}
 
+#region_select_chosen .search-field {
+  height: 34px;
+}
+
+#region_select_chosen .search-choice, #region_select_chosen .search-field input {
+  line-height: 1.54;
+  height: inherit;
+}
+
+#region_select_chosen .search-choice-close {
+  top: 7px;
+}

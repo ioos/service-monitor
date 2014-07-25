@@ -7,7 +7,7 @@ from ioos_catalog import app, db, prettydate
 @app.route('/', methods=['GET'])
 def index():
     # provider list
-    providers = [u'All'] + sorted(db['services'].distinct('data_provider'))
+    providers = sorted(db['services'].distinct('data_provider'))
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider_flat()
