@@ -93,7 +93,7 @@
 
 <script type="text/javascript">
 
-function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel) {
+function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel, tooltips) {
   var region = $('#region-select').val();
 
   // GET DATA
@@ -133,6 +133,7 @@ function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel)
         'btn-lg': true,
         'btn-block': true,
       })
+      .attr('title', function(d) { return tooltips[d.key] || null; })
       .text(function(d) { return d.key + " "; })
     .append('span')
       .attr('class', 'badge');
@@ -226,7 +227,8 @@ $(function() {
       function(d) { return d.service_type; },
       '#service-type-btns',
       'services',
-      '#overview'
+      '#overview',
+      {}
       );
   });
   $('#region-select').on('change', function() {
@@ -235,7 +237,8 @@ $(function() {
       function(d) { return d.asset_type; },
       '#dataset-type-btns',
       'datasets',
-      '#assettypes'
+      '#assettypes',
+      dsTranslate
       );
   });
   $('#region-select').on('change', updateRecentUpdates);
@@ -244,6 +247,11 @@ $(function() {
 
   $('#region-select').chosen({
     placeholder_text_multiple: "No filters selected..."
+  });
+
+  $('.type-btn').tooltip(
+    {placement:'left',
+    animation:false
   });
 });
 
@@ -337,6 +345,15 @@ queue()
 var countsByProvider   = {{ counts_by_provider | tojson }};
 var datasetsByProvider = {{ dataset_counts_by_provider | tojson }};
 var updates            = {{ updates | tojson }};
+var dsTranslate = {
+  RGRID: 'Rectilinear Grid',
+  CGRID: 'Curvilinear Grid',
+  NCELL: 'Irregular/Unstructured Grid',
+  UNKNOWN: 'Unknown',
+  "(NONE)": 'No Dataset Type detected',
+  "FIXED MET STATION": 'Fixed Met Station',
+  BUOY: 'Buoy'
+};
 
 </script>
 
