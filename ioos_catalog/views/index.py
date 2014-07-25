@@ -3,11 +3,12 @@ from collections import defaultdict, Counter
 
 from flask import render_template, make_response, redirect, jsonify, url_for
 from ioos_catalog import app, db, prettydate
+from ioos_catalog.tasks.reindex_services import region_map
 
 @app.route('/', methods=['GET'])
 def index():
     # provider list
-    providers = sorted(db['services'].distinct('data_provider'))
+    providers = sorted(region_map.keys())
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider_flat()
