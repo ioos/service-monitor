@@ -109,9 +109,14 @@ def get_metadatas(service_ids, filters=None):
 
     return metadatas, cols, list(dids)
 
-@app.route('/metadata/view')
-def view_metadatas():
-    sids = get_service_ids()
+@app.route('/metadata/view', defaults={'filter_provider':None}, methods=['GET'])
+@app.route('/metadata/view/<path:filter_provider>', methods=['GET'])
+def view_metadatas(filter_provider):
+    service_filters = {}
+    if filter_provider is not None:
+        service_filters['data_provider'] = filter_provider
+
+    sids = get_service_ids(service_filters)
     metadatas, cols, dids = get_metadatas(sids)
 
     # get mappings of services/datasets
