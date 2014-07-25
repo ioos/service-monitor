@@ -40,11 +40,11 @@
       <tr>
         <td>{{ services[m['ref_id']].name if m['ref_type']=='service' }}</td>
         <td>{{ services[m['ref_id']].data_provider if m['ref_type']=='service' }}</td>
-        <td>{{ m['ref_type'] }} / {{ m['ref_subtype'] }}</td>
+        <td>{{ m['ref_type'] }}</td>
 
         {%- for col in columns %}
         <td>
-          {%- set v=m['metamap'].get(col, "-") %}
+          {%- set v=m.get(col, "-") %}
           {%- if v|is_list %}
             <ul class="list-unstyled">
               {%- for vv in v %}
