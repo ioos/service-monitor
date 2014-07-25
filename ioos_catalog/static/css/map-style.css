@@ -111,21 +111,20 @@ svg path.point.perm-active {
   height: 100%;
   border-right: 5px solid #9fabb7;
   top: 0px;
-  padding: 5px;
+  padding: 0px;
 }
 
 #map_sidebar #filters {
-  height: 5%;
+  /*height: 5%;*/
 }
 
 #map_sidebar #filters select {
-  margin-left: 20%;
-  width: 80%;
 }
 
 #map_sidebar #thumbnails {
-  overflow: auto;
-  height: 95%;
+  
+  /*overflow: auto;
+  height: 95%;*/
 }
 
 #map_infobar {
@@ -149,24 +148,24 @@ svg path.point.perm-active {
   text-overflow: ellipsis;
 }
 
+#map_sidebar #sidebar-content {
+  position: absolute;
+  overflow: auto;
+  top: 95px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+
+  padding: 5px;
+}
+
 #branding {
-  position: fixed;
-  top: 0px;
-  right: 15px;
-  height: 42px;
-  width: 110px;
-
-  z-index: 15;
-
-  border: 1px solid black;
-  border-top-width: 0px;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-  background-color: #3696ef;
-  box-shadow: 0px 0px 10px black;
-  text-align: center;
+  padding-left: 50px;
+  width: 100%;
+  background-color: #c6d4e1;
+  border-bottom: 5px solid #9fabb7;
 }
 
 #branding img {
-  width: 100px;
+  width: 100%;
 }

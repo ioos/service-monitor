@@ -16,6 +16,7 @@
   </head>
   <body>
     <header>
+      {% block navbar %}
       <nav class="navbar navbar-custom">
         <div class="container">
           <div class="navbar-header">
@@ -44,6 +45,7 @@
           </div>
         </div>
       </nav>
+      {% endblock %}
     </header>
     {% block basepage %}{% endblock %}
   </body>

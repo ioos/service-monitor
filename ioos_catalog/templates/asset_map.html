@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 
+{% block navbar %}
+{% endblock %}
+
 {% block css %}
 <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
@@ -10,12 +13,6 @@
 <button id="sidebar-toggle" class="btn btn-default">
   <span class="glyphicon glyphicon-align-justify"></span>
 </button>
-
-<div id="branding">
-  <a href="/">
-    <img src="{{ url_for('.static', filename='img/ioos-white.gif')}}" alt="IOOS" />
-  </a>
-</div>
 
 <div id="map_infobar">
   <button type="button" class="btn btn-lg pull-right close">&times;</button>
@@ -74,18 +71,26 @@
 
 <div id="map_sidebar">
 
-  <div id="filters">
-    <select name="filter-provider" class="form-control">
-      <option value="-">-</option>
-      <option value="null">All</option>
-      {% for region in regions %}
-      <option>{{ region }}</option>
-      {% endfor %}
-    </select>
+  <div id="branding">
+    <a href="/">
+      <img src="{{ url_for('.static', filename='img/ioos.png') }}" alt="IOOS Catalog" />
+    </a>
   </div>
 
-  <div id="thumbnails" class="list-group">
+  <div id="sidebar-content">
+    <div id="filters">
+      <select name="filter-provider" class="form-control">
+        <option value="-">-</option>
+        <option value="null">All</option>
+        {% for region in regions %}
+        <option>{{ region }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
+    <div id="thumbnails" class="list-group">
+
+    </div>
   </div>
 </div>
 
