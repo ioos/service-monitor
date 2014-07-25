@@ -288,9 +288,22 @@ queue()
     var textg = regions.enter().append("g")
       .attr("transform", function(d) { var proj = projection(d.geometry.coordinates); proj[0] += 5; proj[1] += 5; return "translate(" + proj[0] + "," + proj[1] + ")"; })
       .on('click', function() {
-        var region = d3.select(this).datum().properties.region;
-        $('#region-select').val(region);
-        $('#region-select').change();
+        var region = d3.select(this).datum().properties.region,
+          curVals = $('#region-select').val();
+
+        if (curVals == null) { curVals = Array() };
+        var curIdx = $.inArray(region, curVals);
+
+        if (curIdx != -1) {
+          curVals.splice(curIdx, 1);
+        } else {
+          curVals.push(region);
+        }
+
+        $('#region-select')
+          .val(curVals)
+          .trigger('chosen:updated')
+          .change();
       });
 
     textg.append("text")
