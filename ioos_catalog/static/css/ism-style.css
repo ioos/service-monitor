@@ -63,6 +63,10 @@ svg .dataset path {
   border-color: #FFA855;
 }
 
+.btn-success .badge {
+  color: #ef7825;
+}
+
 .jumbotron {
   padding-top: 5px;
   padding-bottom: 5px;
