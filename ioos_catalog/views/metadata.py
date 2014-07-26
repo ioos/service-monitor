@@ -112,7 +112,7 @@ def get_metadatas(service_ids, filters=None):
 @app.route('/metadata/view', defaults={'filter_provider':None}, methods=['GET'])
 @app.route('/metadata/view/<path:filter_provider>', methods=['GET'])
 def view_metadatas(filter_provider):
-    service_filters = {}
+    service_filters = {'active':True}
     if filter_provider is not None:
         service_filters['data_provider'] = filter_provider
 
@@ -152,7 +152,7 @@ def metadatas_csv(filter_provider):
     if request.method == 'POST':
         filter_provider = request.form['data_provider']
 
-    service_filters = {}
+    service_filters = {'active':True}
     if filter_provider is not None:
         service_filters['data_provider'] = filter_provider
 
