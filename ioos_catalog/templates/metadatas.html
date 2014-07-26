@@ -2,20 +2,17 @@
 
 {% block jumbo %}
 <div class="row">
-  <div class="col-lg-6">
-    <h3> <a href="{{ url_for('metadatas') }}">Metadata</a></h3>
+  <div class="col-sm-4">
+    <h3><a href="{{ url_for('metadatas') }}">Metadata</a></h3>
   </div>
   <form class="form-inline">
-    <div class="col-lg-3">
+    <div class="col-sm-8" style="text-align: right;">
       <label for="filter-provider">By Provider</label>
       <select name="filter-provider" class="form-control">
         <option value="null">-</option>
-      </select>
-    </div>
-    <div class="col-lg-3">
-      <label for="filter-type">By Type</label>
-      <select name="filter-type" class="form-control">
-        <option value="null">-</option>
+        {%- for provider in providers|sort %}
+        <option>{{ provider }}</option>
+        {%- endfor %}
       </select>
     </div>
   </form>
@@ -61,5 +58,24 @@
     {%- endfor %}
     </tbody>
   </table>
+  <script type="text/javascript">
+    $(function() {
+
+      {% if 'data_provider' in filters %}
+        $('select[name="filter-provider"]').val('{{ filters['data_provider'] }}');
+      {% endif %}
+
+      $('select[name^="filter"]').change(function() {
+        var provVal = $('select[name="filter-provider"]').val();
+        if (provVal == "null") {
+          window.location = "{{ url_for("view_metadatas") }}";
+          return;
+        }
+        var url = '{{ url_for("view_metadatas") }}/';
+        url += provVal;
+        window.location = url;
+      });
+    });
+  </script>
 
 {% endblock %}

@@ -127,6 +127,8 @@ def view_metadatas(filter_provider):
                            metadatas=metadatas,
                            services=services,
                            #datasets=datasets,
+                           providers=region_map.keys(),
+                           filters=service_filters,
                            columns=list(cols))
 
 @app.route('/metadata/')

@@ -48,7 +48,7 @@
       </div>
 
       <button type="submit" class="btn btn-primary">Download Inventory (CSV)</button>
-      <a href="{{ url_for('metadatas') }}" class="btn btn-default">Cancel</a>
+      <a href="#" id="btn-view" class="btn btn-primary">View Inventory</a>
 
     </form>
   </div>
@@ -59,4 +59,21 @@
 </div>
 
 </div>
+
+<script type="text/javascript">
+
+$(function() {
+  $('#btn-view').click(function() {
+    var provVal = $('select[name="data_provider"]').val();
+    if (provVal == "null") {
+      window.location = "{{ url_for("view_metadatas") }}";
+      return;
+    }
+    var url = '{{ url_for("view_metadatas") }}/';
+    url += provVal;
+    window.location = url;
+  });
+});
+
+</script>
 {% endblock %}
