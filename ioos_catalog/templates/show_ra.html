@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <div class="col-sm-4">
+    <h3>
+      <a href="{{ url_for('show_ra', provider=provider) }}">{{ provider }}</a>
+    </h3>
+  </div>
+  <form class="form-inline">
+    <div class="col-sm-8" style="text-align: right;">
+      <label for="filter-provider">By Provider</label>
+      <select name="filter-provider" class="form-control">
+        {%- for p in providers|sort %}
+        <option {{ "selected='selected'" if p == provider }} value="{{ url_for('show_ra', provider=p) }}">{{ p }}</option>
+        {%- endfor %}
+      </select>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+
+  <div class="row">
+    <div class="col-sm-8">
+      {% if pi.banner %}
+      <img src="{{ pi.banner }}" alt="{{ provider }}" class="img-thumbnail" />
+      {% endif %}
+
+      {% if pi.fullname %}
+      <h2>{{ pi.fullname }}</h2>
+      {% endif %}
+
+      {% if pi.description %}
+      <p>{{ pi.description }}</p>
+      {% endif %}
+    </div>
+
+    <div class="col-sm-4">
+      {% if pi.links|length %}
+      <div class="panel panel-default">
+        <div class="panel-heading">External Links</div>
+
+        {% for link in pi.links %}
+        <div class="list-group">
+          <a href="{{ link.url }}" class="list-group-item">
+            <h4 class="list-group-item-heading">{{ link.title }}</h4>
+            <p class="list-group-item-text">{{ link.url }}</p>
+          </a>
+        </div>
+        {% endfor %}
+
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-12">
+      <h3><strong>{{ provider }}</strong> has <strong>{{ provider_service_count }} service{{ "s" if provider_service_count !=1 }}</strong> over <strong>{{ tlds|length }} TLD{{ "s" if tlds|length != 1 }}</strong> producing <strong>{{ provider_dataset_count }} dataset{{"s" if provider_dataset_count != 1}}</strong>.
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="well">
+        <div class="row">
+          <div class="col-sm-6">
+            <a href="{{ url_for('services', filter_provider=provider) }}" class="btn btn-success btn-block btn-xl">
+              <span class="glyphicon glyphicon-zoom-in"></span>
+              Explore Services
+            </a>
+          </div>
+
+          <div class="col-sm-6">
+            <a href="{{ url_for('datasets', filter_provider=provider, filter_type='null') }}" class="btn btn-success btn-block btn-xl">
+              <span class="glyphicon glyphicon-zoom-in"></span>
+              Explore Datasets
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(function() {
+    $('select[name^="filter"]').change(function() {
+      var url = $('select[name="filter-provider"]').val();
+      window.location = url;
+    });
+  });
+</script>
+
+{% endblock %}
+
