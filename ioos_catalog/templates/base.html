@@ -35,8 +35,19 @@
 
           <div class="collapse navbar-collapse" id="nb-collapse">
             <ul class="nav navbar-nav">
-              <li><a href="{{ url_for('services') }}">Services</a></li>
-              <li><a href="{{ url_for('datasets') }}">Datasets</a></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Explore <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li role="presentation" class="dropdown-header">All</li>
+                  <li><a href="{{ url_for('services') }}">Services</a></li>
+                  <li><a href="{{ url_for('datasets') }}">Datasets</a></li>
+
+                  <li role="presentation" class="dropdown-header">Regional Associations</li>
+                  {% for ra_provider in ra_providers %}
+                  <li><a href="{{ url_for('show_ra', provider=ra_provider) }}">{{ ra_provider }}</a></li>
+                  {% endfor %}
+                </ul>
+              </li>
               <li><a href="{{ url_for('metadatas') }}">Asset Inventory</a></li>
               <li><a href="{{ url_for('asset_map') }}">Asset Map <span class="label label-info">BETA</span></a></li>
             </ul>
