@@ -195,9 +195,11 @@ new L.Control.Zoom({ position: 'topright' }).addTo(map);
 
 //var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
-//var baseAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
-var base = new L.TileLayer(baseUrl, {minZoom: 1, maxZoom: 12, /*attribution: baseAttrib*/}); 
-
+//attribution text from http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer
+var baseAttrib = 'Sources: Esri, GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org, and other contributors';
+var base = new L.TileLayer(baseUrl, { minZoom: 1
+                                    , maxZoom: 12
+                                    , attribution: baseAttrib}); 
 map.addLayer(base);
 
 /* add hook layers for d3 involvement */
