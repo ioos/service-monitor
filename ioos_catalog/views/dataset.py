@@ -45,7 +45,7 @@ def datasets(filter_provider, filter_type):
     f          = DatasetFilterForm()
     datasets   = list(db.Dataset.find(filters))
     try:
-        assettypes = map(lambda x: x['_id'][0], db.Dataset.aggregate({'$group' : {'_id' : '$services.asset_type' }}))
+        assettypes = db.Dataset.find({}).distinct('services.asset_type')
     except:
         assettypes = []
 
