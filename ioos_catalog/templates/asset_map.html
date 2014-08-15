@@ -276,7 +276,9 @@ function addData(error, geojson) {
   datapaths.classed('trajectory', function(d) { return d.geometry.type == 'LineString'; });
   datapaths.classed('area', function(d) { return !classmap.hasOwnProperty(d.geometry.type) });
 
-  // adjust overlay
+  // warp view to cover full region
+  var selBounds = latLonPath.bounds(geoj_data);
+  map.fitBounds(selBounds);
   reset();
 
   // on thumbnail index
