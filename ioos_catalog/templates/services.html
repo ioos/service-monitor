@@ -34,14 +34,14 @@
     <table class="table table-striped table-bordered table-condensed" style="font-size: 11px;">
         <thead>
             <tr>
-                <th>provider</th>
-                <th>type</th>
-                <th>name</th>
-                <th>updated (utc)</th>
-                <th>code</th>
-                <th>time (ms)</th>
-                <th>weekly avg (ms)</th>
-                <th>status</th>
+                <th>Service Provider</th>
+                <th>Service Type</th>
+                <th>Service Name</th>
+                <th title="The date of the last status update for the service">Last Status Update</th>
+                <th title="The service response code. 200 means the service is up and running succesfully">HTTP Status Code</th>
+                <th title="The time for a return trip response from the service, measured in milliseconds">Response Time (ms)</th>
+                <th title="The average of the response times over the span of a week">Weekly Average Response Time (ms)</th>
+                <th>Service Status</th>
             </tr>
         </thead>
         {%- for service_group in services|groupby('tld') %}
