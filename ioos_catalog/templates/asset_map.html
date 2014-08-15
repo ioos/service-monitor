@@ -212,8 +212,15 @@ function projectPoint(x, y) {
   this.stream.point(point.x, point.y);
 }
 
+function returnLatLon(x, y) {
+    //simply turn lon/lat into lat/lon
+    this.stream.point(y, x);
+}
+
 var transform = d3.geo.transform({point:projectPoint}),
          path = d3.geo.path().projection(transform);
+         latLonTrans = d3.geo.transform({point: returnLatLon})
+         latLonPath = d3.geo.path().projection(latLonTrans);
 
 var datapaths = null,
   geoj_data = null;
@@ -309,6 +316,10 @@ function addData(error, geojson) {
     d3.selectAll(sel).classed({'perm-active':false});
 
     var sel = $('#map #' + d.properties.id);
+    //there should be one, and only one element present for the returned path
+    var selBounds = latLonPath.bounds(sel[0].__data__);
+    //zoom map to bounds of selected dataset
+    map.fitBounds(selBounds);
     d3.selectAll(sel).classed({'perm-active':true});
 
     $(this).siblings().removeClass('active');
