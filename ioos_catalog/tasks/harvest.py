@@ -712,10 +712,16 @@ class DapHarvest(Harvester):
             metamap[m_units] = [] # Override the Wicken return to preserve the order
 
 
+            # Wicken doesn't preserve the order between the names and the units,
+            # so what you wind up with is two lists that can't be related, but we 
+            # want to keep the relationship between the name and the units
+
             for k in ncdataset.variables.iterkeys():
                 var_name = k
                 standard_name = getattr(ncdataset.variables[k], 'standard_name', '')
                 units = getattr(ncdataset.variables[k], 'units', '')
+
+                # Only map metadata where we have all three
                 if var_name and standard_name and units:
                     metamap[m_names].append('%s (%s)' % (var_name, standard_name))
                     metamap[m_units].append(units)

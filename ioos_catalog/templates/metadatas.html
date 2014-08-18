@@ -34,6 +34,16 @@
     </thead>
     <tbody>
     {%- for m in metadatas %}
+    {# Each main row is going to have a rowspan equal to the number of variable names #}
+    {#
+| Station Publisher Email | Variable Names | Variable Units           | Altitude Units |
+|                         | time           | seconds since 1970-01-01 |                |
+|                         | depth          | meters                   |                |
+| some_email              | latitude       | degrees_north            | meters         |
+|                         | longitude      | degrees_east             |                |
+|                         | u              | m/s                      |                |
+|                         | v              | m/s                      |                |
+  #}    
       {%- set varcount = m.get("varcount", 1) %}
       <tr>
         <td rowspan="{{varcount}}">{{ services[m['ref_id']].name if m['ref_type']=='service' }}</td>

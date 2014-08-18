@@ -70,6 +70,11 @@ def get_metadatas(service_ids, filters=None):
                 continue
 
             mdict.update(s['metamap'])
+
+            # varcount is passed to the view and used to determine the rowspan
+            # for the rows each row will have a rowspan equal to the number of
+            # variable names in the metadata container.
+
             mdict['varcount'] = len(s['metamap']['Variable Names*'])
             metadatas.append(mdict)
 
@@ -116,7 +121,6 @@ def get_metadatas(service_ids, filters=None):
 @app.route('/metadata/view', defaults={'filter_provider':None}, methods=['GET'])
 @app.route('/metadata/view/<path:filter_provider>', methods=['GET'])
 def view_metadatas(filter_provider):
-    #
     service_filters = {'active':True}
     if filter_provider is not None:
         service_filters['data_provider'] = filter_provider
