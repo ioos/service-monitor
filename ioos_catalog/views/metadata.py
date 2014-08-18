@@ -48,18 +48,19 @@ def get_metadatas(service_ids, filters=None):
         filters = {}
 
     filters['metadata.service_id'] = {'$in':service_ids}
+    app.logger.info('get_metadatas()')
 
     db_metadatas = db.Metadata.find(filters)
 
-    dids = set()
-    cols = set()
+    dataset_ids = set()
+    cols        = set()
 
     # promote metadata array inside each metadata object into a full representation
     metadatas = []
 
     for m in db_metadatas:
         if m.ref_type == 'dataset':
-            dids.add(m.ref_id)
+            dataset_ids.add(m.ref_id)
 
         mdict = dict(m)
         for s in m.metadata:
@@ -69,6 +70,7 @@ def get_metadatas(service_ids, filters=None):
                 continue
 
             mdict.update(s['metamap'])
+            mdict['varcount'] = len(s['metamap']['Variable Names*'])
             metadatas.append(mdict)
 
             map(cols.add, s['metamap'].iterkeys())
@@ -107,11 +109,14 @@ def get_metadatas(service_ids, filters=None):
             'Observed Variable*',
             'Observed Variable Time Last*']
 
-    return metadatas, cols, list(dids)
+    from traceback import format_stack
+    app.logger.info(''.join(format_stack()))
+    return metadatas, cols, list(dataset_ids)
 
 @app.route('/metadata/view', defaults={'filter_provider':None}, methods=['GET'])
 @app.route('/metadata/view/<path:filter_provider>', methods=['GET'])
 def view_metadatas(filter_provider):
+    #
     service_filters = {'active':True}
     if filter_provider is not None:
         service_filters['data_provider'] = filter_provider
