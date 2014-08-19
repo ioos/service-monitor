@@ -114,8 +114,6 @@ def get_metadatas(service_ids, filters=None):
             'Observed Variable*',
             'Observed Variable Time Last*']
 
-    from traceback import format_stack
-    app.logger.info(''.join(format_stack()))
     return metadatas, cols, list(dataset_ids)
 
 @app.route('/metadata/view', defaults={'filter_provider':None}, methods=['GET'])
