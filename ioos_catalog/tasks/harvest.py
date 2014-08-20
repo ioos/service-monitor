@@ -464,6 +464,24 @@ class DapHarvest(Harvester):
             except AttributeError:
                 pass
 
+
+    @classmethod
+    def get_asset_type(cls, cd):
+        """Takes a Paegan object and returns the CF feature type
+            if defined, falling back to `cdm_data_type`,
+            and finally to Paegan's representation if nothing else is found"""
+        #TODO: Add check for adherence to CF conventions, others (ugrid)
+        nc_obj = cd.nc
+        if hasattr(nc_obj, 'featureType'):
+            geom_type = nc_obj.featureType
+        elif hasattr(nc_obj, 'cdm_data_type'):
+            geom_type = nc_obj.cdm_data_type
+        else:
+            geom_type = cd._datasettype.upper()
+        #TODO: Add check for valid feature types
+        return unicode(geom_type)
+
+
     def harvest(self):
         """
         Identify the type of CF dataset this is:
@@ -654,7 +672,7 @@ class DapHarvest(Harvester):
             'messages'          : map(unicode, messages),
             'keywords'          : keywords,
             'variables'         : map(unicode, final_var_names),
-            'asset_type'        : unicode(cd._datasettype).upper(),
+            'asset_type'        : DapHarvest.get_asset_type(cd),
             'geojson'           : gj,
             'updated'           : datetime.utcnow()
         }
