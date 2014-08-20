@@ -22,8 +22,11 @@ if app.config.get('LOG_FILE') == True:
     import logging
     from logging import FileHandler
     file_handler = FileHandler('logs/ioos_catalog.txt')
+    formatter = logging.Formatter('%(asctime)s - %(process)d - %(name)s - %(module)s:%(lineno)d - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
+    app.logger.info('Application Process Started')
 
 # Create the Redis connection
 import redis

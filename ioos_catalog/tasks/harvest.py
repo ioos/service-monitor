@@ -672,7 +672,7 @@ class DapHarvest(Harvester):
             metadata_rec = self.save_ccheck_dataset('ioos', dataset._id, scores, metamap)
         except Exception as e:
             metadata_rec = None
-            app.logger.warn("could not save compliancecheck/metamap information: %s", e)
+            app.logger.error("could not save compliancecheck/metamap information", exc_info=True)
 
         return "Harvested"
 
@@ -699,12 +699,32 @@ class DapHarvest(Harvester):
 
             # now make a map out of this
             # @TODO wicken should make this easier
+
+            m_names, m_units = ['Variable Names*','Variable Units*']
             metamap = {}
             for k in beliefs:
                 try:
                     metamap[k] = getattr(doc, doc._fixup_belief(k)[0])
                 except Exception as e:
-                    print k, e
+                    app.logger.exception("Problem setting belief (%s)", k)
+
+            metamap[m_names] = [] # Override the Wicken return to preserve the order
+            metamap[m_units] = [] # Override the Wicken return to preserve the order
+
+
+            # Wicken doesn't preserve the order between the names and the units,
+            # so what you wind up with is two lists that can't be related, but we 
+            # want to keep the relationship between the name and the units
+
+            for k in ncdataset.variables.iterkeys():
+                var_name = k
+                standard_name = getattr(ncdataset.variables[k], 'standard_name', '')
+                units = getattr(ncdataset.variables[k], 'units', '')
+
+                # Only map metadata where we have all three
+                if var_name and standard_name and units:
+                    metamap[m_names].append('%s (%s)' % (var_name, standard_name))
+                    metamap[m_units].append(units)
 
             return metamap
 

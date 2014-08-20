@@ -48,18 +48,19 @@ def get_metadatas(service_ids, filters=None):
         filters = {}
 
     filters['metadata.service_id'] = {'$in':service_ids}
+    app.logger.info('get_metadatas()')
 
     db_metadatas = db.Metadata.find(filters)
 
-    dids = set()
-    cols = set()
+    dataset_ids = set()
+    cols        = set()
 
     # promote metadata array inside each metadata object into a full representation
     metadatas = []
 
     for m in db_metadatas:
         if m.ref_type == 'dataset':
-            dids.add(m.ref_id)
+            dataset_ids.add(m.ref_id)
 
         mdict = dict(m)
         for s in m.metadata:
@@ -69,6 +70,12 @@ def get_metadatas(service_ids, filters=None):
                 continue
 
             mdict.update(s['metamap'])
+
+            # varcount is passed to the view and used to determine the rowspan
+            # for the rows each row will have a rowspan equal to the number of
+            # variable names in the metadata container.
+
+            mdict['varcount'] = len(s['metamap']['Variable Names*'])
             metadatas.append(mdict)
 
             map(cols.add, s['metamap'].iterkeys())
@@ -107,7 +114,7 @@ def get_metadatas(service_ids, filters=None):
             'Observed Variable*',
             'Observed Variable Time Last*']
 
-    return metadatas, cols, list(dids)
+    return metadatas, cols, list(dataset_ids)
 
 @app.route('/metadata/view', defaults={'filter_provider':None}, methods=['GET'])
 @app.route('/metadata/view/<path:filter_provider>', methods=['GET'])
