@@ -158,19 +158,24 @@ function toggleInfo(did, sindex) {
     var variables = d3.select('#map_infobar').select('#variables').selectAll('li')
       .data(data.variables);
 
-    variables.exit().remove();
+    variables.text(function(d) { return d; });
+
     variables.enter()
       .append('li')
       .text(function(d) { return d; });
 
+    variables.exit().remove();
+
     var keywords = d3.select('#map_infobar').select('#keywords').selectAll('li')
       .data(data.keywords);
 
-    keywords.exit().remove();
+    keywords.text(function(d) { return d; });
+
     keywords.enter()
       .append('li')
       .text(function(d) { return d; });
 
+    keywords.exit().remove();
   });
 }
 
