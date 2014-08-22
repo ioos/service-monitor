@@ -5,6 +5,11 @@ from flask import render_template, make_response, redirect, jsonify, url_for
 from ioos_catalog import app, db, prettydate
 from ioos_catalog.tasks.reindex_services import region_map
 
+# @TODO: really belongs in app __init__ but need to move region_map
+@app.context_processor
+def inject_ra_providers():
+        return dict(ra_providers=sorted(region_map.keys()))
+
 @app.route('/', methods=['GET'])
 def index():
     # provider list

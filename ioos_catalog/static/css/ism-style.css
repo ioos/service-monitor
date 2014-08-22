@@ -67,6 +67,11 @@ svg .dataset path {
   color: #ef7825;
 }
 
+.btn-xl {
+  font-size: 24px;
+  line-height: 3;
+}
+
 .jumbotron {
   padding-top: 5px;
   padding-bottom: 5px;
