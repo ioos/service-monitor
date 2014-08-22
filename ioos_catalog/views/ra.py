@@ -18,6 +18,7 @@ provider_info = {
         ]
     },
     'ATN_DAC': {
+        'provider_type': 'national',
     },
     'CARICOOS': {
         'fullname': 'Carribean Coastal Ocean Observing System',
@@ -51,9 +52,10 @@ provider_info = {
         'fullname': 'IOOS Glider DAC',
         'provider_type': 'national',
         'banner': '/static/img/ioos.png',
-        'description': 'IOOS Glider DAC',
+        'description': 'IOOS Glider Data Assembly Center',
         'links': [
-            {'title': 'Glider DAC TDS Catalog', 'url': 'http://tds.gliders.ioos.us/thredds/catalog.html'}
+            {'title': 'Glider DAC', 'url': 'http://gliders.ioos.us/'},
+            {'title': 'Glider DAC TDS Catalog', 'url': 'http://tds.gliders.ioos.us/thredds/catalog.html'},
         ]
     },
     'GLOS': {
@@ -139,8 +141,8 @@ provider_info = {
         'description':'SECOORA, the Southeast Coastal Ocean Observing Regional Association, is the regional solution to integrating coastal and ocean observing data and information in the Southeast United States.  SECOORA is a 501(c)(3) nonprofit incorporated in September 2007 that coordinates coastal and ocean observing activities, and facilitates continuous dialogue among stakeholders so that the benefits from the sustained operation of a coastal and ocean observing system can be realized.',
         'links': [
             {'title':'SECOORA Site', 'url': 'http://secoora.org/'},
-            {'title':'SEECORA Data Portal', 'url': 'http://secoora.org/maps/'},
-            {'title':'SEECORA Asset Inventory', 'url': 'http://inventory.secoora.org/'},
+            {'title':'SECOORA Data Portal', 'url': 'http://secoora.org/maps/'},
+            {'title':'SECOORA Asset Inventory', 'url': 'http://inventory.secoora.org/'},
         ]
     },
     'NOS/CO-OPS': {
@@ -192,6 +194,7 @@ provider_info = {
         ]
     },
     'Other': {
+        'provider_type': 'national',
     },
 }
 
