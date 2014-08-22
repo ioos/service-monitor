@@ -1,3 +1,7 @@
+.img-thumbnail {
+  max-height: 350px;
+}
+
 tr.hilite>td {
   background-color: #C6D4E1 !important;
   color: #565C61;
