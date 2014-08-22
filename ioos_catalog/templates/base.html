@@ -46,6 +46,10 @@
                   {% for ra_provider in ra_providers %}
                   <li><a href="{{ url_for('show_ra', provider=ra_provider) }}">{{ ra_provider }}</a></li>
                   {% endfor %}
+                  <li role="presentation" class="dropdown-header">National Partners</li>
+                  {% for partner in national_partners %}
+                  <li><a href="{{ url_for('show_ra', provider=partner) }}">{{ partner }}</a></li>
+                  {% endfor %}
                 </ul>
               </li>
               <li><a href="{{ url_for('metadatas') }}">Asset Inventory</a></li>
