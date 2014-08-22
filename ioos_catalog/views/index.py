@@ -4,6 +4,20 @@ from collections import defaultdict, Counter
 from flask import render_template, make_response, redirect, jsonify, url_for
 from ioos_catalog import app, db, prettydate
 from ioos_catalog.tasks.reindex_services import region_map
+from ioos_catalog.views.ra import provider_info as p_info
+
+# @TODO: really belongs in app __init__ but need to move region_map
+@app.context_processor
+def inject_ra_providers():
+        ra_list, national_list = [], []
+        for key in p_info:
+            if p_info[key].get('provider_type') == 'national':
+                national_list.append(key)
+            #assume unset provider types are regional by default
+            elif p_info[key].get('provider_type', 'regional') == 'regional':
+                ra_list.append(key)
+        return {'ra_providers': sorted(ra_list),
+                'national_partners': sorted(national_list)}
 
 @app.route('/', methods=['GET'])
 def index():
