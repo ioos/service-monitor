@@ -45,7 +45,11 @@ def datasets(filter_provider, filter_type):
     f          = DatasetFilterForm()
     datasets   = list(db.Dataset.find(filters))
     try:
-        assettypes = db.Dataset.find({}).distinct('services.asset_type')
+        # find all service ids with an associated active service endpoint
+        assettypes = (db.Dataset.find({'services.service_id':
+                                       {'$in': service_ids}},
+                                      {'services.asset_type': True})
+                                      .distinct('services.asset_type'))
     except:
         assettypes = []
 
