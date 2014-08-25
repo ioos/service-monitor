@@ -39,16 +39,19 @@ def index():
     updates = []
 
     for s in stats:
-        updates.append({'data_provider':services[s._id].data_provider,
-                        'name': services[s._id].name,
-                        'service_type': services[s._id].service_type,
-                        'update_type': 'ping',
-                        'updated': int(s.updated.strftime('%s')),
-                        'updated_display': prettydate(s.updated),
-                        'data': {'code':s.last_response_code,
-                                 'time':s.last_response_time},
-                        '_id': str(s._id),
-                        'url': url_for('show_service', service_id=s._id)})
+        try:
+            updates.append({'data_provider':services[s._id].data_provider,
+                            'name': services[s._id].name,
+                            'service_type': services[s._id].service_type,
+                            'update_type': 'ping',
+                            'updated': int(s.updated.strftime('%s')),
+                            'updated_display': prettydate(s.updated),
+                            'data': {'code':s.last_response_code,
+                                     'time':s.last_response_time},
+                            '_id': str(s._id),
+                            'url': url_for('show_service', service_id=s._id)})
+        except KeyError:
+            app.logger.exception('KeyError updating stats')
 
     for d in upd_datasets:
         for s in d.services:
