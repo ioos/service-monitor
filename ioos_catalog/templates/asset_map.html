@@ -81,7 +81,7 @@
     <div id="filters">
       <select name="filter-provider" class="form-control">
         <option value="-">-</option>
-        <option value="null">All</option>
+        <!-- <option value="null">All</option> -->
         {% for region in regions %}
         <option>{{ region }}</option>
         {% endfor %}
@@ -97,7 +97,8 @@
 <!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
 <!--<svg id="map" viewBox="0 0 1500 1500" preserveAspectRatio="xMinYMin slice"></svg>-->
 
-<div id="map"></div>
+<div id="map">
+</div>
 
 <svg id="shared"></svg>
 
@@ -187,7 +188,9 @@ function setupFilters() {
     }
     var url = '/map/geojson/';
     url += provVal + "/";
-
+    console.log("Loading...");
+    /* Overlay a spinner to let the user know that the data is being loaded */
+    addSpinner();
     d3.json(url, addData);
   })
 }
@@ -229,6 +232,18 @@ var transform = d3.geo.transform({point:projectPoint}),
 
 var datapaths = null,
   geoj_data = null;
+
+function addSpinner() {
+  var content = "\
+  <div id='spinner'>\
+    <img src='/static/img/spinning-loader.svg' alt='Loading...'></img>\
+  </div>";
+  $('#map').append(content);
+}
+
+function removeSpinner() {
+  $('#spinner').remove();
+}
 
 function reset() {
   // fixup group to correct size
@@ -273,6 +288,9 @@ function zoom_to_bbox(bbox) {
 map.on('viewreset', reset);
 
 function addData(error, geojson) {
+
+  /* Remove the spinner now that the content is ready */
+  removeSpinner();
 
   // DEBUG:
   // L.geoJson(geojson).addTo(map);
