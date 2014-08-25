@@ -23,12 +23,17 @@
         <p>2. Choose a filter:</p>
         <div class="row">
           <div class="col-lg-6">
-            <p><strong>Services</strong></p>
+            <p class="show-tooltip" data-toggle="tooltip" data-placement="left"
+               title="{% include 'service_help_text.txt' %}">
+              <strong>Services</strong>
+            </p>
             <div id="service-type-btns">
             </div>
           </div>
           <div class="col-lg-6">
-            <p><strong>Datasets</strong></p>
+            <p class="show-tooltip" data-toggle="tooltip" data-placement="left"
+              title="{% include 'dataset_help_text.txt' %}">
+              <strong>Datasets</strong></p>
             <div id="dataset-type-btns">
             </div>
           </div>
@@ -343,6 +348,9 @@ var dsTranslate = {
   "FIXED MET STATION": 'Fixed Met Station',
   BUOY: 'Buoy'
 };
+
+//activate help tooltips for services and datasets
+$('.show-tooltip').tooltip()
 
 </script>
 

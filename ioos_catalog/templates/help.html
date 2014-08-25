@@ -15,13 +15,13 @@
 
   <h4>What is a Service?</h4>
 
-  <p>A service or service endpoint is an accessible URL providing data access via a standard (e.g. SOS, DAP, WCS). Services are harvested via CSW from the NGDC geoportal on a nightly basis. The IOOS Catalog provides monitoring for uptime statistics and uses these services to extract Datasets.</p>
+  <p>{% include 'service_help_text.txt' %}</p>
 
   <p>The current supported services are DAP, SOS, WCS, and WMS.</p>
 
   <h4>What is a Dataset?</h4>
 
-  <p>A dataset is some form of data produced by a service. Gridded data, point data, and observation data are just some of the datasets harvested from a service. A single service may produce one or more datasets.</p>
+  <p>{% include 'dataset_help_text.txt' %}</p>
 
   <div class="alert alert-info">Only DAP and SOS datasets are currently supported.</div>
 

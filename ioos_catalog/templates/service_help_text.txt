@@ -1,0 +1,1 @@
+A service or service endpoint is an accessible URL providing data access via a standard (e.g. SOS, DAP, WCS). Services are harvested via CSW from the NGDC Geoportal on a nightly basis. The IOOS Catalog provides monitoring for uptime statistics and uses these services to extract datasets.  
