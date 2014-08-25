@@ -75,6 +75,7 @@ def harvest(service_id):
         elif service.service_type == "WCS":
             return WcsHarvest(service).harvest()
 
+
 def unicode_or_none(thing):
     try:
         if thing is None:
@@ -86,6 +87,38 @@ def unicode_or_none(thing):
                 return None
     except:
         return None
+
+
+def get_common_name(data_type):
+    """Map names from various standards to return a human readable form"""
+    # TODO: should probably split this into DAP and SOS specific mappings
+    mapping_dict = {
+        # Remap UNKNOWN, None to Unspecified
+        None: 'Unspecified',
+        'UNKNOWN': 'Unspecified',
+        '(NONE)': 'Unspecified',
+        # Rectangular grids remap to the CF feature type "grid"
+        'grid': 'Regular Grid',
+        'Grid': 'Regular Grid',
+        'GRID': 'Regular Grid',
+        'RGRID': 'Regular Grid',
+        # Curvilinear grids
+        'CGRID': 'Curvilinear Grid',
+        # remap some CDM `cdm_data_type`s to equivalent CF-1.6 `featureType`s
+        'trajectory': 'Trajectory',
+        'point': 'Point',
+        # UGrid to unstructured grid
+        'ugrid': 'Unstructured Grid',
+        # Buoys
+        'BUOY': 'Buoy',
+        # time series
+        'timeSeries': 'Time Series'
+    }
+
+    # Get the common name if defined, otherwise return initial value
+    return unicode(mapping_dict.get(data_type, data_type))
+
+
 
 class Harvester(object):
     def __init__(self, service):
@@ -295,7 +328,7 @@ class SosHarvest(Harvester):
                 'messages'          : map(unicode, messages),
                 'keywords'          : map(unicode, sorted(station_ds.keywords)),
                 'variables'         : map(unicode, sorted(station_ds.variables)),
-                'asset_type'        : asset_type,
+                'asset_type'        : get_common_name(asset_type),
                 'geojson'           : gj,
                 'updated'           : datetime.utcnow()
             }
@@ -472,13 +505,17 @@ class DapHarvest(Harvester):
             and finally to Paegan's representation if nothing else is found"""
         #TODO: Add check for adherence to CF conventions, others (ugrid)
         nc_obj = cd.nc
-        if hasattr(nc_obj, 'featureType'):
+        # Paegan data type
+        p_data_type = cd._datasettype.upper()
+        #Paegan is better at determining curvilinear grids here
+        if p_data_type == 'CGRID':
+            geom_type = p_data_type
+        elif hasattr(nc_obj, 'featureType'):
             geom_type = nc_obj.featureType
         elif hasattr(nc_obj, 'cdm_data_type'):
             geom_type = nc_obj.cdm_data_type
         else:
             geom_type = cd._datasettype.upper()
-        #TODO: Add check for valid feature types
         return unicode(geom_type)
 
 
@@ -662,19 +699,19 @@ class DapHarvest(Harvester):
             final_var_names = non_std_variables + list(map(unicode, ["%s%s" % (prefix, cd.nc.variables[x].getncattr("standard_name")) for x in std_variables]))
 
         service = {
-            'name'              : name,
-            'description'       : description,
-            'service_type'      : self.service.get('service_type'),
-            'service_id'        : ObjectId(self.service.get('_id')),
-            'data_provider'     : self.service.get('data_provider'),
-            'metadata_type'     : u'ncml',
-            'metadata_value'    : unicode(dataset2ncml(cd.nc, url=self.service.get('url'))),
-            'messages'          : map(unicode, messages),
-            'keywords'          : keywords,
-            'variables'         : map(unicode, final_var_names),
-            'asset_type'        : DapHarvest.get_asset_type(cd),
-            'geojson'           : gj,
-            'updated'           : datetime.utcnow()
+            'name':           name,
+            'description':    description,
+            'service_type':   self.service.get('service_type'),
+            'service_id':     ObjectId(self.service.get('_id')),
+            'data_provider':  self.service.get('data_provider'),
+            'metadata_type':  u'ncml',
+            'metadata_value': unicode(dataset2ncml(cd.nc, url=self.service.get('url'))),
+            'messages':       map(unicode, messages),
+            'keywords':       keywords,
+            'variables':      map(unicode, final_var_names),
+            'asset_type':     get_common_name(DapHarvest.get_asset_type(cd)),
+            'geojson':        gj,
+            'updated':        datetime.utcnow()
         }
 
         with app.app_context():
