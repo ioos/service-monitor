@@ -204,7 +204,7 @@ var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap
 var baseAttrib = 'Sources: Esri, GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org, and other contributors';
 var base = new L.TileLayer(baseUrl, { minZoom: 1
                                     , maxZoom: 12
-                                    , attribution: baseAttrib}); 
+                                    , attribution: baseAttrib});
 map.addLayer(base);
 
 /* add hook layers for d3 involvement */
@@ -251,6 +251,25 @@ function reset() {
   datapaths.attr('d', path);
 }
 
+function zoom_to_bbox(bbox) {
+    //zoom to bounds, while guarding against extraneous values
+    var bboxMod = bbox;
+    //abs used to guard against large/positive values in bbox
+    if (Math.abs(bboxMod[0][0]) > 90) {
+        bboxMod[0][0] = -90;
+    }
+    if (Math.abs(bboxMod[1][0]) > 90) {
+        bboxMod[1][0] = 90;
+    }
+    if (Math.abs(bboxMod[0][1]) > 180) {
+        bboxMod[0][1] = -180;
+    }
+    if (Math.abs(bboxMod[1][1]) > 180) {
+        bboxMod[1][1] = 180;
+    }
+    map.fitBounds(bboxMod);
+}
+
 map.on('viewreset', reset);
 
 function addData(error, geojson) {
@@ -283,7 +302,7 @@ function addData(error, geojson) {
 
   // warp view to cover full region
   var selBounds = latLonPath.bounds(geoj_data);
-  map.fitBounds(selBounds);
+  zoom_to_bbox(selBounds);
   reset();
 
   // on thumbnail index
@@ -326,7 +345,7 @@ function addData(error, geojson) {
     //there should be one, and only one element present for the returned path
     var selBounds = latLonPath.bounds(sel[0].__data__);
     //zoom map to bounds of selected dataset
-    map.fitBounds(selBounds);
+    zoom_to_bbox(selBounds);
     d3.selectAll(sel).classed({'perm-active':true});
 
     $(this).siblings().removeClass('active');
