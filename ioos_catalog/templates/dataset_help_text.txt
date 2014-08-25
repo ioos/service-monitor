@@ -1,0 +1,1 @@
+A dataset is some form of data produced by a service. Gridded data, point data, and observation data are just some of the datasets harvested from a service. A single service may produce one or more datasets.
