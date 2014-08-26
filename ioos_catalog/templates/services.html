@@ -32,7 +32,7 @@
     <!-- Single button -->
     <label>Filter</label>
     <br>
-    <div class="btn-group" style="top-padding: 25%;">
+    <div class="btn-group">
       <button id="filter-btn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
         Filter <span class="caret"></span>
       </button>
@@ -119,6 +119,8 @@
         $('#region-select').chosen({
           placeholder_text_multiple: "No filters selected..."
         });
+
+        /* Callback for the click event */
         $('.dropdown-menu li a').click(function() {
           if($(this).text() == "Apply Filter") {
             applyFilter();
@@ -127,35 +129,8 @@
           }
         });
 
-        /* Split the URL up to parse out the provider and filter components */
-        var currentURL = document.URL;
-        var filters = currentURL.split("/filter/")[1]; /* Split on the /filter/ */
-        var filterSplit = filters.split("/");
-        var providers = filterSplit[0].split(","); /* an array of providers */
-        var filterType = filterSplit[1];
-        var validOptions = [];
-        var validProviders = [];
-        /* Now go through each of the options and make sure the providers are in the options */
-        $('#region-select option').each(function() {
-          validOptions.push($(this).val());
-        });
-        for(var i in providers) {
-          if(validOptions.indexOf(providers[i]) >= 0) {
-            validProviders.push(providers[i]);
-          }
-        }
-        /* Update them appropriately */
-        $('#region-select').val(validProviders);
-        $('#region-select').trigger("chosen:updated");
+        updateSelectBoxes();
 
-        /* Do the same for the filters */
-        var validFilters = [];
-        $('#filter-select option').each(function() {
-            validFilters.push($(this).val());
-        });
-        if(validFilters.indexOf(filterType) >= 0) {
-          $('#filter-select').val(filterType);
-        }
 
 
         /**
@@ -183,10 +158,58 @@
         */
       });
 
-      /**
-       * Makes a comma-delimited string using the contents of the #region-selected 
-       * DOM and sets the URL
+      /*
+       * Returns the valid providers and filters
        */
+      function getValids() {
+        var valid = {};
+        valid.providers = [];
+        valid.filters = [];
+        
+        $('#region-select option').each(function() {
+          valid.providers.push($(this).val());
+        });
+        
+        $('#filter-select option').each(function() {
+          valid.filters.push($(this).val());
+        });
+
+        return valid;
+      }
+
+      function getSelected() {
+        var selected = {};
+        /* Split the URL up to parse out the provider and filter components */
+        var currentURL = document.URL;
+        var filters = currentURL.split("/filter/")[1]; /* Split on the /filter/ */
+        var filterSplit = filters.split("/");
+        selected.providers = filterSplit[0].split(","); /* an array of providers */
+        selected.filter = filterSplit[1];
+
+        return selected;
+      }
+
+
+      function updateSelectBoxes() {
+        var valid = getValids();
+        var selected = getSelected();
+        var validProviders = [];
+        /* Now go through each of the options and make sure the providers are in the options */
+        for(var i in selected.providers) {
+          if(valid.providers.indexOf(selected.providers[i]) >= 0) {
+            validProviders.push(selected.providers[i]);
+          }
+        }
+        /* Update them appropriately */
+        $('#region-select').val(validProviders);
+        $('#region-select').trigger("chosen:updated");
+
+        /* Do the same for the filters */
+        if(valid.filters.indexOf(selected.filter) >= 0) {
+          $('#filter-select').val(selected.filter);
+        }
+      }
+
       function applyFilter() {
         var regionSelect = $('#region-select').val();
         var regionString = null;
