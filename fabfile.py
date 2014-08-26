@@ -28,9 +28,10 @@ code_dir = "/home/monitoring/ioos-service-monitor"
 env.hosts = ['198.199.75.160']
 
 def admin():
-    env.user = "dfoster"
+    env.user = os.environ.get('ADMIN_USER')
+
 def monitoring():
-    env.user = "monitoring"
+    env.user = os.environ.get('IOOS_USER', "monitoring")
 
 def deploy():
     stop_supervisord()
