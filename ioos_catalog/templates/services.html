@@ -121,30 +121,6 @@
         updateSelectBoxes();
 
 
-
-        /**
-        {% if 'data_provider' in filters and filters['data_provider']['$in']|length == 1 %}
-          $('select[name="filter-provider"]').val('{{ filters['data_provider']['$in'][0] }}');
-        {% endif %}
-
-        {% if 'service_type' in filters %}
-          $('select[name="filter-type"]').val('{{ filters['service_type'] }}');
-        {% endif %}
-
-        $('select[name^="filter"]').change(function() {
-          var provVal = $('select[name="filter-provider"]').val();
-          var typeVal = $('select[name="filter-type"]').val();
-          if (provVal == "null" && typeVal == "null") {
-            window.location = "{{ url_for("services") }}";
-            return;
-          }
-          var url = '{{ url_for("services") }}filter/';
-          url += provVal + "/";
-          url += typeVal;
-
-          window.location = url;
-        });
-        */
       });
 
       /*
