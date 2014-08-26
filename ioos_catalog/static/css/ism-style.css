@@ -200,6 +200,23 @@ svg path.dataset.active {
   top: 7px;
 }
 
+#filter_select_chosen {
+  margin-bottom: 6px;
+}
+
+#filter_select_chosen .search-field {
+  height: 34px;
+}
+
+#filter_select_chosen .search-choice, #filter_select_chosen .search-field input {
+  line-height: 1.54;
+  height: inherit;
+}
+
+#filter_select_chosen .search-choice-close {
+  top: 7px;
+}
+
 .navbar-custom {
   background-color: #c6d4e1;
   border-size: 0px;
