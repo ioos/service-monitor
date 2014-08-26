@@ -49,7 +49,7 @@ def services(filter_provider, filter_type, oformat):
 
     if filter_type is not None and filter_type != "null":
         titleparts.append(filter_type)
-        filters['service_type'] = filter_type
+        filters['service_type'] = {'$in': filter_type.split(',')}
 
     # build title
     titleparts.append("Services")
