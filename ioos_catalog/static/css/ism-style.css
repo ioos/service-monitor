@@ -326,3 +326,7 @@ svg path.dataset.active {
 .navbar-custom .navbar-link:hover {
   color: #333333;
 }
+
+.overflow {
+  overflow-x: auto;
+}
