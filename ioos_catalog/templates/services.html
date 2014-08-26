@@ -2,7 +2,7 @@
 
 {% block jumbo %}
 <div class="row">
-  <div class="col-sm-4">
+  <div class="col-sm-3">
     <br>
     <h3><a href="{{ url_for('services') }}">Services</a></h3>
   </div>
@@ -11,35 +11,25 @@
     <label for="filter-provider">By Provider</label>
     <!-- This is the Drop-Down box for the providers
          The default text is managed by JS -->
-    <select id="region-select" class="form-control" multiple="multiple">
-      {%- for provider in providers|sort %}
-      <option>{{ provider }}</option>
-      {%- endfor %}
+    <select id="region-select" data-placeholder="No providers selected..." class="form-control" multiple="multiple" style="height:30px;">
     </select>
   </div>
   <div class="col-sm-3" style="text-align: left;">
     <label for="filter-type">By Type</label>
     <!-- This is the drop down for the Types -->
-    <select id="filter-select" class="form-control" multiple="multiple">
-      <option>WMS</option>
-      <option>DAP</option>
-      <option>WCS</option>
-      <option>SOS</option>
+    <select id="filter-select" data-placeholder="No dataset types selected..." class="form-control" multiple="multiple" style="height:30px;">
     </select>
   </div>
-  <div class="col-sm-1">
+  <div class="col-sm-2">
     <!-- Single button -->
-    <label>Filter</label>
-    <br>
-    <div class="btn-group">
-      <button id="filter-btn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-        Filter <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu" role="menu">
-        <li><a href="#">Apply Filter</a></li>
-        <li><a href="#">Reset Filter</a></li>
-      </ul>
-    </div> <!-- btn-group -->
+    <div class="pull-right">
+      <label>Filter</label>
+      <br>
+      <div class="btn-group">
+        <button id='apply-btn' type="button" class="btn btn-default">Apply</button>
+        <button id='reset-btn' type="button" class="btn btn-default">Reset</button>
+      </div> <!-- btn-group -->
+    </div> <!-- pull-right -->
   </div> <!-- col-sm-4 -->
 </div> <!-- row -->
 {% endblock %}
@@ -115,49 +105,22 @@
 
     <script type="text/javascript">
       $(function() {
-        $('#region-select').chosen({
-          placeholder_text_multiple: "No providers selected..."
-        });
-        $('#filter-select').chosen({
-          placeholder_text_multiple: "No dataset types selected..."
-        });
+        populateBoxes();
+
+        $('#region-select').chosen();
+        $('#filter-select').chosen();
 
         /* Callback for the click event */
-        $('.dropdown-menu li a').click(function() {
-          if($(this).text() == "Apply Filter") {
-            applyFilter();
-          } else {
-            resetFilter();
-          }
+        $('#apply-btn').click(function() {
+          applyFilter();
+        });
+        $('#reset-btn').click(function() {
+          resetFilter();
         });
 
         updateSelectBoxes();
 
 
-
-        /**
-        {% if 'data_provider' in filters and filters['data_provider']['$in']|length == 1 %}
-          $('select[name="filter-provider"]').val('{{ filters['data_provider']['$in'][0] }}');
-        {% endif %}
-
-        {% if 'service_type' in filters %}
-          $('select[name="filter-type"]').val('{{ filters['service_type'] }}');
-        {% endif %}
-
-        $('select[name^="filter"]').change(function() {
-          var provVal = $('select[name="filter-provider"]').val();
-          var typeVal = $('select[name="filter-type"]').val();
-          if (provVal == "null" && typeVal == "null") {
-            window.location = "{{ url_for("services") }}";
-            return;
-          }
-          var url = '{{ url_for("services") }}filter/';
-          url += provVal + "/";
-          url += typeVal;
-
-          window.location = url;
-        });
-        */
       });
 
       /*
@@ -190,6 +153,18 @@
 
         return selected;
       }
+
+      function populateBoxes() {
+        {%- for provider in providers|sort %}
+        $('#region-select').append("<option>{{ provider }}</option>");
+        {%- endfor %}
+        $('#filter-select').append("<option>WMS</option>");
+        $('#filter-select').append("<option>DAP</option>");
+        $('#filter-select').append("<option>WCS</option>");
+        $('#filter-select').append("<option>SOS</option>");
+
+      }
+
 
 
       function updateSelectBoxes() {

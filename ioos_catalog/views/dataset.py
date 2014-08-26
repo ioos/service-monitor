@@ -36,7 +36,7 @@ def datasets(filter_provider, filter_type):
         if filter_type == "(NONE)":
             filter_type = None
 
-        filters['services.asset_type'] = filter_type
+        filters['services.asset_type'] = {'$in' : filter_type.split(',')}
 
     # build title
     titleparts.append("Datasets")
