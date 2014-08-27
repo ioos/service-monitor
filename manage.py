@@ -40,6 +40,11 @@ def queue_daily_status():
 def cleanup_datasets():
     queue.enqueue(cleanup)
 
+@manager.command
+def migrate_140827():
+    from ioos_catalog.models.migration.migrate_140827 import migrate
+    queue.enqueue(migrate)
+
 if __name__ == "__main__":
     manager.run()
 

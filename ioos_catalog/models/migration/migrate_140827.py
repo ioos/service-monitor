@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 '''
-Migrates to new provider naming
+Migrates:
+    - New Provider Names
+    - Active datasets
 '''
 
 
@@ -11,6 +13,7 @@ from ioos_catalog import db
 
 
 def migrate_names():
+    app.logger.info("Migrating to new data provider names")
     changing_providers = {
         'NOS/CO-OPS' : u'NOAA-CO-OPS',
         'USGS/CMGP'  : u'USGS-CMGP',
@@ -36,6 +39,7 @@ def migrate_names():
 
 
 def migrate_active_datasets():
+    app.logger.info("Migrating activated datasets")
     datasets = db.Dataset.find({'active':False})
     for d in datasets:
         services = d['services'] # a list of services
