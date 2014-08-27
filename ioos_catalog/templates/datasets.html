@@ -53,6 +53,8 @@
          </tbody>
     </table>
 
+    <script type="text/javascript" src="{{ url_for('.static', filename='js/servicemappings.js')}}" /></script>
+    <script type="text/javascript" src="{{ url_for('.static', filename='js/selectboxes.js')}}" /></script>
     <script type="text/javascript">
       $(function() {
         populateBoxes();
@@ -62,47 +64,16 @@
 
         /* Callback for the click event */
         $('#apply-btn').click(function() {
-          applyFilter();
+          applyFilter("{{url_for("datasets")}}");
         });
         $('#reset-btn').click(function() {
-          resetFilter();
+          resetFilter("{{url_for("datasets")}}");
         });
 
         updateSelectBoxes();
 
 
       });
-
-      /*
-       * Returns the valid providers and filters
-       */
-      function getValids() {
-        var valid = {};
-        valid.providers = [];
-        valid.filters = [];
-        
-        $('#region-select option').each(function() {
-          valid.providers.push($(this).val());
-        });
-        
-        $('#filter-select option').each(function() {
-          valid.filters.push($(this).val());
-        });
-
-        return valid;
-      }
-
-      function getSelected() {
-        var selected = {};
-        /* Split the URL up to parse out the provider and filter components */
-        var currentURL = document.URL;
-        var filters = currentURL.split("/filter/")[1]; /* Split on the /filter/ */
-        var filterSplit = filters.split("/");
-        selected.providers = filterSplit[0].split(","); /* an array of providers */
-        selected.filters = filterSplit[1].split(",");
-
-        return selected;
-      }
 
       function populateBoxes() {
         {%- for provider in providers|sort %}
@@ -111,58 +82,6 @@
         {%- for a in assettypes|sort %}
         $('#filter-select').append("<option>{{a}}</option>");
         {%- endfor %}
-      }
-
-
-
-      function updateSelectBoxes() {
-        var valid = getValids();
-        var selected = getSelected();
-        var validProviders = [];
-        /* Now go through each of the options and make sure the providers are in the options */
-        for(var i in selected.providers) {
-          if(valid.providers.indexOf(selected.providers[i]) >= 0) {
-            validProviders.push(selected.providers[i]);
-          }
-        }
-        /* Update them appropriately */
-        $('#region-select').val(validProviders);
-        $('#region-select').trigger("chosen:updated");
-
-        /* Do the same for the filters */
-        var validFilters = [];
-        for(var i in selected.filters) {
-          if(valid.filters.indexOf(selected.filters[i]) >= 0) {
-            validFilters.push(selected.filters[i]);
-          }
-        }
-        $('#filter-select').val(validFilters);
-        $('#filter-select').trigger("chosen:updated");
-      }
-
-      function applyFilter() {
-        var regionSelect = $('#region-select').val();
-        var regionString = null;
-        var filterType = $('#filter-select').val();
-        var filterString = null;
-
-        if(typeof regionSelect != 'undefined' && regionSelect !== null) {
-          regionString = regionSelect.join(",");
-        }
-        if(typeof filterType != 'undefined' && filterType !== null) {
-          filterString = filterType.join(",");
-        }
-
-        var url = "{{url_for("datasets")}}filter/" + regionString;
-        if(filterType != "null") {
-          url += "/" + filterType;
-        }
-        window.location = url;
-      }
-
-      function resetFilter() {
-        var url = "{{url_for("datasets")}}";
-        window.location = url;
       }
 
     </script>

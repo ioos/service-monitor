@@ -33,6 +33,12 @@ class ServiceForm(Form):
 @app.route('/services/filter/<path:filter_provider>/<filter_type>/<oformat>', methods=['GET'])
 @support_jsonp
 def services(filter_provider, filter_type, oformat):
+    provider_mapping = {
+        "NOS-CO-OPS" : "NOS/CO-OPS", # The slash disriupts proper routing
+        "USGS-CMGP"  : "USGS/CMGP"
+    }
+    if filter_provider in provider_mapping:
+        filter_provider = provider_mapping[filter_provider]
 
     # it's hard to get flask to route correctly with paths/json - fixup for "/" providers with no oformat
     if oformat == "null":

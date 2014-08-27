@@ -19,6 +19,12 @@ class DatasetFilterForm(Form):
 @app.route('/datasets/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
 @app.route('/datasets/filter/<path:filter_provider>/<filter_type>', methods=['GET'])
 def datasets(filter_provider, filter_type):
+    provider_mapping = {
+        "NOS-CO-OPS" : "NOS/CO-OPS", # The slash disriupts proper routing
+        "USGS-CMGP"  : "USGS/CMGP"
+    }
+    if filter_provider in provider_mapping:
+        filter_provider = provider_mapping[filter_provider]
 
     # only get datasets that are active for this list!
     service_ids = [s._id for s in db.Service.find({'active':True}, {'_id':1})]
