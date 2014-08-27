@@ -44,6 +44,13 @@ class DatasetMigration(DocumentMigration):
         self.target = {'active' : {'$exists' : False}}
         self.update = {'$set' : {'active' : False}}
 
+# Metadatas
+from ioos_catalog.models import metadata
+class MetadataMigration(DocumentMigration):
+    def allmigration01__add_active_field(self):
+        self.target = {'active' : {'$exists' : False}}
+        self.update = {'$set' : {'active' : False}}
+
 
 with app.app_context():
     migration = ServiceMigration(service.Service)
@@ -51,4 +58,7 @@ with app.app_context():
 
     migration = DatasetMigration(dataset.Dataset)
     migration.migrate_all(collection=db['datasets'])
+
+    migration = MetadataMigration(metadata.Metadata)
+    migration.migrate_all(collection=db['metadatas'])
 

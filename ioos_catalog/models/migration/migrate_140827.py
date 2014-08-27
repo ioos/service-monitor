@@ -7,6 +7,7 @@ Migrates:
 '''
 
 
+from bson.objectid import ObjectId
 from ioos_catalog.models.service import Service
 from ioos_catalog import app
 from ioos_catalog import db
@@ -57,12 +58,29 @@ def migrate_active_datasets():
                 continue
             break
 
+def migrate_active_metadata():
+    app.logger.info("Migrating activated metadata")
+    # Update the metadata for services
+    metadata = db.Metadata.find({'active' : False})
+    for m in metadata:
+        service_id = m['ref_id']
+        for entry in m['metadata']:
+            service_id = entry['service_id']
+            related_services = list(db.Service.find({'_id' : service_id}))
+            for s in related_services:
+                app.logger.info("Service url: %s", s['url'])
+                if s['active']:
+                    m['active'] = True
+                    m.save()
+                    break
 
 
 def migrate():
     with app.app_context():
         migrate_names()
         migrate_active_datasets()
+        migrate_active_metadata()
+        app.logger.info("Migration 2014-08-27 complete")
 
 
 
