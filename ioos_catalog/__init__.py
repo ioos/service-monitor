@@ -32,7 +32,7 @@ if app.config.get('LOG_FILE') == True:
 import redis
 redis_pool = redis.ConnectionPool(host=app.config.get('REDIS_HOST'),
                                   port=app.config.get('REDIS_PORT'),
-                                  db=app.config.get('REDIS_DATABASE'))
+                                  db=app.config.get('REDIS_DB'))
 redis_connection = redis.Redis(connection_pool=redis_pool)
 
 # rq
