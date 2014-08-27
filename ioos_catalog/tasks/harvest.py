@@ -33,6 +33,7 @@ import json
 
 from ioos_catalog import app, db, queue
 from ioos_catalog.tasks.send_email import send_service_down_email
+from ioos_catalog.tasks.debug import debug_wrapper
 
 def queue_harvest_tasks():
     """
@@ -45,6 +46,7 @@ def queue_harvest_tasks():
         for sid in sids:
             queue.enqueue(harvest, sid)
 
+@debug_wrapper
 def harvest(service_id):
     with app.app_context():
         service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
