@@ -45,8 +45,9 @@ class Dataset(BaseDocument):
                 'updated'           : datetime
             }
         ],
-        'created'       : datetime,
-        'updated'       : datetime
+        'active'  : bool,
+        'created' : datetime,
+        'updated' : datetime
     }
 
     default_values = {
