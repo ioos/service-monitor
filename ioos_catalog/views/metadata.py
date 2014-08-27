@@ -48,7 +48,7 @@ def get_metadatas(service_ids, filters=None):
         filters = {}
 
     filters['metadata.service_id'] = {'$in':service_ids}
-    app.logger.info('get_metadatas()')
+    filters['active'] = True
 
     db_metadatas = db.Metadata.find(filters)
 
@@ -68,6 +68,7 @@ def get_metadatas(service_ids, filters=None):
             # so we need to skip any that aren't in this list
             if s['service_id'] not in service_ids:
                 continue
+            mdict['service_id'] = s['service_id']
 
             mdict.update(s['metamap'])
 
@@ -86,7 +87,8 @@ def get_metadatas(service_ids, filters=None):
 
     # metamap does not preserve column order. We duplicate the list of cols here according t the asset_sos_map google doc.
     # IF THE MAPPING CHANGES THIS WILL BREAK.
-    cols = ['Service Provider Name',
+    cols = ['Service ID',
+            'Service Provider Name',
             'Service Contact Name',
             'Service Contact Email',
             'Service Type Name',
