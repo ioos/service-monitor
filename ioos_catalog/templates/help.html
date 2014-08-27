@@ -2,9 +2,11 @@
 
 {% block jumbo %}
 <div class="row">
-  <div class="col-lg-6">
-    <h3> <a href="{{ url_for('help') }}">Help</a></h3>
-  </div>
+  <ul class="nav-header nav navbar-nav">
+    <li><a href="{{ url_for('help') }}">Help</a></li>
+    <li> <a href="https://github.com/ioos/catalog/wiki/Roadmap">Roadmap</a></li>
+    <li> <a href="https://github.com/ioos/catalog/milestones">Milestones</a></li>
+  <ul>
 </div>
 {% endblock %}
 
