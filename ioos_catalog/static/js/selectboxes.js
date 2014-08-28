@@ -31,7 +31,8 @@ function getValids() {
 function getSelected() {
     var selected = {};
     /* Split the URL up to parse out the provider and filter components */
-    var currentURL = document.URL;
+    //replace only HTML encoded spaces currently
+    var currentURL = document.URL.replace('%20', ' ');
     var filters = currentURL.split("/filter/")[1]; /* Split on the /filter/ */
     if(typeof filters == 'undefined') { // no need to go any further
         return selected;
