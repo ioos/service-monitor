@@ -64,10 +64,10 @@
 
         /* Callback for the click event */
         $('#apply-btn').click(function() {
-          applyFilter("{{url_for("datasets")}}");
+          applyFilter("{{url_for("datasets")}}filter/");
         });
         $('#reset-btn').click(function() {
-          resetFilter("{{url_for("datasets")}}");
+          resetFilter("{{url_for("datasets")}}filter/");
         });
 
         updateSelectBoxes();
