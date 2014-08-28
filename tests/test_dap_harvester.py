@@ -19,7 +19,7 @@ class TestDapHarvester(FlaskMongoTestCase):
         assert len(d['services']) == 1
         s = d['services'][0]
         assert type(json.loads(json.dumps(s['geojson']))) == dict
-        assert s['asset_type'] == "RGRID"
+        assert s['asset_type'] == "Grid"
         assert sorted(s['keywords']) == sorted([u'GLOS',
                                                 u'MODIS',
                                                 u'LST',
@@ -47,7 +47,7 @@ class TestDapHarvester(FlaskMongoTestCase):
         s = d['services'][0]
         # Compute geometry on default ROMS output
         assert type(json.loads(json.dumps(s['geojson']))) == dict
-        assert s['asset_type'] == "CGRID"
+        assert s['asset_type'] == "Curvilinear Grid"
         assert sorted(s['keywords']) == []
 
     def test_variable_without_stdname(self):
@@ -66,5 +66,5 @@ class TestDapHarvester(FlaskMongoTestCase):
         s = d['services'][0]
         # Can compute geometry on variables without standard names
         assert type(json.loads(json.dumps(s['geojson']))) == dict
-        assert s['asset_type'] == "RGRID"
+        assert s['asset_type'] == "Grid"
         assert sorted(s['keywords']) == [u'Oceans > Coastal Process > Shorelines']
