@@ -42,6 +42,8 @@ queue = Queue('default', connection=redis_connection)
 # Create the database connection
 from flask.ext.mongokit import MongoKit
 db = MongoKit(app)
+from flask.ext.sqlalchemy import SQLAlchemy
+sqlalchemy_db = SQLAlchemy(app)
 
 # Create the Flask-Mail object
 from flask.ext.mail import Mail
@@ -189,3 +191,9 @@ def requires_auth(f):
 import ioos_catalog.views
 import ioos_catalog.models
 import ioos_catalog.tasks
+
+# Captcha
+from flask_captcha import Captcha
+captcha = Captcha(app)
+from flask_captcha.views import captcha_blueprint
+app.register_blueprint(captcha_blueprint)

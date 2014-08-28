@@ -19,24 +19,24 @@
       We are always looking to improve the tools on this website. If you have feedback you would like to share, we'd appreciate it. Thank you!
     <p>
 
-    <form role="form">
+    <form role="form" action="/help/feedback/submit" method="post">
       <div class="form-group">
-        <label for="nameInput">Enter your name</label>
-        <input type="text" class="form-control" id="nameInput" placeholder="Your Name">
+        <label for="name">Enter your name</label>
+        <input name="name" type="text" class="form-control" id="nameInput" placeholder="Your Name">
       </div>
       <div class="form-group">
-        <label for="emailInput">Enter your email address</label>
-        <input type="email" class="form-control" id="emailInput" placeholder="Your Email">
+        <label for="email">Enter your email address</label>
+        <input name="email" type="email" class="form-control" id="emailInput" placeholder="Your Email">
       </div>
       <div class="form-group">
         <label for='comments'>Comments</label>
-        <textarea id='comments' class="form-control" rows="8"></textarea>
+        <textarea name="comments" id='comments' class="form-control" rows="8"></textarea>
       </div>
       <div id='captcha-panel' class="panel panel-default">
         <div class="panel-heading">CAPTCHA</div>
         <div class="panel-body">
           <img src="http://upload.wikimedia.org/wikipedia/commons/6/69/Captcha.jpg" alt="Captcha"></img>
-          <input type="text" class="form-control" id="captchaInput">
+          <input name="captcha_text" type="text" class="form-control" id="captchaInput">
         </div> <!-- panel-body -->
       </div> <!-- panel -->
       <button type="submit" class="btn btn-default">Submit</button>
