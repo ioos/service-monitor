@@ -1,0 +1,8 @@
+A user has left a comment on the IOOS Catalog feedback section.
+
+Name: {{name}}
+Email: {{email}}
+Comments:
+{{comments}}
+
+

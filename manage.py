@@ -8,6 +8,7 @@ from ioos_catalog.tasks.stat import queue_ping_tasks
 from ioos_catalog.tasks.harvest import queue_harvest_tasks
 from ioos_catalog.tasks.reindex_services import reindex_services, cleanup_datasets as cleanup
 from ioos_catalog.tasks.send_email import send_daily_report_email
+from ioos_catalog.tasks.captcha import initialize_captcha_db
 
 manager = Manager(app)
 
@@ -49,6 +50,10 @@ def migrate_140827():
 def migrate_140828():
     from ioos_catalog.models.migration.migrate_140828 import migrate
     queue.enqueue(migrate)
+
+@manager.command
+def captcha_init():
+    initialize_captcha_db()
 
 if __name__ == "__main__":
     manager.run()

@@ -1,5 +1,6 @@
 import os
 import urlparse
+import pkg_resources
 
 DEBUG = False
 TESTING = False
@@ -46,3 +47,17 @@ MAIL_DEFAULT_TO = os.environ.get("MAIL_DEFAULT_TO")
 
 # Email to receive daily reports and to be CCd in status reports.  Only used if MAILER_DEBUG is False.
 MAIL_DEFAULT_LIST = os.environ.get("MAIL_DEFAULT_LIST")
+
+# Email Comments
+MAIL_COMMENTS_TO = os.environ.get("MAIL_COMMENTS_TO").split(';')
+
+# Captcha
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.environ.get("CAPTCHA_DB")
+CAPTCHA_PREGEN_PATH = os.environ.get("CAPTCHA_PREGEN_PATH")
+CAPTCHA_FONT_PATH = pkg_resources.resource_filename('flask_captcha', 'fonts/Vera.ttf')
+
+from flask_captcha.settings import CAPTCHA_FONT_SIZE, CAPTCHA_LETTER_ROTATION, CAPTCHA_BACKGROUND_COLOR, CAPTCHA_FOREGROUND_COLOR
+from flask_captcha.settings import CAPTCHA_CHALLENGE_FUNCT, CAPTCHA_WORDS_DICTIONARY, CAPTCHA_PUNCTUATION, CAPTCHA_FLITE_PATH
+from flask_captcha.settings import CAPTCHA_TIMEOUT, CAPTCHA_LENGTH, CAPTCHA_IMAGE_BEFORE_FIELD, CAPTCHA_DICTIONARY_MIN_LENGTH
+from flask_captcha.settings import CAPTCHA_DICTIONARY_MAX_LENGTH, CAPTCHA_OUTPUT_FORMAT, CAPTCHA_NOISE_FUNCTIONS, CAPTCHA_FILTER_FUNCTIONS
+CAPTCHA_PREGEN = False
