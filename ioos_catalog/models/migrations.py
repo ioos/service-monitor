@@ -3,6 +3,9 @@ from mongokit import DocumentMigration
 
 # Services
 from ioos_catalog.models import service
+
+# Scripted Migrations
+
 class ServiceMigration(DocumentMigration):
     # add any migrations here named "allmigration_*"
     def allmigration01__add_harvest_job_id_field(self):
@@ -37,7 +40,17 @@ class ServiceMigration(DocumentMigration):
 from ioos_catalog.models import dataset
 class DatasetMigration(DocumentMigration):
     # add any migrations here named "allmigration_*"
-    pass
+    def allmigration01__add_active_field(self):
+        self.target = {'active' : {'$exists' : False}}
+        self.update = {'$set' : {'active' : False}}
+
+# Metadatas
+from ioos_catalog.models import metadata
+class MetadataMigration(DocumentMigration):
+    def allmigration01__add_active_field(self):
+        self.target = {'active' : {'$exists' : False}}
+        self.update = {'$set' : {'active' : False}}
+
 
 with app.app_context():
     migration = ServiceMigration(service.Service)
@@ -45,4 +58,7 @@ with app.app_context():
 
     migration = DatasetMigration(dataset.Dataset)
     migration.migrate_all(collection=db['datasets'])
+
+    migration = MetadataMigration(metadata.Metadata)
+    migration.migrate_all(collection=db['metadatas'])
 

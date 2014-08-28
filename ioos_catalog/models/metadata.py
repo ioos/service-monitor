@@ -13,6 +13,7 @@ class Metadata(BaseDocument):
     structure = {
         'ref_id'            : ObjectId, # ref to Service or Dataset
         'ref_type'          : unicode,  # "service" or "dataset"
+        'active'            : bool,
 
         'metadata'          : [{
             'service_id'    : ObjectId, # all metadata is refed to a service entry

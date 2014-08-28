@@ -84,6 +84,7 @@
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/rickshaw.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/servicemappings.js')}}" /></script>
 
 <script type="text/javascript">
 
@@ -139,7 +140,7 @@ function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel,
   // both new and existing hrefs get updated
   svcbtns.attr('href', function(d) {
     var ltype = (d.key != "All") ? d.key : "null";
-    var rtype = (region && region.length) ? region : 'null';
+    var rtype = sanitizeServiceUrl(region);
     return '/' + urlBase + '/filter/' + rtype + '/' + ltype;
   });
 

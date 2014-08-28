@@ -26,11 +26,11 @@ region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
                  'PacIOOS'          : '68FF11D8-D66B-45EE-B33A-21919BB26421',
                  'SCCOOS'           : 'B70B3E3C-3851-4BA9-8E9B-C9F195DCEAC7',
                  'SECOORA'          : 'B3EA8869-B726-4E39-898A-299E53ABBC98',
-                 'NOS/CO-OPS'       : '72E748DF-23B1-4E80-A2C4-81E70783094A',
+                 'NOAA-CO-OPS'      : '72E748DF-23B1-4E80-A2C4-81E70783094A',
                  'USACE'            : '73019DFF-2E01-4800-91CD-0B3F812256A7',
                  'NAVY'             : '3B94DAAE-B7E9-4789-993B-0045AD9149D9',
-                 'NDBC'             : '828981B0-0039-4360-9788-E788FA6B0875',
-                 'USGS/CMGP'        : 'C6F11F00-C2BD-4AC6-8E2C-013E16F4932E',
+                 'NOAA-NDBC'        : '828981B0-0039-4360-9788-E788FA6B0875',
+                 'USGS-CMGP'        : 'C6F11F00-C2BD-4AC6-8E2C-013E16F4932E',
                  'Other'            : '7EDF86E1-573C-4B3C-A979-AD499A11FD22'}
 
 services =      {'SOS'              : 'urn:x-esri:specification:ServiceType:sos:url',
@@ -152,4 +152,31 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                            upsert=False)
 
         return "New services: %s, updated services: %s, deactivated services: %s" % (len(new_services), len(update_services), len(deactivate))
+
+def cleanup_datasets():
+    with app.app_context():
+        datasets = db.Dataset.find({'active':True})
+        for d in datasets:
+            services = d['services'] # a list of services
+            service_ids = [s['service_id'] for s in services]
+            if not service_ids:
+                app.logger.info('Deactivating %s', d['uid'])
+                d['active'] = False
+                d.save()
+                continue
+
+            # Go through each of the services
+            # 
+            # if we don't find at least one service that is active, set
+            # dataset.active to False
+            for service_id in service_ids:
+                related_services = db.Service.find({'_id':service_id})
+                for service in related_services:
+                    if service['active']:
+                        break
+                else: # reached the end of the loop
+                    app.logger.info('Deactivating %s', d['uid'])
+                    d['active'] = False
+                    d.save()
+                    break
 

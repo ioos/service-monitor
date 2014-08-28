@@ -231,6 +231,7 @@ class SosHarvest(Harvester):
             if dataset is None:
                 dataset = db.Dataset()
                 dataset.uid = unicode(unique_id)
+                dataset['active'] = True
 
             # Find service reference in Dataset.services and remove (to replace it)
             tmp = dataset.services[:]
@@ -485,6 +486,7 @@ class DapHarvest(Harvester):
             if dataset is None:
                 dataset = db.Dataset()
                 dataset.uid = unicode(unique_id)
+                dataset['active'] = True
 
         # Find service reference in Dataset.services and remove (to replace it)
         tmp = dataset.services[:]

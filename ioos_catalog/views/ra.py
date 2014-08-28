@@ -145,7 +145,7 @@ provider_info = {
             {'title':'SECOORA Asset Inventory', 'url': 'http://inventory.secoora.org/'},
         ]
     },
-    'NOS/CO-OPS': {
+    'NOAA-CO-OPS': {
         'fullname': 'NOAA Center for Operational Oceanographic Products and Services',
         'provider_type': 'national',
         'banner':'/static/img/np/NOAA-Transparent-Logo.png',
@@ -175,7 +175,7 @@ provider_info = {
             {'title': 'US Navy Site', 'url': 'www.navy.mil'},
         ]
     },
-    'NDBC': {
+    'NOAA-NDBC': {
         'fullname': 'NOAA National Data Buoy Center',
         'provider_type': 'national',
         'banner':'/static/img/np/NOAA-Transparent-Logo.png',
@@ -184,7 +184,7 @@ provider_info = {
             {'title': 'NDBC Site', 'url': 'http://www.ndbc.noaa.gov'}
         ]
     },
-    'USGS/CMGP': {
+    'USGS-CMGP': {
         'fullname':'United States Geological Survey',
         'provider_type': 'national',
         'banner':'/static/img/np/usgs-logo-color.jpg',

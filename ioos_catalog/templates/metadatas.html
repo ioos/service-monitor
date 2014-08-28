@@ -50,6 +50,7 @@
           <td rowspan="{{varcount}}">{{ services[m['ref_id']].name if m['ref_type']=='service' }}</td>
           <td rowspan="{{varcount}}">{{ services[m['ref_id']].data_provider if m['ref_type']=='service' }}</td>
           <td rowspan="{{varcount}}">{{ m['ref_type'] }}</td>
+          <td rowspan="{{varcount}}"><a href="{{ url_for("show_service", service_id=m['service_id'])}}">{{m['service_id']}}</a></td>
 
           {%- for col in columns %}
             {%- set v=m.get(col, "-") %}
