@@ -5,3 +5,6 @@ from ioos_catalog import app
 def help():
     return render_template('help.html')
 
+@app.route('/help/feedback', methods=['GET'])
+def feedback():
+    return render_template('feedback.html')
