@@ -65,44 +65,42 @@
             </ul>
           </dd>
         </dl>
-      </div>
-
-
-      <h4>Metamap</h4>
-      {%- for checker, metadata in s['metadata'].iteritems() %}
-      <h5>{{ checker }}</h5>
-      <div class="row">
-        <div class="col-lg-8">
-          <dl class="dl-horizontal">
-            {%- for k,v in metadata.metamap|dictsort %}
-            <dt>{{ k|trim_star }}</dt>
-            <dd>
-            {%- if v|is_list %}
-            <ul class="list-unstyled">
-              {%- for vv in v %}
-              <li>{{ vv }}</li>
+        <h4>Metamap</h4>
+        {%- for checker, metadata in s['metadata'].iteritems() %}
+        <h5>{{ checker }}</h5>
+        <div class="row">
+          <div class="col-lg-8">
+            <dl class="dl-horizontal">
+              {%- for k,v in metadata.metamap|dictsort %}
+              <dt>{{ k|trim_star }}</dt>
+              <dd>
+              {%- if v|is_list %}
+              <ul class="list-unstyled">
+                {%- for vv in v %}
+                <li>{{ vv }}</li>
+                {%- endfor %}
+              </ul>
+              {%- else %}
+              {{ v }}
+              {%- endif %}
+              </dd>
               {%- endfor %}
-            </ul>
-            {%- else %}
-            {{ v }}
-            {%- endif %}
-            </dd>
-            {%- endfor %}
-          </dl>
-        </div>
-        <div class="col-lg-4">
-          {%- if metadata %}
-          <div class="progress progress-striped">
-            <div class="progress-bar progress-bar-success" style="width: {{ metadata.cc_score.pct * 100}}%">
-              <span class="sr-only">{{metadata.cc_score.pct * 100}}%</span>
-            </div>
+            </dl>
           </div>
-          <dl class="dl-horizontal">
-            <dt>Compliance Score</dt>
-            <dd>{{metadata.cc_score.score }}<small>/{{metadata.cc_score.max_score}}</small> ({{ "%.1f"|format(metadata.cc_score.pct * 100) }}%)</dd>
-          </dl>
-          {%- else %}
-          {%- endif %}
+          <div class="col-lg-4">
+            {%- if metadata %}
+            <div class="progress progress-striped">
+              <div class="progress-bar progress-bar-success" style="width: {{ metadata.cc_score.pct * 100}}%">
+                <span class="sr-only">{{metadata.cc_score.pct * 100}}%</span>
+              </div>
+            </div>
+            <dl class="dl-horizontal">
+              <dt>Compliance Score</dt>
+              <dd>{{metadata.cc_score.score }}<small>/{{metadata.cc_score.max_score}}</small> ({{ "%.1f"|format(metadata.cc_score.pct * 100) }}%)</dd>
+            </dl>
+            {%- else %}
+            {%- endif %}
+          </div>
         </div>
       </div>
       {%- endfor %}
