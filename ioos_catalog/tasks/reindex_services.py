@@ -29,7 +29,7 @@ region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
                  'NOAA-CO-OPS'      : '72E748DF-23B1-4E80-A2C4-81E70783094A',
                  'USACE'            : '73019DFF-2E01-4800-91CD-0B3F812256A7',
                  'NAVY'             : '3B94DAAE-B7E9-4789-993B-0045AD9149D9',
-                 'NOAA-NBDC'        : '828981B0-0039-4360-9788-E788FA6B0875',
+                 'NOAA-NDBC'        : '828981B0-0039-4360-9788-E788FA6B0875',
                  'USGS-CMGP'        : 'C6F11F00-C2BD-4AC6-8E2C-013E16F4932E',
                  'Other'            : '7EDF86E1-573C-4B3C-A979-AD499A11FD22'}
 

@@ -18,7 +18,7 @@ def migrate_names():
     changing_providers = {
         'NOS/CO-OPS' : u'NOAA-CO-OPS',
         'USGS/CMGP'  : u'USGS-CMGP',
-        'NDBC'       : u'NOAA-NBDC'
+        'NDBC'       : u'NOAA-NDBC'
     }
     
     services = db.Service.find({'data_provider':{'$in':['NOS/CO-OPS', 'NDBC', 'USGS/CMGP']}})
