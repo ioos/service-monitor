@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <ul class="nav-header nav navbar-nav">
+    <li><a href="{{ url_for('help') }}">Help</a></li>
+    <li> <a href="https://github.com/ioos/catalog/wiki/Roadmap">Roadmap</a></li>
+    <li> <a href="https://github.com/ioos/catalog/milestones">Milestones</a></li>
+    <li> <a href="{{url_for('feedback')}}">Feedback</a></li>
+  <ul>
+</div>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+  <div class="col-md-6">
+    <h3> We value your feedback </h3>
+      We are always looking to improve the tools on this website. If you have feedback you would like to share, we'd appreciate it. Thank you!
+    <p>
+
+    <form role="form">
+      <div class="form-group">
+        <label for="nameInput">Enter your name</label>
+        <input type="text" class="form-control" id="nameInput" placeholder="Your Name">
+      </div>
+      <div class="form-group">
+        <label for="emailInput">Enter your email address</label>
+        <input type="email" class="form-control" id="emailInput" placeholder="Your Email">
+      </div>
+      <div class="form-group">
+        <label for='comments'>Comments</label>
+        <textarea id='comments' class="form-control" rows="8"></textarea>
+      </div>
+      <div id='captcha-panel' class="panel panel-default">
+        <div class="panel-heading">CAPTCHA</div>
+        <div class="panel-body">
+          <img src="http://upload.wikimedia.org/wikipedia/commons/6/69/Captcha.jpg" alt="Captcha"></img>
+          <input type="text" class="form-control" id="captchaInput">
+        </div> <!-- panel-body -->
+      </div> <!-- panel -->
+      <button type="submit" class="btn btn-default">Submit</button>
+    </form>
+  </div> <!-- col-md-6 -->
+</div> <!-- container -->
+
+{% endblock %}
