@@ -48,6 +48,9 @@ MAIL_DEFAULT_TO = os.environ.get("MAIL_DEFAULT_TO")
 # Email to receive daily reports and to be CCd in status reports.  Only used if MAILER_DEBUG is False.
 MAIL_DEFAULT_LIST = os.environ.get("MAIL_DEFAULT_LIST")
 
+# Email Comments
+MAIL_COMMENTS_TO = os.environ.get("MAIL_COMMENTS_TO").split(';')
+
 # Captcha
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.environ.get("CAPTCHA_DB")
 CAPTCHA_PREGEN_PATH = os.environ.get("CAPTCHA_PREGEN_PATH")

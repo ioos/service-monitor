@@ -54,13 +54,13 @@ def feedback_post():
 
 def prepare_email(name, email, comments):
     from ioos_catalog.tasks.send_email import send
-    email_address = 'ioos-dmac@asa.flowdock.com'
+    email_address = app.config.get('MAIL_COMMENTS_TO')
     subject = 'IOOS Catalog Comments'
-    text_body = comments
+    text_body = render_template('feedback_email.txt', name=name, email=email, comments=comments)
     html_body = None
     
     app.logger.info("Sending email from %s <%s>", name, email)
-    send(subject, [email_address], None, text_body, html_body)
+    send(subject, email_address, None, text_body, html_body)
 
 @app.route('/help/feedback/success', methods=['GET'])
 def feedback_success():
