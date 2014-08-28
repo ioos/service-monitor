@@ -128,6 +128,7 @@ function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel,
         'btn-lg': true,
         'btn-block': true,
       })
+      //return readable tooltip name or default to the key
       .attr('title', function(d) { return tooltips[d.key] || null; })
       .text(function(d) { return d.key + " "; })
     .append('span')
@@ -342,12 +343,22 @@ var datasetsByProvider = {{ dataset_counts_by_provider | tojson }};
 var updates            = {{ updates | tojson }};
 var dsTranslate = {
   RGRID: 'Rectilinear Grid',
+  grid: 'Rectilinear Grid',
+  Grid: 'Rectilinear Grid',
   CGRID: 'Curvilinear Grid',
-  NCELL: 'Irregular/Unstructured Grid',
   UNKNOWN: 'Unknown',
   "(NONE)": 'No Dataset Type detected',
   "FIXED MET STATION": 'Fixed Met Station',
-  BUOY: 'Buoy'
+  'All': 'Show all datasets',
+  'Regular Grid': 'Rectilinear Grid',
+  'Trajectory': 'Data taken from a trajectory with varying location in time.  Often corresponds with glider data.',
+  'Curvilinear Grid': 'Curvilinear Grid (i.e. ROMS models)',
+  'Point': "Geometry conforming to CF 'point' or CDM 'Point' geometries",
+  'Time Series': 'CF timeSeries data.  Often corresponds with a station recording data over time.',
+  'Unspecified': 'Unspecified data type',
+  'NCELL': 'Irregular/Unstructured Grid',
+  'Unstructured Grid': 'Unstructured grid implementing ugrid conventions',
+  'Buoy': 'Platform is a buoy'
 };
 
 //activate help tooltips for services and datasets
