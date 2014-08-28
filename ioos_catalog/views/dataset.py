@@ -17,6 +17,7 @@ class DatasetFilterForm(Form):
     asset_type = SelectField('Asset Type')
 
 @app.route('/datasets/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
+@app.route('/datasets/filter/', defaults={'filter_provider':None, 'filter_type':None}, methods=['GET'])
 @app.route('/datasets/filter/<path:filter_provider>/<filter_type>', methods=['GET'])
 def datasets(filter_provider, filter_type):
     # only get datasets that are active for this list!
