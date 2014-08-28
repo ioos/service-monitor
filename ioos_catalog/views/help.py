@@ -1,9 +1,13 @@
+from functools import partial
+
 from flask import render_template, make_response, request
 from flask.ext.captcha.models import CaptchaStore
-from sqlalchemy.exc import InvalidRequestError, DBAPIError
-from functools import partial
-from flask_captcha.views import db
+
 from ioos_catalog import app
+from ioos_catalog.tasks.send_email import send
+
+from flask_captcha.views import db
+from sqlalchemy.exc import InvalidRequestError, DBAPIError
 import json
 
 @app.route('/help', methods=['GET'])
@@ -25,7 +29,6 @@ def feedback_post():
         captcha_text = form['captcha_text']
         captcha_img = form['captcha_img']
 
-        app.logger.info(form)
 
         invalid_fields = []
         if not name or name == 'Your Name':
@@ -53,13 +56,12 @@ def feedback_post():
 
 
 def prepare_email(name, email, comments):
-    from ioos_catalog.tasks.send_email import send
     email_address = app.config.get('MAIL_COMMENTS_TO')
     subject = 'IOOS Catalog Comments'
     text_body = render_template('feedback_email.txt', name=name, email=email, comments=comments)
     html_body = None
     
-    app.logger.info("Sending email from %s <%s>", name, email)
+    app.logger.info("Sending email on behalf of %s <%s>", name, email)
     send(subject, email_address, None, text_body, html_body)
 
 @app.route('/help/feedback/success', methods=['GET'])

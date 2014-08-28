@@ -19,3 +19,4 @@ geojson
 petulant-bear>=0.1.2
 wicken>=0.1.2
 compliance-checker>=0.2.0
+Flask-Captcha==0.1.8

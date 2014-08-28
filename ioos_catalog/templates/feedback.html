@@ -50,6 +50,9 @@ $(function() {
     initiateCaptcha();
 }); // document.ready
 
+/*
+ * Loads a new captcha image and overrides the submit button action
+ */
 function initiateCaptcha() {
     var image_key = null;
 
@@ -61,7 +64,6 @@ function initiateCaptcha() {
         $("#feedbackform").submit(function(e) {
           e.preventDefault();
           var actionURL = e.currentTarget.action;
-          console.log(actionURL);
           var formData = {
             "name" : $('#nameInput').val(),
             "email" : $('#emailInput').val(),
@@ -80,7 +82,6 @@ function initiateCaptcha() {
               window.location = "{{url_for('feedback_success')}}";
             },
             error: function(jqXHR, textStatus, errorThrown) {
-              console.log("OH NO");
               console.log(jqXHR);
               console.log(textStatus);
               console.log(errorThrown);
@@ -96,17 +97,16 @@ function initiateCaptcha() {
 
 }
 
+/*
+ * Adds a red color to each label/field in the response fields
+ */
 function highlightFields(response) {
   response.fields.forEach(function(field) {
       var domID = '#' + field;
-      console.log(domID);
       $(domID).css('color', 'red');
       
   });
-  console.log("Highlight");
-  console.log(response);
 }
-
 </script>
 
 {% endblock %}
