@@ -217,6 +217,9 @@ function updateRecentUpdates() {
 }
 
 $(function() {
+  /* Keep any values that were auto-filled, typically from a cache or by clicking back */ 
+  var autocompleteValue = $('#region-select').val();
+  $('#region-select').val([]);
   $('#region-select').on('change', function() {
     updateTypeBtns(
       countsByProvider,
@@ -249,6 +252,12 @@ $(function() {
     {placement:'left',
     animation:false
   });
+  /* If we had a value when the document loaded, apply it now */
+  if(autocompleteValue !== null) {
+    $('#region-select').val(autocompleteValue);
+    $('#region-select').change();
+    $('#region-select').trigger("chosen:updated");
+  }
 });
 
 function updateMap() {
