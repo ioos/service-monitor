@@ -60,7 +60,7 @@
 
   <div class="row">
     <div class="col-sm-12">
-      <h3><strong>{{ provider }}</strong> has <strong>{{ provider_service_count }} service{{ "s" if provider_service_count !=1 }}</strong> over <strong>{{ tlds|length }} TLD{{ "s" if tlds|length != 1 }}</strong> producing <strong>{{ provider_dataset_count }} dataset{{"s" if provider_dataset_count != 1}}</strong>.
+      <h3><strong>{{ provider }}</strong> has <strong>{{ provider_service_count }} service{{ "s" if provider_service_count !=1 }}</strong> over <strong><span title="A server refers to a computer that is hosting the data.">{{ tlds|length }} server{{ "s" if tlds|length != 1 }}</span></strong> producing <strong>{{ provider_dataset_count }} dataset{{"s" if provider_dataset_count != 1}}</strong>.
     </div>
   </div>
 
