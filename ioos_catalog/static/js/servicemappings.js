@@ -5,7 +5,6 @@
  * have illegal characters.
  */
 function sanitizeServiceUrl(serviceNames) {
-    console.log(serviceNames);
     if(!serviceNames || !serviceNames.length) {
         return "null";
     }
