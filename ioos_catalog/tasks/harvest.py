@@ -671,6 +671,7 @@ class DapHarvest(Harvester):
                     try:
                         # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
                         # Asterik magic to expland the tuple into positional arguments
+                        app.logger.exception("Error calculating bounding box")
 
                         # handles "points" aka single position NCELLs
                         bbox = cd.getbbox(var=v)
@@ -687,10 +688,17 @@ class DapHarvest(Harvester):
                     messages.append(u"Variable %s was used to calculate geometry." % v)
                     break
 
+            if gj is None: # Try the globals
+                gj = self.global_bounding_box(cd.nc)
+                messages.append(u"Bounding Box calculated using global attributes")
             if gj is None:
                 messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
                 messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
                 messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(itertools.chain(std_variables, non_std_variables)))
+            
+                
+
+
 
         # TODO: compute bounding box using global attributes
 
@@ -797,4 +805,32 @@ class DapHarvest(Harvester):
                                              u'dataset',
                                              scores,
                                              metamap)
+
+    def global_bounding_box(self, ncdataset):
+        ncattrs = ncdataset.ncattrs()
+        attrs_list = [
+            'geospatial_lat_min', 
+            'geospatial_lat_max', 
+            'geospatial_lat_units', 
+            'geospatial_lon_min', 
+            'geospatial_lon_max', 
+            'geospatial_lon_units'
+        ]
+
+        # Check that each of them is in the ncdatasets global
+        for attr_name in attrs_list:
+            if attr_name not in ncattrs:
+                break
+        else: # All of them were found
+            lat_min = getattr(ncdataset, 'geospatial_lat_min')
+            lat_max = getattr(ncdataset, 'geospatial_lat_max')
+            lon_min = getattr(ncdataset, 'geospatial_lon_min')
+            lon_max = getattr(ncdataset, 'geospatial_lon_max')
+
+            geometry = mapping(box(lon_min, lat_min, lon_max, lat_max, ccw=True))
+            return geometry
+        return None
+
+
+
 
