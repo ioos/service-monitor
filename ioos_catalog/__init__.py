@@ -197,3 +197,9 @@ from flask_captcha import Captcha
 captcha = Captcha(app)
 from flask_captcha.views import captcha_blueprint
 app.register_blueprint(captcha_blueprint)
+
+
+# Mimetype handling
+import mimetypes
+
+mimetypes.add_type('image/svg+xml', '.svg')
