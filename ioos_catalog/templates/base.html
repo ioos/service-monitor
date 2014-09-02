@@ -2,15 +2,15 @@
 <html lang="en">
   <head>
     <title>IOOS Catalog{% if g.title is defined %} - {{ g.title }}{%endif%}</title>
-    <script type="text/javascript" src="{{ url_for('.static', filename='js/jquery.min.js') }}" /></script>
-    <script type="text/javascript" src="{{ url_for('.static', filename='js/bootstrap.js') }}" /></script>
-    <script type="text/javascript" src="{{ url_for('.static', filename='js/chosen.jquery.min.js') }}" /></script>
+    <script type="text/javascript" src="{{ url_for('.static', filename='js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('.static', filename='js/bootstrap.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('.static', filename='js/chosen.jquery.min.js') }}"></script>
     {% block javascript %}
     {% endblock %}
-    <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/bootstrap.min.css') }}"></link>
-    <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/graph.css') }}"></link>
-    <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/ism-style.css') }}"></link>
-    <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/chosen.min.css') }}"></link>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='css/graph.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='css/ism-style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='css/chosen.min.css') }}">
     {% block css %}
     {% endblock %}
   </head>
