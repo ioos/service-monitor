@@ -4,8 +4,8 @@
 {% endblock %}
 
 {% block css %}
-<link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}">
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css">
+<link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
 {% endblock %}
 
 {% block basepage %}
@@ -103,38 +103,15 @@
 <svg id="shared"></svg>
 
 
-<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.zoom.js') }}"></script>
-<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
-
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.zoom.js') }}" /></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 <script type="text/javascript">
 
 function toggleInfo(did, sindex) {
 
-  /*
-  if ($('#map_infobar').css('left') != '0px') {
-    $('#map_sidebar').animate({
-      'left': '+=250'
-    }, 150);
-    $('#map_infobar').animate({
-      'left': '-=50'
-    }, 150);
-
-    $('#map_infobar dl').empty();
-
-    return;
-  }
-
-  $('#map_sidebar').animate({
-    'left': '-=250'
-  }, 150, function() {});
-
-  $('#map_infobar').animate({
-    'left': '+=50'
-  }, 150, function() {});
-  */
   $.getJSON('/map/details/'+did +'/'+sindex, function(data) {
     var ib = $('#map_infobar');
 
@@ -201,7 +178,6 @@ setupFilters();
 var map = L.map('map', { zoomControl: false} ).setView([44, -100], 4);
 new L.Control.Zoom({ position: 'topright' }).addTo(map);
 
-//var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
 //attribution text from http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer
 var baseAttrib = 'Sources: Esri, GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org, and other contributors';
@@ -209,29 +185,6 @@ var base = new L.TileLayer(baseUrl, { minZoom: 1
                                     , maxZoom: 12
                                     , attribution: baseAttrib});
 map.addLayer(base);
-
-/* add hook layers for d3 involvement */
-var svg = d3.select(map.getPanes().overlayPane).append('svg'),
-      g = svg.append('g').attr('class', 'leaflet-zoom-hide');
-
-// adapter code for leaflet from http://bost.ocks.org/mike/leaflet/
-function projectPoint(x, y) {
-  var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-  this.stream.point(point.x, point.y);
-}
-
-function returnLatLon(x, y) {
-    //simply turn lon/lat into lat/lon
-    this.stream.point(y, x);
-}
-
-var transform = d3.geo.transform({point:projectPoint}),
-         path = d3.geo.path().projection(transform);
-         latLonTrans = d3.geo.transform({point: returnLatLon})
-         latLonPath = d3.geo.path().projection(latLonTrans);
-
-var datapaths = null,
-  geoj_data = null;
 
 function addSpinner() {
   var content = "\
@@ -245,30 +198,89 @@ function removeSpinner() {
   $('#spinner').remove();
 }
 
-function reset() {
-  // fixup group to correct size
-  if (!geoj_data) { return; }
+var lastLayer;
 
-  var      bounds = path.bounds(geoj_data),
-          topLeft = bounds[0],
-      bottomRight = bounds[1];
+function highlight_layer_hover(layer) {
+   //may cause other problems, but will show points when multiple points are
+   //overlaid
+   if (layer.feature.geometry.type === 'Point') {
+       layer.bringToFront();
+   }
+   layer.setStyle({'fillColor': '#F23128',
+                   'color': '#8C2E19',
+                   'fillOpacity': 0.6});
+}
 
-  svg
-    .attr('width', bottomRight[0] - topLeft[0])
-    .attr('height', bottomRight[1] - topLeft[1])
-    .style('left', topLeft[0] + 'px')
-    .style('top', topLeft[1] + 'px')
-    ;
+function highlight_layer(layer) {
+        layer.setStyle({fillColor: 'red', fillOpacity: 0.7});
+}
 
-  g.attr('transform', 'translate(' + -topLeft[0] + ',' + -topLeft[1] + ')');
+function reset_highlight(layer) {
+    //if highlighted layer is last layer, preserve the style
+    if (layer === lastLayer) {
+       layer.setStyle({fillColor: 'red', fillOpacity: 0.7});
+    } else {
+        //Could be more elegant here.  Any container will work since it
+        //contains the style, though
+        pointFeatures.resetStyle(layer);
+    }
+}
+function click_layer(layer, feature) {
+        if (lastLayer) {
+            pointFeatures.resetStyle(lastLayer);
+        }
+        lastLayer = layer;
+        highlight_layer(layer);
+        if (layer.feature.geometry.type === 'Point') {
+            layer.bringToFront();
+            //easier way to get this?
+            map.setView(layer.feature.geometry.coordinates.reverse(), 10);
+        } else {
+          layer.bringToBack();
+          zoom_to_bbox(layer.getBounds())
+        }
+        toggleInfo(feature.properties.id, feature.properties.sindex);
+}
 
-  // do paths
-  datapaths.attr('d', path);
+
+function bind_features(feature, layer) {
+    //don't confuse leaflet .on vs d3 .on
+    layer.on({
+           mouseover: function () { highlight_layer_hover(layer); },
+           mouseout: function () { reset_highlight(layer); },
+           'click': function () { click_layer(layer, feature); }
+        });
+
+    var thumbs = d3.select('#thumbnails')
+    var div = thumbs.append('div')
+    .attr('class', 'list-group-item')
+    .on('click', function () { click_layer(layer, feature) })
+    .on('mouseover', function () {
+          highlight_layer_hover(layer);
+          d3.select(this).classed({'list-group-item-info': true});
+    })
+    .on('mouseout', function () {
+          reset_highlight(layer);
+          d3.select(this).classed({'list-group-item-info': false});
+    });
+
+    div
+        .append('h4')
+        .attr('class', 'list-group-item-heading')
+        .text(feature.properties.name || feature.properties.id);
+
+    div
+        .append('p')
+        .attr('class', 'list-group-item-text')
+        .text(feature.properties.description || "");
+
 }
 
 function zoom_to_bbox(bbox) {
     //zoom to bounds, while guarding against extraneous values
-    var bboxMod = bbox;
+    //prevent violent crash of Leaflet from extreme bbox values
+    var bboxMod = [[bbox.getSouth(), bbox.getWest()],
+                   [bbox.getNorth(), bbox.getEast()]];
     //abs used to guard against large/positive values in bbox
     if (Math.abs(bboxMod[0][0]) > 90) {
         bboxMod[0][0] = -90;
@@ -285,96 +297,95 @@ function zoom_to_bbox(bbox) {
     map.fitBounds(bboxMod);
 }
 
-map.on('viewreset', reset);
+var polygons, points, trajectories;
+
+var polyFeatures = L.layerGroup();
+var pointFeatures = L.layerGroup();
+var traj = L.layerGroup();
+var mpFeatures = L.layerGroup();
 
 function addData(error, geojson) {
 
+  //zoom to currently selected dataset
+  var datasetBounds = L.geoJson(geojson).getBounds();
+  //guard against providers which currently no datasets,
+  //and for whom no BBox is thus defined
+  if (Object.getOwnPropertyNames(datasetBounds).length > 0) {
+      zoom_to_bbox(datasetBounds);
+  }
+  polyFeatures.clearLayers();
+  pointFeatures.clearLayers();
+  traj.clearLayers();
+  mpFeatures.clearLayers();
+  //delete any thumbnails
+  d3.select('#thumbnails').selectAll('div').remove();
   /* Remove the spinner now that the content is ready */
   removeSpinner();
 
-  // DEBUG:
-  // L.geoJson(geojson).addTo(map);
 
-  geoj_data = geojson;
+    //naive, QND approach. Should partition instead
+    //FIXME: How should we handle multipoints (i.e. AOOS has many)
+    polygons = geojson.features.filter(function (f)
+                  { return f.geometry.type == 'Polygon' });
 
-  // on main map
-  datapaths = g.selectAll('.ioos-dataset')
-    .data(geojson.features, function(d) { return d.properties.id;});
+    trajectories = geojson.features.filter(function (f)
+                  { return f.geometry.type == 'LineString' });
 
-  datapaths.exit().remove();
+    mp = geojson.features.filter(function (f)
+                  { return f.geometry.type == 'MultiPoint' });
 
-  datapaths.enter()
-    .append('path')
-      .attr('id', function(d) { return d.properties.id; })
-      .attr('class', 'ioos-dataset')
+    points = geojson.features.filter(function (f)
+                  { return f.geometry.type == 'Point' });
 
-  var classmap = {
-    LineString: 'trajectory',
-    Point: 'point',
-    MultiPoint: 'point'
-  };
 
-  datapaths.classed('point', function(d) { return d.geometry.type == 'Point' || d.geometry.type == 'MultiPoint' });
-  datapaths.classed('trajectory', function(d) { return d.geometry.type == 'LineString'; });
-  datapaths.classed('area', function(d) { return !classmap.hasOwnProperty(d.geometry.type) });
+  function makeStyle(feature) {
+    var baseStyle;
+    var geomType = feature.geometry.type;
+    if (geomType === 'Point' || geomType === 'MultiPoint') {
+        baseStyle = {radius: 5,  //for circleMarker
+                    'weight': 1,
+                     fillOpacity: 1,
+                     fillColor: '#FFC883'};
+    } else if (geomType == 'LineString') {
+        baseStyle = {'weight': 4,
+                     'opacity': 1};
+    } else {
+        baseStyle = {'fillOpacity': 0.09,
+                      'weight': 1,
+                      fillColor: '#1E313D'};
+    };
 
-  // warp view to cover full region
-  var selBounds = latLonPath.bounds(geoj_data);
-  zoom_to_bbox(selBounds);
-  reset();
+    globalStyle = {
+                    color: '#333',
+                    stroke: '#1E313D'
+                  }
 
-  // on thumbnail index
-  var thumbs = d3.select('#thumbnails').selectAll('.list-group-item')
-    .data(geojson.features, function(d) { return d.properties.id; });
+    //add common style attributes to the features
+    return $.extend({}, baseStyle, globalStyle)
+  }
 
-  thumbs.exit().remove();
 
-  var ps = thumbs.enter()
-    .append('div')
-      .attr('class', 'list-group-item');
+      var featureProc = {
+                style: makeStyle,
+                //use circle markers instead of default
+                pointToLayer: function (feature, latlng) {
+                  return L.circleMarker(latlng);
+                  },
+                onEachFeature: bind_features
+                };
 
-  ps
-    .append('h4')
-    .attr('class', 'list-group-item-heading')
-    .text(function(d) { return d.properties.name || d.properties.id; });
+      polyFeatures = L.geoJson(polygons, featureProc); 
+      traj = L.geoJson(trajectories, featureProc);
+      mpFeatures = L.geoJson(mp, featureProc)
+      pointFeatures = L.geoJson(points, featureProc);
 
-  ps
-    .append('p')
-    .attr('class', 'list-group-item-text')
-    .text(function(d) { return d.properties.description || ""; });
-
-  ps.on('mouseout', function(d) {
-    d3.selectAll('#map path.active').classed({'active':false});
-    d3.select(this).classed({'list-group-item-info': false});
-  });
-
-  ps.on('mouseover', function(d) {
-    var sel = $('#map #' + d.properties.id);
-    d3.selectAll(sel).classed({'active':true});
-
-    d3.select(this).classed({'list-group-item-info': true});
-  });
-
-  ps.on('click', function(d) {
-    var sel = $('#map .perm-active');
-    d3.selectAll(sel).classed({'perm-active':false});
-
-    var sel = $('#map #' + d.properties.id);
-    //there should be one, and only one element present for the returned path
-    var selBounds = latLonPath.bounds(sel[0].__data__);
-    //zoom map to bounds of selected dataset
-    zoom_to_bbox(selBounds);
-    d3.selectAll(sel).classed({'perm-active':true});
-
-    $(this).siblings().removeClass('active');
-    $(this).addClass('active');
-
-    toggleInfo(d.properties.id, d.properties.sindex);
-  });
+  map.addLayer(polyFeatures);
+  map.addLayer(traj);
+  map.addLayer(mpFeatures);
+  map.addLayer(pointFeatures);
 }
 
 /* standard controls */
-
 $('#map_infobar .close').click(function() {
   $('#map_infobar').hide();
 });
@@ -400,11 +411,8 @@ $('#sidebar-toggle').click(function() {
 /* debug */
 $(function() {
   $('select').val('SECOORA', true).trigger('change');
-
 });
 
 </script>
 
 {% endblock %}
-
-
