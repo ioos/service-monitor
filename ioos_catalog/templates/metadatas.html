@@ -21,7 +21,8 @@
 
 {% block page %}
 
-  <div class="overflow">
+<div class="container">
+  <div class="container overflow">
     <table class="table table-bordered table-condensed" style="font-size: 11px;">
       <thead>
         <tr>
@@ -82,8 +83,16 @@
       </tbody>
     </table>
   </div> <!-- .overflow -->
+  </div>
   <script type="text/javascript">
+function set_table_height() {
+      $('.overflow').css('max-height', 
+                         Math.round($(window).height() * 0.7) + 'px'); 
+}
     $(function() {
+
+      set_table_height();
+      $(window).bind('resize', set_table_height)
 
       {% if 'data_provider' in filters %}
         $('select[name="filter-provider"]').val('{{ filters['data_provider'] }}');
