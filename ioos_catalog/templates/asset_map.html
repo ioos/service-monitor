@@ -297,7 +297,7 @@ function zoom_to_bbox(bbox) {
     map.fitBounds(bboxMod);
 }
 
-var polygons, points, trajectories;
+var polygons, points, trajectories, mp;
 
 var polyFeatures = L.layerGroup();
 var pointFeatures = L.layerGroup();
@@ -322,21 +322,26 @@ function addData(error, geojson) {
   /* Remove the spinner now that the content is ready */
   removeSpinner();
 
+  polygons = [];
+  trajectories = [];
+  mp = [];
+  points = [];
 
-    //naive, QND approach. Should partition instead
-    //FIXME: How should we handle multipoints (i.e. AOOS has many)
-    polygons = geojson.features.filter(function (f)
-                  { return f.geometry.type == 'Polygon' });
+  for (var i = 0; i < geojson.features.length; ++i) {
+      //FIXME: How should we handle multipoints (i.e. AOOS has many)
+      var feat = geojson.features[i];
 
-    trajectories = geojson.features.filter(function (f)
-                  { return f.geometry.type == 'LineString' });
-
-    mp = geojson.features.filter(function (f)
-                  { return f.geometry.type == 'MultiPoint' });
-
-    points = geojson.features.filter(function (f)
-                  { return f.geometry.type == 'Point' });
-
+      switch(feat.geometry.type) {
+          case 'Polygon':
+              polygons.push(feat); break;
+          case 'LineString':
+              trajectories.push(feat); break;
+          case 'MultiPoint':
+              mp.push(feat); break;
+          case 'Point':
+              points.push(feat);
+      }
+  }
 
   function makeStyle(feature) {
     var baseStyle;
@@ -365,19 +370,19 @@ function addData(error, geojson) {
   }
 
 
-      var featureProc = {
-                style: makeStyle,
-                //use circle markers instead of default
-                pointToLayer: function (feature, latlng) {
-                  return L.circleMarker(latlng);
-                  },
-                onEachFeature: bind_features
-                };
+  var featureProc = {
+            style: makeStyle,
+            //use circle markers instead of default
+            pointToLayer: function (feature, latlng) {
+              return L.circleMarker(latlng);
+              },
+            onEachFeature: bind_features
+            };
 
-      polyFeatures = L.geoJson(polygons, featureProc); 
-      traj = L.geoJson(trajectories, featureProc);
-      mpFeatures = L.geoJson(mp, featureProc)
-      pointFeatures = L.geoJson(points, featureProc);
+  polyFeatures = L.geoJson(polygons, featureProc); 
+  traj = L.geoJson(trajectories, featureProc);
+  mpFeatures = L.geoJson(mp, featureProc)
+  pointFeatures = L.geoJson(points, featureProc);
 
   map.addLayer(polyFeatures);
   map.addLayer(traj);
