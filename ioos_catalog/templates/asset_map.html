@@ -4,8 +4,11 @@
 {% endblock %}
 
 {% block css %}
-<link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}"></link>
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+<link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}">
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" >
+<!--TODO: change to non-cdn assets later.  Use bower? -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css" />
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css" />
 {% endblock %}
 
 {% block basepage %}
@@ -94,20 +97,12 @@
   </div>
 </div>
 
-<!--<svg id="map" preserveAspectRatio="xMidYMid"></svg>-->
-<!--<svg id="map" viewBox="0 0 1500 1500" preserveAspectRatio="xMinYMin slice"></svg>-->
+<div id="map"></div>
 
-<div id="map">
-</div>
-
-<svg id="shared"></svg>
-
-
-<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}" /></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}" /></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.projection.v0.min.js') }}" /></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.geo.zoom.js') }}" /></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}"></script>
 <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
 <script type="text/javascript">
 
 function toggleInfo(did, sindex) {
@@ -199,12 +194,30 @@ function removeSpinner() {
 }
 
 var lastLayer;
+var hoverLayer;
+var targetLayer;
 
 function highlight_layer_hover(layer) {
    //may cause other problems, but will show points when multiple points are
    //overlaid
+   if (layer._map == null) {
+   }
    if (layer.feature.geometry.type === 'Point') {
-       layer.bringToFront();
+       //sometimes the old hover layer is not destroyed
+       if (hoverLayer) {
+           map.removeLayer(hoverLayer);
+       }
+       hoverLayer = L.circleMarker(layer.getLatLng(), {fillOpacity: 0,
+                                                       radius: 12,
+                                                       clickable: false})
+       map.addLayer(hoverLayer);
+       //important, or many hoverLayers can get added
+       //if they are exactly overlapping!
+       //TODO: Always bring point hover indicators to top z-index level
+       hoverLayer.bringToFront();
+       if (layer._map != null) {
+           layer.bringToFront();
+       }
    }
    layer.setStyle({'fillColor': '#F23128',
                    'color': '#8C2E19',
@@ -212,7 +225,9 @@ function highlight_layer_hover(layer) {
 }
 
 function highlight_layer(layer) {
+    if (layer._map != null) {
         layer.setStyle({fillColor: 'red', fillOpacity: 0.7});
+    }
 }
 
 function reset_highlight(layer) {
@@ -224,24 +239,46 @@ function reset_highlight(layer) {
         //contains the style, though
         pointFeatures.resetStyle(layer);
     }
+    if (layer.feature.geometry.type === 'Point') {
+        map.removeLayer(hoverLayer);
+    }
 }
+
 function click_layer(layer, feature) {
         if (lastLayer) {
+            //check if station point
             pointFeatures.resetStyle(lastLayer);
+            map.removeLayer(targetLayer);
+        }
+        if (layer.feature.geometry.type === 'Point') {
+            //reset the map object if we have removed the layer
+            //important!! this brings the point layergroup into focus, which
+            //then allows us to bring the point to the front
+            targetLayer = L.marker(layer.getLatLng(), {'fillOpacity': 0,
+                                                             color: 'yellow',
+                                                             radius: 12});
+            //TODO: don't reassign event handler if already present
+            targetLayer.on('click', function() { click_layer(layer, feature)})
+            map.addLayer(targetLayer);
+            map.setView(layer._latlng, 10);
+            layer.bringToFront();
+            //easier way to get this?
+        } else {
+          layer.bringToBack();
+          zoom_to_bbox(layer.getBounds());
+        }
+        if (lastLayer) {
+            //check if station point
+            polyFeatures.resetStyle(lastLayer);
         }
         lastLayer = layer;
         highlight_layer(layer);
-        if (layer.feature.geometry.type === 'Point') {
-            layer.bringToFront();
-            //easier way to get this?
-            map.setView(layer.feature.geometry.coordinates.reverse(), 10);
-        } else {
-          layer.bringToBack();
-          zoom_to_bbox(layer.getBounds())
-        }
         toggleInfo(feature.properties.id, feature.properties.sindex);
 }
 
+bind_features2 = function(layer) {
+ bind_features(layer.feature, layer)
+};
 
 function bind_features(feature, layer) {
     //don't confuse leaflet .on vs d3 .on
@@ -303,6 +340,9 @@ var polyFeatures = L.layerGroup();
 var pointFeatures = L.layerGroup();
 var traj = L.layerGroup();
 var mpFeatures = L.layerGroup();
+var individualStation = L.layerGroup();
+var clusterGroup = new L.MarkerClusterGroup({disableClusteringAtZoom: 9,
+                                             maxClusterRadius: 20});
 
 function addData(error, geojson) {
 
@@ -317,6 +357,7 @@ function addData(error, geojson) {
   pointFeatures.clearLayers();
   traj.clearLayers();
   mpFeatures.clearLayers();
+  clusterGroup.clearLayers();
   //delete any thumbnails
   d3.select('#thumbnails').selectAll('div').remove();
   /* Remove the spinner now that the content is ready */
@@ -342,6 +383,7 @@ function addData(error, geojson) {
               points.push(feat);
       }
   }
+
 
   function makeStyle(feature) {
     var baseStyle;
@@ -379,15 +421,19 @@ function addData(error, geojson) {
             onEachFeature: bind_features
             };
 
-  polyFeatures = L.geoJson(polygons, featureProc); 
+  polyFeatures = L.geoJson(polygons, featureProc);
   traj = L.geoJson(trajectories, featureProc);
   mpFeatures = L.geoJson(mp, featureProc)
   pointFeatures = L.geoJson(points, featureProc);
+  clusterGroup.addLayer(pointFeatures);
+  clusterGroup.eachLayer(bind_features2);
 
   map.addLayer(polyFeatures);
   map.addLayer(traj);
-  map.addLayer(mpFeatures);
-  map.addLayer(pointFeatures);
+  //FIXME: MultiPoint features are pretty broken right now and interfere with
+  //      clustering
+  //map.addLayer(mpFeatures);
+  map.addLayer(clusterGroup);
 }
 
 /* standard controls */
@@ -413,7 +459,6 @@ $('#sidebar-toggle').click(function() {
   }
 });
 
-/* debug */
 $(function() {
   $('select').val('SECOORA', true).trigger('change');
 });
