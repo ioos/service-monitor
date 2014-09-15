@@ -430,9 +430,8 @@ function addData(error, geojson) {
 
   map.addLayer(polyFeatures);
   map.addLayer(traj);
-  //FIXME: MultiPoint features are pretty broken right now and interfere with
-  //      clustering
-  //map.addLayer(mpFeatures);
+  //TODO: Better handling of multipoint features
+  map.addLayer(mpFeatures);
   map.addLayer(clusterGroup);
 }
 
