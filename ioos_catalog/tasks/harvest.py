@@ -531,7 +531,14 @@ class DapHarvest(Harvester):
           * DSG
         """
 
-        cd = CommonDataset.open(self.service.get('url'))
+        try:
+            cd = CommonDataset.open(self.service.get('url'))
+        except Exception as e:
+            app.logger.error("Could not open DAP dataset from '%s'\n"
+                             "Exception %s: %s" % (self.service.get('url'),
+                                                   type(e).__name__, e))
+            return 'Not harvested'
+
 
         # For DAP, the unique ID is the URL
         unique_id = self.service.get('url')
