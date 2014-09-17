@@ -831,16 +831,20 @@ class DapHarvest(Harvester):
             if attr_name not in ncattrs:
                 break
         else: # All of them were found
-            lat_min = getattr(ncdataset, 'geospatial_lat_min')
-            lat_max = getattr(ncdataset, 'geospatial_lat_max')
-            lon_min = getattr(ncdataset, 'geospatial_lon_min')
-            lon_max = getattr(ncdataset, 'geospatial_lon_max')
+            # Sometimes the attributes are strings, which will cause the
+            # box calculation to fail.  Just to be sure, cast to float
+            try:
+                lat_min = float(ncdataset.geospatial_lat_min)
+                lat_max = float(ncdataset.geospatial_lat_max)
+                lon_min = float(ncdataset.geospatial_lon_min)
+                lon_max = float(ncdataset.geospatial_lon_max)
+            except ValueError:
+                app.logger.warning('Bbox calculation from global attributes '
+                                   'failed.  Likely due to uncastable string '
+                                   'to float value')
+                return None
 
             geometry = self.get_bbox_or_point([lon_min, lat_min,
                                                lon_max, lat_max])
             return geometry
         return None
-
-
-
-
