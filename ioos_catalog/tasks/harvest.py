@@ -675,10 +675,7 @@ class DapHarvest(Harvester):
 
                         # handles "points" aka single position NCELLs
                         bbox = cd.getbbox(var=v)
-                        if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
-                            gj = mapping(Point(bbox[0:2]))
-                        else:
-                            gj = mapping(box(*bbox))
+                        gj = self.get_bbox_or_point(bbox)
 
                     except (AttributeError, AssertionError, ValueError, KeyError):
                         pass
@@ -695,8 +692,8 @@ class DapHarvest(Harvester):
                 messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
                 messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
                 messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(itertools.chain(std_variables, non_std_variables)))
-            
-                
+
+
 
 
 
@@ -780,7 +777,7 @@ class DapHarvest(Harvester):
 
 
             # Wicken doesn't preserve the order between the names and the units,
-            # so what you wind up with is two lists that can't be related, but we 
+            # so what you wind up with is two lists that can't be related, but we
             # want to keep the relationship between the name and the units
 
             for k in ncdataset.variables.iterkeys():
@@ -806,14 +803,25 @@ class DapHarvest(Harvester):
                                              scores,
                                              metamap)
 
+    @staticmethod
+    def get_bbox_or_point(bbox):
+        """
+        Determine whether the bounds are a single point or bounding box area
+        """
+        if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
+            return mapping(Point(bbox[0:2]))
+        else:
+            return mapping(box(*bbox))
+
+
     def global_bounding_box(self, ncdataset):
         ncattrs = ncdataset.ncattrs()
         attrs_list = [
-            'geospatial_lat_min', 
-            'geospatial_lat_max', 
-            'geospatial_lat_units', 
-            'geospatial_lon_min', 
-            'geospatial_lon_max', 
+            'geospatial_lat_min',
+            'geospatial_lat_max',
+            'geospatial_lat_units',
+            'geospatial_lon_min',
+            'geospatial_lon_max',
             'geospatial_lon_units'
         ]
 
@@ -827,7 +835,8 @@ class DapHarvest(Harvester):
             lon_min = getattr(ncdataset, 'geospatial_lon_min')
             lon_max = getattr(ncdataset, 'geospatial_lon_max')
 
-            geometry = mapping(box(lon_min, lat_min, lon_max, lat_max, ccw=True))
+            geometry = self.get_bbox_or_point([lon_min, lat_min,
+                                               lon_max, lat_max])
             return geometry
         return None
 
