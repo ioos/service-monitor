@@ -811,7 +811,8 @@ class DapHarvest(Harvester):
         if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
             return mapping(Point(bbox[0:2]))
         else:
-            return mapping(box(*bbox))
+            # d3 expects poly coordinates in clockwise order (?)
+            return mapping(box(*bbox, ccw=False))
 
 
     def global_bounding_box(self, ncdataset):
