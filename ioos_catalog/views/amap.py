@@ -48,7 +48,6 @@ def geoj(filter_provider):
                                       'name':s['name'],
                                       'description':s['description']},
                         'geometry': s.get('geojson')}
-
                 features.append(feat)
 
             continue
@@ -105,10 +104,17 @@ def details(dataset_id, sindex):
               'service_link':url_for('show_service', service_id=s['service_id']),
               'service_name':service.name,
               'service_type':service.service_type,
-              'service_last_ping_time':str(pl.updated),
-              'service_last_status':pl.last_operational_status,
               'service_recent_uptime':'',
               'cc_score':''}
+
+    # if there exists ping data, show it
+    if pl:
+              retval['service_last_ping_time'] = str(pl.updated)
+              retval['service_last_status'] = pl.last_operational_status
+    # otherwise just leave it blank instead of failing entirely
+    else:
+              retval['service_last_ping_time'] = 'Never'
+              retval['service_last_status'] = 'N/A'
 
     return jsonify(retval)
 
