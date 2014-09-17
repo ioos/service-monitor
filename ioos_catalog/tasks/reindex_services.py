@@ -1,5 +1,6 @@
 from datetime import datetime
 from urlparse import urlparse
+import re
 
 import requests
 import xml.etree.ElementTree as ET
@@ -58,6 +59,18 @@ def reindex_services(filter_regions=None, filter_service_types=None):
         # get a set of all non-manual, active services for possible deactivation later
         current_services = set((s._id for s in db.Service.find({'manual':False, 'active':True, 'data_provider':{'$in':filter_regions}}, {'_id':True})))
 
+        # FIXME: find a more robust mechanism for detecting ERDDAP instances
+        # this would fail if behind a url rewriting/proxying mechanism which
+        # remove the 'erddap' portion from the URL.  May want to have GeoPortal
+        # use a separate 'scheme' dedicated to ERDDAP for CSW record
+        # 'references'
+
+        # workaround for matching ERDDAP endpoints
+        # match griddap or tabledap endpoints with html or graph
+        # discarding any query string parameters (i.e. some datasets on PacIOOS)
+        re_string = r'(^.*erddap/(?:grid|table)dap.*)\.(?:html|graph)(:?\?.*)?$'
+        erddap_re = re.compile(re_string)
+
         for region,uuid in region_map.iteritems():
 
             if region not in filter_regions:
@@ -98,10 +111,18 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                     for ref in record.references:
 
                         try:
+                            # TODO: Use a more robust mechanism for detecting
+                            # ERDDAP instances aside from relying on the url
+                            erddap_match = erddap_re.search(ref['url'])
                             # We are only interested in the 'services'
-                            if ref["scheme"] in services.values():
-                                url = unicode(ref["url"])
-                                s =   db.Service.find_one({ 'data_provider' : unicode(region), 'url' : url })
+                            if (ref["scheme"] in services.values() or
+                               erddap_match):
+                                # strip extension if erddap endpoint
+                                url = unicode(erddap_match.group(1)
+                                              if erddap_match else ref['url'])
+                                s = db.Service.find_one({'data_provider':
+                                                         unicode(region),
+                                                         'url': url})
                                 if s is None:
                                     s               = db.Service()
                                     s.url           = url
@@ -111,16 +132,20 @@ def reindex_services(filter_regions=None, filter_service_types=None):
 
                                     new_services.append(s)
                                 else:
+                                    # will run twice if erddap services have
+                                    # both .html and .graph, but resultant
+                                    # data should be the same
                                     update_services.append(s)
 
-                                s.service_id        = unicode(name)
-                                s.name              = unicode(record.title)
-                                s.service_type      = unicode(next((k for k,v in services.items() if v == ref["scheme"])))
-                                s.interval          = 3600 # 1 hour
-                                s.tld               = unicode(urlparse(url).netloc)
-                                s.updated           = datetime.utcnow()
-                                s.contact           = unicode(contact_email)
-                                s.metadata_url      = unicode(metadata_url)
+                                s.service_id   = unicode(name)
+                                s.name         = unicode(record.title)
+                                s.service_type = unicode('DAP' if erddap_match
+                                                          else next((k for k,v in services.items() if v == ref["scheme"])))
+                                s.interval     = 3600 # 1 hour
+                                s.tld          = unicode(urlparse(url).netloc)
+                                s.updated      = datetime.utcnow()
+                                s.contact      = unicode(contact_email)
+                                s.metadata_url = unicode(metadata_url)
 
                                 # grab opendap form url if present
                                 if s.service_type == 'DAP':
@@ -166,7 +191,7 @@ def cleanup_datasets():
                 continue
 
             # Go through each of the services
-            # 
+            #
             # if we don't find at least one service that is active, set
             # dataset.active to False
             for service_id in service_ids:
