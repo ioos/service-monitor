@@ -228,7 +228,8 @@ function highlight_layer_hover(layer) {
        /*if there's also a layer selected and it intersects with the hovered
         *layer, send it to the very back so the hover effect is kept
         *and the selected layer does not overlap it. */
-       if (lastLayer && lastLayer.getBounds().intersects(layer.getBounds())) {
+       if (lastLayer && lastLayer.feature.geometry.type == 'Polygon' &&
+           lastLayer.getBounds().intersects(layer.getBounds())) {
            lastLayer.bringToBack();
        }
    }
