@@ -248,7 +248,10 @@ function click_layer(layer, feature) {
         if (lastLayer) {
             //check if station point
             pointFeatures.resetStyle(lastLayer);
-            map.removeLayer(targetLayer);
+            //remove any marker indicators for selected points if they exist
+            if (map.hasLayer(targetLayer)) {
+                map.removeLayer(targetLayer);
+            }
         }
         if (layer.feature.geometry.type === 'Point') {
             //reset the map object if we have removed the layer
