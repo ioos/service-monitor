@@ -659,13 +659,17 @@ class DapHarvest(Harvester):
 
                     xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
                     ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
+                    # both coords must be valid to have a valid vertex
+                    # get rid of any nans and unreasonable lon/lats
+                    valid_idx = ((~np.isnan(xs)) & (np.absolute(xs) <= 180) &
+                                 (~np.isnan(ys)) & (np.absolute(ys) <= 90))
 
-                    xs = xs[~np.isnan(xs)]
-                    ys = ys[~np.isnan(ys)]
+                    xs = xs[valid_idx]
+                    ys = ys[valid_idx]
                     # Shapely seems to require float64 values or incorrect
                     # values will propagate for the generated lineString
                     # if the array is not numpy's float64 dtype
-                    lineCoords = np.dstack((xs, ys))[0].astype('float64')
+                    lineCoords = np.array([xs, ys]).T.astype('float64')
 
                     gj = mapping(asLineString(lineCoords))
 
