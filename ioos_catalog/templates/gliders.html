@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <ul class="nav-header nav navbar-nav">
+    <li><a href="{{ url_for('gliders') }}">Gliders</a></li>
+    <li><a href="{{ url_for('help') }}">Help</a></li>
+  <ul>
+</div>
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/infographic.css') }}">
+{% endblock %}
+
+{% block page %}
+
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
+
+<div id="main-container" class="container">
+  <div class="row">
+    <div class="col-md-12" id='infographic'>
+      <script id="infogram_0_glider-days-per-association" src="//e.infogr.am/js/embed.js" type="text/javascript"></script>
+      <div id="infographic-footer">
+        <a target="_blank" href="//infogr.am/glider-days-per-association" style="color:#acacac;text-decoration:none;">Glider Days per Association</a> | 
+        <a style="color:#acacac;text-decoration:none;" href="//infogr.am" target="_blank">Create Infographics</a>
+      </div> <!-- info-footer -->
+    </div> <!-- infographic -->
+  </div> <!-- row -->
+  <div class="row">
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <a href="http://www.ioos.noaa.gov/glider/welcome.html">
+          <img src="{{url_for('static', filename='img/flying_glider.jpg')}}" alt="IOOS Gliders"></img>
+        </a>
+        <div class="caption">
+          <h3>IOOS Gliders</h3>
+          <p>Gliders monitor water currents, temperature, and conditions that reveal effects from storms, impacts on fisheries, and the quality of our water. This information creates a more complete picture of what is happening in the ocean, as well as trends scientists might be able to detect. The robots collect information from deep water, as well as at the surface, at lower cost and less risk than ever before. As scientists deploy more gliders, they are revolutionizing how we observe our ocean. These robots propel us closer to that revolution.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <a href="http://www.ioos.noaa.gov/glider/strategy/natl_glider_ntwrk_plan_final.pdf">
+          <img src="{{url_for('static', filename='img/whitepaper_thumb.png')}}" alt="Glider Whitepaper"></img>
+        </a>
+        <div class="caption">
+          <h3>Toward an IOOS Underwater Glider Network Plan</h3>
+          <p>Using the underwater glider as part of a larger comprehensive three dimensional ocean, coastal and Great Lakes observing system. This paper outlines the structure to develop an initial network that includes maintaining existing glider lines, acquiring additional glider lines to fill high priority identified gaps, and improving data management, product development, and data/product delivery. </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <a href="{{url_for('asset_map')}}/Glider_DAC">
+          <img src="{{url_for('static', filename='img/asset_map_thumb.png')}}" alt="Glider Whitepaper"></img>
+        </a>
+        <div class="caption">
+          <h3>Catalog Glider Asset Map</h3>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quis semper augue, elementum ultricies neque. Mauris et urna interdum, cursus nunc eu, scelerisque erat. Quisque finibus, eros sit amet egestas consequat, est ex vehicula lorem, in viverra lorem lorem vitae arcu. Proin molestie sed erat ac pharetra. Proin consectetur enim ante, ut vestibulum nulla convallis a. Sed mattis aliquet sodales. Integer molestie, velit ut vulputate sodales, odio libero placerat nibh, vel sollicitudin tellus sem sit amet metus. Sed iaculis sed dolor posuere tincidunt.  </p>
+        </div> <!-- caption -->
+      </div> <!-- thumbnail -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+</div>
+
+
+{% endblock %}
