@@ -86,7 +86,7 @@
         <option value="-">-</option>
         <!-- <option value="null">All</option> -->
         {% for region in regions %}
-        <option>{{ region }}</option>
+        <option value={{ region }}>{{region}}</option>
         {% endfor %}
       </select>
     </div>
@@ -462,7 +462,16 @@ $('#sidebar-toggle').click(function() {
 });
 
 $(function() {
-  $('select').val('SECOORA', true).trigger('change');
+  //get trailing components
+  var pathComp = document.location.pathname.split('/');
+  var setVal = pathComp.length > 2 ? pathComp[2] : null;
+  if ($("select option[value='" + setVal + "']").length == 1) {
+    defaultVal = setVal;
+  } else {
+    defaultVal = 'SECOORA';
+  }
+
+  $('select').val(defaultVal, true).trigger('change');
 });
 
 </script>
