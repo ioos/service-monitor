@@ -234,22 +234,28 @@ function highlight_layer_hover(layer) {
        }
    }
 
+   if (layer.feature.geometry.type != 'LineString') {
    layer.setStyle({fill: true,
                    'fillColor': '#F23128',
                    'color': '#8C2E19',
                    'fillOpacity': 0.6});
+   } else {
+       layer.setStyle({'color': '#8C2E19'})
+   }
 }
 
 function highlight_layer(layer) {
     if (layer._map != null) {
-        layer.setStyle({fill: true, fillColor: 'red', fillOpacity: 0.7});
+       if (layer.feature.geometry.type != 'LineString') {
+           layer.setStyle({fill: true, fillColor: 'red', fillOpacity: 0.7});
+       } else layer.setStyle({color: 'red'});
     }
 }
 
 function reset_highlight(layer) {
     //if highlighted layer is last layer, preserve the style
     if (layer === lastLayer) {
-       layer.setStyle({fill: true, fillColor: 'red', fillOpacity: 0.7});
+        highlight_layer(layer);
     } else {
         //Could be more elegant here.  Any container will work since it
         //contains the style, though
@@ -412,6 +418,7 @@ function addData(error, geojson) {
                      fillColor: '#FFC883'};
     } else if (geomType == 'LineString') {
         baseStyle = {weight: 4,
+                     fill: false,
                      opacity: 1};
     } else if (geomType == 'Polygon') {
         baseStyle = {fill: false,
