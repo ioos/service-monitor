@@ -207,7 +207,7 @@ function highlight_layer_hover(layer) {
        if (hoverLayer) {
            map.removeLayer(hoverLayer);
        }
-       hoverLayer = L.circleMarker(layer.getLatLng(), {fillOpacity: 0,
+       hoverLayer = L.circleMarker(layer.getLatLng(), {fill: false,
                                                        radius: 12,
                                                        clickable: false})
        map.addLayer(hoverLayer);
@@ -219,21 +219,37 @@ function highlight_layer_hover(layer) {
            layer.bringToFront();
        }
    }
-   layer.setStyle({'fillColor': '#F23128',
+
+   else if (layer.feature.geometry.type === 'Polygon' && layer != lastLayer) {
+       /*send this polygon layer to the back so we can select the borders
+        *of other polygon layers inside this one without the fill overlapping
+        *and preventing selection */
+       layer.bringToBack();
+       /*if there's also a layer selected and it intersects with the hovered
+        *layer, send it to the very back so the hover effect is kept
+        *and the selected layer does not overlap it. */
+       if (lastLayer && lastLayer.feature.geometry.type == 'Polygon' &&
+           lastLayer.getBounds().intersects(layer.getBounds())) {
+           lastLayer.bringToBack();
+       }
+   }
+
+   layer.setStyle({fill: true,
+                   'fillColor': '#F23128',
                    'color': '#8C2E19',
                    'fillOpacity': 0.6});
 }
 
 function highlight_layer(layer) {
     if (layer._map != null) {
-        layer.setStyle({fillColor: 'red', fillOpacity: 0.7});
+        layer.setStyle({fill: true, fillColor: 'red', fillOpacity: 0.7});
     }
 }
 
 function reset_highlight(layer) {
     //if highlighted layer is last layer, preserve the style
     if (layer === lastLayer) {
-       layer.setStyle({fillColor: 'red', fillOpacity: 0.7});
+       layer.setStyle({fill: true, fillColor: 'red', fillOpacity: 0.7});
     } else {
         //Could be more elegant here.  Any container will work since it
         //contains the style, though
@@ -257,9 +273,7 @@ function click_layer(layer, feature) {
             //reset the map object if we have removed the layer
             //important!! this brings the point layergroup into focus, which
             //then allows us to bring the point to the front
-            targetLayer = L.marker(layer.getLatLng(), {'fillOpacity': 0,
-                                                             color: 'yellow',
-                                                             radius: 12});
+            targetLayer = L.marker(layer.getLatLng());
             //TODO: don't reassign event handler if already present
             targetLayer.on('click', function() { click_layer(layer, feature)})
             map.addLayer(targetLayer);
@@ -393,16 +407,15 @@ function addData(error, geojson) {
     var geomType = feature.geometry.type;
     if (geomType === 'Point' || geomType === 'MultiPoint') {
         baseStyle = {radius: 5,  //for circleMarker
-                    'weight': 1,
+                     weight: 1,
                      fillOpacity: 1,
                      fillColor: '#FFC883'};
     } else if (geomType == 'LineString') {
-        baseStyle = {'weight': 4,
-                     'opacity': 1};
-    } else {
-        baseStyle = {'fillOpacity': 0.09,
-                      'weight': 1,
-                      fillColor: '#1E313D'};
+        baseStyle = {weight: 4,
+                     opacity: 1};
+    } else if (geomType == 'Polygon') {
+        baseStyle = {fill: false,
+                     weight: 4};
     };
 
     globalStyle = {
