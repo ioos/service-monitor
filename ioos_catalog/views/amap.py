@@ -1,4 +1,3 @@
-import json
 import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
@@ -40,11 +39,12 @@ def geoj(filter_provider):
     nongrouped = []
 
     for d in datasets:
-        if not d.uid.startswith('urn'):
-            for idx, s in enumerate(d.services):
-                if s.get('geojson', None) is None:
-                    continue
-
+        # FIXME: How should multipoints be handled?
+        # if not d.uid.startswith('urn'):
+        for idx, s in enumerate(d.services):
+            if s.get('geojson', None) is None:
+                continue
+            else:
                 service_name = db.Service.find_one({'_id':
                                                     s['service_id']})['name']
                 feat = {'type':'Feature',
@@ -56,33 +56,33 @@ def geoj(filter_provider):
                         'geometry': s.get('geojson')}
                 features.append(feat)
 
-            continue
+    #        continue
 
-        splits = d.uid.split(':')
-        grouped[":".join(splits[0:4])].append(d)
+    #    splits = d.uid.split(':')
+    #    grouped[":".join(splits[0:4])].append(d)
 
-    # grouped
-    for g, vals in grouped.iteritems():
+    ## grouped
+    #for g, vals in grouped.iteritems():
 
-        coords = []
+    #    coords = []
 
-        for v in vals:
-            for s in v.services:
-                if s.get('geojson', None) is None:
-                    continue
+    #    for v in vals:
+    #        for s in v.services:
+    #            if s.get('geojson', None) is None:
+    #                continue
 
-                coords.append(s.get('geojson')['coordinates'])
+    #            coords.append(s.get('geojson')['coordinates'])
 
-        feat = {'type':'Feature',
-                'properties':{'group':g,
-                              'name':g,
-                              'id':grouped.keys().index(g)},
-                'geometry': {
-                    'type':'MultiPoint',
-                    'coordinates':coords,
-                }}
+    #    feat = {'type':'Feature',
+    #            'properties':{'group':g,
+    #                          'name':g,
+    #                          'id':grouped.keys().index(g)},
+    #            'geometry': {
+    #                'type':'MultiPoint',
+    #                'coordinates':coords,
+    #            }}
 
-        features.append(feat)
+    #    features.append(feat)
 
     doc = {'type':'FeatureCollection',
            'features':features}
