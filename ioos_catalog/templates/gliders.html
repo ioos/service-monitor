@@ -17,9 +17,10 @@
 
 <div id="main-container" class="container">
   <form>
-    <label><input type="radio" name="mode" value="grouped"> Grouped</label>
-    <label><input type="radio" name="mode" value="stacked" checked> Stacked</label>
+    <label><input type="radio" name="mode" value="multiples" checked> Multiples</label>
+    <label><input type="radio" name="mode" value="stacked"> Stacked</label>
   </form>
+
   <div class="chart">
   </div>
 
@@ -28,132 +29,111 @@
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-$(document).ready(function() {
-    var container = $('.chart');
-    renderChart(container);
-});
+var parseDate = d3.time.format("%y").parse;
 
-var chartContext = {};
+var margin = {top: 10, right: 20, bottom: 20, left: 300},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
 
-function renderChart(container) {
+var y0 = d3.scale.ordinal()
+    .rangeRoundBands([height, 0], .2);
 
-  chartContext.n = 4; // number of layers
-  chartContext.m = 58; // number of samples per layer
-  chartContext.stack = d3.layout.stack();
-  chartContext.layers = chartContext.stack(d3.range(chartContext.n).map(function() { return bumpLayer(chartContext.m, .1); }));
-  chartContext.yGroupMax = d3.max(chartContext.layers, function(layer) { return d3.max(layer, function(d) { return d.y; }); });
-  chartContext.yStackMax = d3.max(chartContext.layers, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); });
+var y1 = d3.scale.linear();
 
-  chartContext.margin = {top: 40, right: 10, bottom: 20, left: 10};
-  chartContext.width = 960 - chartContext.margin.left - chartContext.margin.right;
-  chartContext.height = 500 - chartContext.margin.top - chartContext.margin.bottom;
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1, 0);
 
-  chartContext.x = d3.scale.ordinal()
-      .domain(d3.range(chartContext.m))
-      .rangeRoundBands([0, chartContext.width], .08);
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+    .tickFormat(function(d) { return d.getFullYear(); });
 
-  chartContext.y = d3.scale.linear()
-      .domain([0, chartContext.yStackMax])
-      .range([chartContext.height, 0]);
+var nest = d3.nest()
+    .key(function(d) { return d.key; });
 
-  chartContext.color = d3.scale.linear()
-      .domain([0, chartContext.n - 1])
+var stack = d3.layout.stack()
+    .values(function(d) { return d.values; })
+    .x(function(d) { return d.date; })
+    .y(function(d) { return d.value; })
+    .out(function(d, y0) { d.valueOffset = y0; });
+
+
+var svg = d3.select(".chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var g = null;
+
+d3.csv("{{url_for('static', filename='data/chart_sample.csv')}}", function(error, data) {
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+  });
+
+  var dataByGroup = nest.entries(data);
+  var color = d3.scale.linear()
+      .domain([0, dataByGroup.length - 1])
       .range(["#aad", "#556"]);
+  g = color;
 
-  chartContext.xAxis = d3.svg.axis()
-      .scale(chartContext.x)
-      .tickSize(0)
-      .tickPadding(6)
-      .orient("bottom");
+  stack(dataByGroup);
+  x.domain(dataByGroup[0].values.map(function(d) { return d.date; }));
+  y0.domain(dataByGroup.map(function(d) { return d.key; }));
+  y1.domain([0, d3.max(data, function(d) { return d.value; })]).range([y0.rangeBand(), 0]);
 
-  chartContext.svg = d3.select(container[0]).append("svg")
-      .attr("width", chartContext.width + chartContext.margin.left + chartContext.margin.right)
-      .attr("height", chartContext.height + chartContext.margin.top + chartContext.margin.bottom)
-    .append("g")
-      .attr("transform", "translate(" + chartContext.margin.left + "," + chartContext.margin.top + ")");
-
-  chartContext.layer = chartContext.svg.selectAll(".layer")
-      .data(chartContext.layers)
+  var group = svg.selectAll(".group")
+      .data(dataByGroup)
     .enter().append("g")
-      .attr("class", "layer")
-      .style("fill", function(d, i) { return chartContext.color(i); });
+      .attr("class", "group")
+      .attr("transform", function(d) { return "translate(0," + y0(d.key) + ")"; });
 
-  chartContext.rect = chartContext.layer.selectAll("rect")
-      .data(function(d) { return d; })
+  group.append("text")
+      .attr("class", "group-label")
+      .attr("x", -20)
+      .attr("y", function(d) { return y1(d.values[0].value / 2); })
+      .attr("dy", ".35em")
+      .text(function(d) { return d.key; });
+
+  group.selectAll("rect")
+      .data(function(d) { return d.values; })
     .enter().append("rect")
-      .attr("x", function(d) { return chartContext.x(d.x); })
-      .attr("y", chartContext.height)
-      .attr("width", chartContext.x.rangeBand())
-      .attr("height", 0);
+    .style("fill", function(d) { return color(dataByGroup.map(function(k) { return k.key; }).indexOf(d.key)); })
+      .attr("x", function(d) { return x(d.date); })
+      .attr("y", function(d) { return y1(d.value); })
+      .attr("width", x.rangeBand())
+      .attr("height", function(d) { return y0.rangeBand() - y1(d.value); });
 
-  chartContext.rect.transition()
-      .delay(function(d, i) { return i * 10; })
-      .attr("y", function(d) { return chartContext.y(d.y0 + d.y); })
-      .attr("height", function(d) { return chartContext.y(d.y0) - chartContext.y(d.y0 + d.y); });
-
-  chartContext.svg.append("g")
+  group.filter(function(d, i) { return !i; }).append("g")
       .attr("class", "x axis")
-      .attr("transform", "translate(0," + chartContext.height + ")")
-      .call(chartContext.xAxis);
+      .attr("transform", "translate(0," + y0.rangeBand() + ")")
+      .call(xAxis);
 
   d3.selectAll("input").on("change", change);
 
-  chartContext.timeout = setTimeout(function() {
-    d3.select("input[value=\"grouped\"]").property("checked", true).each(change);
-  }, 2000);
 
-}
-
-function change() {
-  clearTimeout(chartContext.timeout);
-  if (this.value === "grouped") transitionGrouped();
-  else transitionStacked();
-}
-
-function transitionGrouped() {
-  chartContext.y.domain([0, chartContext.yGroupMax]);
-
-  chartContext.rect.transition()
-      .duration(500)
-      .delay(function(d, i) { return i * 10; })
-      .attr("x", function(d, i, j) { return chartContext.x(d.x) + chartContext.x.rangeBand() / chartContext.n * j; })
-      .attr("width", chartContext.x.rangeBand() / chartContext.n)
-    .transition()
-      .attr("y", function(d) { return chartContext.y(d.y); })
-      .attr("height", function(d) { return chartContext.height - chartContext.y(d.y); });
-}
-
-function transitionStacked() {
-  chartContext.y.domain([0, chartContext.yStackMax]);
-
-  chartContext.rect.transition()
-      .duration(500)
-      .delay(function(d, i) { return i * 10; })
-      .attr("y", function(d) { return chartContext.y(d.y0 + d.y); })
-      .attr("height", function(d) { return chartContext.y(d.y0) - chartContext.y(d.y0 + d.y); })
-    .transition()
-      .attr("x", function(d) { return chartContext.x(d.x); })
-      .attr("width", chartContext.x.rangeBand());
-}
-
-// Inspired by Lee Byron's test data generator.
-function bumpLayer(n, o) {
-
-  function bump(a) {
-    var x = 1 / (.1 + Math.random()),
-        y = 2 * Math.random() - .5,
-        z = 10 / (.1 + Math.random());
-    for (var i = 0; i < n; i++) {
-      var w = (i / n - y) * z;
-      a[i] += x * Math.exp(-w * w);
-    }
+  function change() {
+    clearTimeout(timeout);
+    if (this.value === "multiples") transitionMultiples();
+    else transitionStacked();
   }
 
-  var a = [], i;
-  for (i = 0; i < n; ++i) a[i] = o + o * Math.random();
-  for (i = 0; i < 5; ++i) bump(a);
-  return a.map(function(d, i) { return {x: i, y: Math.max(0, d)}; });
-}
+  function transitionMultiples() {
+    var t = svg.transition().duration(750),
+        g = t.selectAll(".group").attr("transform", function(d) { return "translate(0," + y0(d.key) + ")"; });
+    g.selectAll("rect").attr("y", function(d) { return y1(d.value); });
+    g.select(".group-label").attr("y", function(d) { return y1(d.values[0].value / 2); })
+  }
+
+  function transitionStacked() {
+    var t = svg.transition().duration(750),
+        g = t.selectAll(".group").attr("transform", "translate(0," + y0(y0.domain()[0]) + ")");
+    g.selectAll("rect").attr("y", function(d) { return y1(d.value + d.valueOffset); });
+    g.select(".group-label").attr("y", function(d) { return y1(d.values[0].value / 2 + d.values[0].valueOffset); })
+  }
+});
 
 </script>
 {% endblock %}
