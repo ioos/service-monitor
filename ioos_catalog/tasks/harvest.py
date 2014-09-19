@@ -815,11 +815,18 @@ class DapHarvest(Harvester):
         """
         Determine whether the bounds are a single point or bounding box area
         """
-        if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
-            return mapping(Point(bbox[0:2]))
+        # first check if coordinates are within valid bounds
+        if (all(abs(x) <= 90  for x in bbox[::2]) and
+            all(abs(y) <= 180 for y in bbox[1::2])):
+            if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
+                return mapping(Point(bbox[0:2]))
+            else:
+                # d3 expects poly coordinates in clockwise order (?)
+                return mapping(box(*bbox, ccw=False))
         else:
-            # d3 expects poly coordinates in clockwise order (?)
-            return mapping(box(*bbox, ccw=False))
+            # If the point/bbox lies outside of valid bounds, don't generate
+            # geojson
+            return None
 
 
     def global_bounding_box(self, ncdataset):
