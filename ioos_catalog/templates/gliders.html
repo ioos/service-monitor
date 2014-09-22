@@ -20,9 +20,11 @@
 <div id="main-container" class="container">
   <div class="row">
     <div class="col-md-3 welcome">
-      <a href="//www.ioos.noaa.gov/glider/welcome.html">
-        <img src="{{url_for('static', filename='img/flying_glider.jpg')}}" alt="IOOS Gliders"></img>
-      </a>
+      <div class="rounded-shadow">
+        <a href="//www.ioos.noaa.gov/glider/welcome.html">
+          <img src="{{url_for('static', filename='img/flying_glider.jpg')}}" alt="IOOS Gliders"></img>
+        </a>
+      </div>
     </div>
     <div class="col-md-9">
       <div class="caption">
@@ -44,7 +46,7 @@
     </div>
   </div>
   <div class="row">
-    <div class="col-sm-6 col-md-4">
+    <div class="col-sm-6 col-md-3">
       <div class="thumbnail">
         <a href="//www.ioos.noaa.gov/glider/welcome.html">
           <img src="{{url_for('static', filename='img/gliders_page_thumb.png')}}" alt="IOOS Gliders Homepage"></img>
@@ -55,7 +57,7 @@
         </div> <!-- caption -->
       </div> <!-- thumbnail -->
     </div> <!-- col -->
-    <div class="col-sm-6 col-md-4">
+    <div class="col-sm-6 col-md-3">
       <div class="thumbnail">
         <a href="//www.ioos.noaa.gov/glider/strategy/natl_glider_ntwrk_plan_final.pdf">
           <img src="{{url_for('static', filename='img/whitepaper_thumb.png')}}" alt="Glider Whitepaper"></img>
@@ -66,14 +68,25 @@
         </div> <!-- caption -->
       </div> <!-- thumbnail -->
     </div> <!-- col -->
-    <div class="col-sm-6 col-md-4">
+    <div class="col-sm-6 col-md-3">
       <div class="thumbnail">
         <a href="{{url_for('asset_map')}}Glider_DAC">
-          <img src="{{url_for('static', filename='img/asset_map_thumb.png')}}" alt="Glider Whitepaper"></img>
+          <img src="{{url_for('static', filename='img/catalog_map_thumb.png')}}" alt="Glider Catalog Map"></img>
         </a>
         <div class="caption">
           <h3>Catalog Glider Asset Map</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer varius nisl sem, eget tincidunt ex aliquet id. Maecenas in ipsum a lectus elementum cursus. Fusce porta lectus non lacus tincidunt, id fringilla odio elementum. Donec eget leo lectus. Suspendisse aliquam.</p>
+          <p>The IOOS Catalog Map displays IOOS registered datasets and services. Several glider datasets are registered with the IOOS catalog.</p>
+        </div> <!-- caption -->
+      </div> <!-- thumbnail -->
+    </div> <!-- col -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail">
+        <a href="//marine.rutgers.edu/cool/auvs/sfmc/">
+          <img src="{{url_for('static', filename='img/asset_map_thumb.png')}}" alt="Slocum Fleet Mission Control"></img>
+        </a>
+        <div class="caption">
+          <h3>Slocum Fleet Mission Control</h3>
+          <p>The Slocum Fleet Mission Control is funded by Teledyne Web Research Corporation for the development of a commercial product to control, manage and pilot Slocum Gliders.</p>
         </div> <!-- caption -->
       </div> <!-- thumbnail -->
     </div> <!-- col -->
