@@ -654,17 +654,28 @@ class DapHarvest(Harvester):
                     xvar = cd.nc.variables[coord_names['xname']]
                     yvar = cd.nc.variables[coord_names['yname']]
 
-                    slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)   # one less order of magnitude eg 390000 -> 10000
+                    # one less order of magnitude eg 390000 -> 10000
+                    slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)
 
                     xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
                     ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
+                    # both coords must be valid to have a valid vertex
+                    # get rid of any nans and unreasonable lon/lats
+                    valid_idx = ((~np.isnan(xs)) & (np.absolute(xs) <= 180) &
+                                 (~np.isnan(ys)) & (np.absolute(ys) <= 90))
 
-                    xs = xs[~np.isnan(xs)]
-                    ys = ys[~np.isnan(ys)]
+                    xs = xs[valid_idx]
+                    ys = ys[valid_idx]
+                    # Shapely seems to require float64 values or incorrect
+                    # values will propagate for the generated lineString
+                    # if the array is not numpy's float64 dtype
+                    lineCoords = np.array([xs, ys]).T.astype('float64')
 
-                    gj = mapping(asLineString(np.dstack((xs, ys))[0]))
+                    gj = mapping(asLineString(lineCoords))
 
-                    messages.append(u"Variable %s was used to calculate trajectory geometry, and is a naive sampling." % v)
+                    messages.append(u"Variable %s was used to calculate "
+                                    u"trajectory geometry, and is a "
+                                    u"naive sampling." % v)
 
                 except (AssertionError, AttributeError, ValueError, KeyError) as e:
                     app.logger.warn("Trajectory error occured: %s", e)
