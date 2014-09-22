@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "help_navbar.html" %}
 
 {% block css %}
   <link rel="stylesheet" href="{{url_for('static', filename='css/by_the_numbers.css')}}" />
@@ -10,13 +10,6 @@
   <script src="{{url_for('static', filename='js/lorem.js')}}"></script>
 {% endblock %}
 
-{% block jumbo %}
-<div class="row">
-  <ul class="nav-header nav navbar-nav">
-    <li><a href="{{ url_for('help') }}">Help</a></li>
-  <ul>
-</div>
-{% endblock %}
 
 {% block page %}
 

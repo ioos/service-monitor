@@ -138,6 +138,15 @@ nc.variables
         <h4 class="list-group-item-heading">uDig</h4>
       </a>
     </div>
+    <div id='arce' class='toggle-hide'>
+      <a href="http://www.esri.com/software/arcgis/explorer"><h3>Download ArcGIS Explorer</h3></a>
+      <p>
+        Explorer for ArcGIS lets you interact with your organization's maps and
+        data no matter where you are. Whether you are a seasoned GIS professional
+        or have no prior GIS knowledge, you can become immediately productive
+        with the app to make more informed decisions.
+      </p>
+    </div>
     <div id='google' class='toggle-hide'>
       <a href="https://earth.google.com/"><h3>Download Google Earth</h3></a>
       <p>
@@ -149,6 +158,20 @@ nc.variables
     </div>
     <div id='nasa' class='toggle-hide'>
       <a href="http://worldwind.arc.nasa.gov/java/"><h3>Download NASA World Wind</h3></a>
+      <p>
+        World Wind is an open-source (released under the NOSA license) virtual
+        globe first developed by NASA in 2003 for use on personal computers and
+        then further developed in concert with the open source community since
+        2004. The original version relied on .NET Framework, which ran only on
+        Microsoft Windows. The more recent Java version, World Wind Java, is
+        cross platform, a software development kit (SDK) aimed at developers and,
+        unlike the old .NET version, not a standalone virtual globe application
+        in the style of Google Earth. The SDK includes a suite of basic demos,
+        available at goworldwind.org. The World Wind Java version was awarded
+        NASA Software of the Year in November 2009. The program overlays NASA
+        and USGS satellite imagery, aerial photography, topographic maps, Keyhole
+        Markup Language (KML) and Collada files.
+      </p>
       <h4>Adding WMS to Nasa World Wind</h4>
       <p>
         <img src="{{url_for('static', filename='img/help/nasa.png')}}" alt="NASA World Wind"></img>
@@ -156,6 +179,13 @@ nc.variables
     </div>
     <div id='udig' class='toggle-hide'>
       <a href='http://udig.refractions.net/'><h3>Download uDig</h3></a>
+      <p>
+        uDig is a GIS software program produced by a community led by
+        Canadian-based consulting company Refractions Research. It is based on
+        the Eclipse platform and features full layered Open Source GIS. It is
+        written in Java and released under EPL and BSD licences (formerly under
+        GNU LGPL).
+      </p>
       <h4>Adding WMS Layers in uDig</h4>
       <p>
         <img src="{{url_for('static', filename='img/help/udig/udig_menu.png')}}" alt="uDig Menu"</img>
@@ -264,7 +294,7 @@ nc.variables
       </p>
     </div>
   </div>
-  <hr style="width:40%;">
+  <p style="padding-bottom:8em;"></p>
 
 </div>
 <script type="text/javascript">

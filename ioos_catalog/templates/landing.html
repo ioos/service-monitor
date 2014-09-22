@@ -1,0 +1,113 @@
+{% extends "help_navbar.html" %}
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/welcome.css') }}">
+{% endblock %}
+
+
+{% block page %}
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12 col-md-12 welcome">
+      <h1>Welcome</h1>
+      <p>As our eyes on the oceans, coasts, and Great Lakes, the Integrated Ocean Observing System (IOOS®) is a tool for tracking, predicting, managing, and adapting to changes in our marine environment. IOOS® delivers the data and information needed to increase our understanding of our coastal waters so decision makers can take action to improve safety, enhance our economy, and protect our environment. </p>
+    </div> <!-- welcome -->
+  </div> <!-- row -->
+  <div class="row img-block">
+    <div class="col-xs-12 col-md-4 smpadding">
+      <div class="img-text">
+        <a href="{{url_for('dashboard')}}">
+          <img class="img-responsive" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Dashboard"></img>
+        </a>
+        <div class="overlay">
+          Catalog Dashboard
+        </div>
+      </div>
+      <div class="img-text">
+        <a href="{{url_for('gliders')}}">
+          <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/glider.png')}}" alt="Gliders"></img>
+        </a>
+        <div class="overlay">
+          Gliders
+        </div>
+      </div>
+      <div class="img-text">
+        <a href="{{url_for('help_download')}}">
+          <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/map.png')}}" alt="Download Help"></img>
+        </a>
+        <div class="overlay">
+          Download Help
+        </div>
+      </div>
+    </div> <!-- col -->
+    <div class="col-xs-12 col-md-8 smpadding">
+      <div class="row">
+        <div class="col-xs-12 col-md-12">
+          <div class="img-text">
+            <a href="{{url_for('asset_map')}}">
+              <img class="img-responsive" src="{{url_for('static', filename='img/landing/earth.png')}}" alt="Catalog Asset Map"></img>
+            </a>
+            <div class="overlay overlay-map">
+              Catalog Asset Map
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row row-top-pad">
+        <div class="col-xs-6 col-md-6 smapdding">
+          <div class="img-text">
+            <a href="{{url_for('by_the_numbers')}}">
+              <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/btn.png')}}" alt="By the numbers"></img>
+            </a>
+            <div class="overlay overlay-sq">
+              IOOS By The Numbers
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-6 col-md-6 smpadding">
+          <div class="img-text">
+            <a href="{{url_for('featured_maps')}}">
+              <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/asset_map.png')}}" alt="Featured Maps"></img>
+            </a>
+            <div class="overlay overlay-sq">
+              Featured Maps
+            </div> <!-- overlay -->
+          </div> <!-- img-text -->
+        </div> <!-- col -->
+      </div> <! -- row -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+  <div class="row news">
+    <div class="col-sm-12 col-md-6"> <!-- social media -->
+      <h1> SOCIAL MEDIA </h1>
+      <a class="twitter-timeline" href="https://twitter.com/usioosgov" data-widget-id="514076757905793024">Tweets by @usioosgov</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+    </div>
+    <div class="col-sm-12 col-md-6"> <!-- news -->
+      <h1>NEWS:</h1>
+      <div class="thumbnail">
+        <ul>
+          <li>Federal Register Notice Of Open Meeting of U.S. IOOS® Advisory Committee (Duluth, MN) on October 2-3, 2014</li>
+          <li>The U.S. IOOS Data Management and Communication (DMAC) core services, have released their fifth QARTOD manual - Released, 05/2014</li>
+          <li>The U.S. IOOS Summit Report was published by the Interagency Ocean Observation Committee (IOOC) and is now available, 09/2013</li>
+          <li>U.S. Integrated Ocean Observing System (U.S. IOOS®) 2013 Report to Congress (pdf), 06/2013</li>
+        </ul>
+      </div> <!-- thumbnail -->
+      <div class="right-caption">
+        <div class="right-caption-img">
+          <a href="https://www.facebook.com/usioosgov">
+            <img src="//img2.wikia.nocookie.net/__cb20130501121248/logopedia/images/f/fb/Facebook_icon_2013.svg" alt="Facebook"></img>
+          </a>
+        </div>
+        <div class="caption">
+          <h3>Facebook</h3>
+          <p>Stay Connected - "Like" us on <a href="https://www.facebook.com/usioosgov">Facebook</a></p>
+        </div>
+      </div> <!-- thumbnail -->
+      <h1> CONTACT: </h1>
+      <a href="mailto:contact@ioos.org">contact@ioos.org</a>
+    </div> <!-- col -->
+
+</div>
+
+{% endblock %}
