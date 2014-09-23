@@ -1,0 +1,42 @@
+.title {
+    color: #01485a;
+    text-align: center;
+}
+.title h1 {
+    font-family: Impact, Charcoal, sans-serif;
+    font-size: 90px;
+}
+
+.constrained img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.explanation {
+    font-family: "Helvetica Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.plain a:link {
+    text-decoration: none;
+}
+
+.plain a:visited {
+    text-decoration: none;
+}
+
+.plain a:hover {
+    text-decoration: none;
+}
+
+.plain a:active {
+    text-decoration: none;
+}
+
+.about-btn {
+    color: #acacac;
+}
+
+.about-btn a {
+    color: #838383;
+}
+
