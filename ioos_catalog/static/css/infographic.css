@@ -1,0 +1,27 @@
+#infographic-footer {
+    width: 100%;
+    border-top: 1px solid #acacac;
+    padding-top: 3px;
+    font-family: Arial;
+    font-size: 10px;
+    text-align: center;
+}
+
+.links-section {
+    background: #E0E5E6;
+}
+
+.links-section img {
+    margin-top: 5px;
+    margin-left: 5px;
+    width: 100%;
+    height: auto;
+}
+
+.section-heading {
+    text-align: center;
+}
+
+.welcome img {
+    box-shadow: 10px 10px 5px #888888;
+}

@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <ul class="nav-header nav navbar-nav">
+    <li><a href="{{ url_for('gliders') }}">Gliders</a></li>
+    <li><a href="{{ url_for('help') }}">Help</a></li>
+  <ul>
+</div>
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/infographic.css') }}">
+{% endblock %}
+
+{% block page %}
+
+<script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
+
+<div id="main-container" class="container">
+  <div class="row">
+    <div class="col-md-3 welcome">
+      <div class="rounded-shadow">
+        <a href="//www.ioos.noaa.gov/glider/welcome.html">
+          <img src="{{url_for('static', filename='img/flying_glider.jpg')}}" alt="IOOS Gliders"></img>
+        </a>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="caption">
+        <h3>IOOS Gliders</h3>
+        <p>Gliders monitor water currents, temperature, and conditions that reveal effects from storms, impacts on fisheries, and the quality of our water. This information creates a more complete picture of what is happening in the ocean, as well as trends scientists might be able to detect. The robots collect information from deep water, as well as at the surface, at lower cost and less risk than ever before. As scientists deploy more gliders, they are revolutionizing how we observe our ocean. These robots propel us closer to that revolution.</p>
+      </div> <!-- caption -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+  <hr>
+  <div class="row">
+    <div class="col-md-12" id='infographic'>
+      <script id="infogram_0_glider-days-per-association" src="//e.infogr.am/js/embed.js" type="text/javascript"></script>
+    </div> <!-- infographic -->
+  </div> <!-- row -->
+  <hr>
+  <div class="row">
+    <div class="section-heading">
+      <h1>Glider Resources</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail">
+        <a href="//www.ioos.noaa.gov/glider/welcome.html">
+          <img src="{{url_for('static', filename='img/gliders_page_thumb.png')}}" alt="IOOS Gliders Homepage"></img>
+        </a>
+        <div class="caption">
+          <h3>IOOS Gliders Homepage</h3>
+          <p>The main IOOS Glider Page provides an overview of glider applications, deployments, and recent workshops and meetings</p>
+        </div> <!-- caption -->
+      </div> <!-- thumbnail -->
+    </div> <!-- col -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail">
+        <a href="//www.ioos.noaa.gov/glider/strategy/natl_glider_ntwrk_plan_final.pdf">
+          <img src="{{url_for('static', filename='img/whitepaper_thumb.png')}}" alt="Glider Whitepaper"></img>
+        </a>
+        <div class="caption">
+          <h3>Toward an IOOS Underwater Glider Network Plan</h3>
+          <p> The Glider Network White Paper outlines a strategy for using underwater gliders as part of a larger comprehensive three dimensional ocean, coastal, and Great Lakes observing system</p>
+        </div> <!-- caption -->
+      </div> <!-- thumbnail -->
+    </div> <!-- col -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail">
+        <a href="{{url_for('asset_map')}}Glider_DAC">
+          <img src="{{url_for('static', filename='img/catalog_map_thumb.png')}}" alt="Glider Catalog Map"></img>
+        </a>
+        <div class="caption">
+          <h3>Catalog Glider Asset Map</h3>
+          <p>The IOOS Catalog Map displays IOOS registered datasets and services. Several glider datasets are registered with the IOOS catalog.</p>
+        </div> <!-- caption -->
+      </div> <!-- thumbnail -->
+    </div> <!-- col -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail">
+        <a href="//marine.rutgers.edu/cool/auvs/sfmc/">
+          <img src="{{url_for('static', filename='img/asset_map_thumb.png')}}" alt="Slocum Fleet Mission Control"></img>
+        </a>
+        <div class="caption">
+          <h3>Slocum Fleet Mission Control</h3>
+          <p>The Slocum Fleet Mission Control is funded by Teledyne Web Research Corporation for the development of a commercial product to control, manage and pilot Slocum Gliders.</p>
+        </div> <!-- caption -->
+      </div> <!-- thumbnail -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+</div>
+
+
+{% endblock %}
