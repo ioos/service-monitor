@@ -78,8 +78,7 @@ def harvest(service_id):
             return WcsHarvest(service).harvest()
 
 
-,
-small_bbox_to_point=Truedef unicode_or_none(thing):
+def unicode_or_none(thing):
     try:
         if thing is None:
             return thing
