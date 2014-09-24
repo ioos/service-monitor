@@ -78,7 +78,8 @@ def harvest(service_id):
             return WcsHarvest(service).harvest()
 
 
-def unicode_or_none(thing):
+,
+small_bbox_to_point=Truedef unicode_or_none(thing):
     try:
         if thing is None:
             return thing
@@ -522,6 +523,27 @@ class DapHarvest(Harvester):
         return unicode(geom_type)
 
 
+    @classmethod
+    def get_axis_variables(cls, dataset):
+        """
+        Try to find x/y axes based on variable attributes, and return
+        them in a dict
+        """
+        axisVars = {}
+        # beware of datasets with duplicate axes!  This will continue
+        for var_name, var in dataset.variables.iteritems():
+            if hasattr(var, 'axis'):
+                if var.axis == 'X':
+                    axisVars['xname'] = var_name
+                elif var.axis == 'Y':
+                    axisVars['yname'] = var_name
+            elif hasattr(var, '_CoordinateAxisType'):
+                if var._CoordinateAxisType == 'Lon':
+                    axisVars['xname'] = var_name
+                elif var._CoordinateAxisType == 'Lat':
+                    axisVars['yname'] = var_name
+        return axisVars
+
     def harvest(self):
         """
         Identify the type of CF dataset this is:
@@ -601,6 +623,7 @@ class DapHarvest(Harvester):
         # Get variables that are not axis variables or metadata variables and are not already in the 'std_variables' variable
         non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, self.METADATA_VAR_NAMES, self.COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
 
+        axis_names = DapHarvest.get_axis_variables(cd.nc)
         """
         var_to_get_geo_from = None
         if len(std_names) > 0:
@@ -637,9 +660,10 @@ class DapHarvest(Harvester):
             messages.append(u"The underlying 'Paegan' data access library does not support UGRID and cannot parse geometry.")
         elif is_trajectory:
             coord_names = {}
+            # try to get info for x, y, z, t axes
             for v in itertools.chain(std_variables, non_std_variables):
                 try:
-                    coord_names = cd.get_coord_names(v)
+                    coord_names = cd.get_coord_names(v, **axis_names)
 
                     if coord_names['xname'] is not None and \
                        coord_names['yname'] is not None:
@@ -677,25 +701,29 @@ class DapHarvest(Harvester):
                                     u"trajectory geometry, and is a "
                                     u"naive sampling." % v)
 
-                except (AssertionError, AttributeError, ValueError, KeyError) as e:
+                except (AssertionError, AttributeError,
+                        ValueError, KeyError, IndexError) as e:
                     app.logger.warn("Trajectory error occured: %s", e)
                     messages.append(u"Trajectory discovered but could not create a geometry.")
 
         else:
             for v in itertools.chain(std_variables, non_std_variables):
                 try:
-                    gj = mapping(cd.getboundingpolygon(var=v).simplify(0.5))
-                except (AttributeError, AssertionError, ValueError, KeyError):
+                    gj = mapping(cd.getboundingpolygon(var=v, **axis_names
+                                                       ).simplify(0.5))
+                except (AttributeError, AssertionError, ValueError,
+                        KeyError, IndexError):
                     try:
                         # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
                         # Asterik magic to expland the tuple into positional arguments
                         app.logger.exception("Error calculating bounding box")
 
                         # handles "points" aka single position NCELLs
-                        bbox = cd.getbbox(var=v)
+                        bbox = cd.getbbox(var=v, **axis_names)
                         gj = self.get_bbox_or_point(bbox)
 
-                    except (AttributeError, AssertionError, ValueError, KeyError):
+                    except (AttributeError, AssertionError, ValueError,
+                            KeyError, IndexError):
                         pass
 
                 if gj is not None:
