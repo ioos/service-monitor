@@ -285,9 +285,11 @@ function click_layer(layer, feature) {
             map.addLayer(targetLayer);
             map.setView(layer._latlng, 10);
             layer.bringToFront();
-            //easier way to get this?
         } else {
-          layer.bringToBack();
+          //bring trajectories out front, polygons stay back
+          (layer.feature.geometry.type === 'LineString') ?
+              layer.bringToFront() :
+              layer.bringToBack();
           zoom_to_bbox(layer.getBounds());
         }
         if (lastLayer) {
