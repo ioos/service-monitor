@@ -854,8 +854,8 @@ class DapHarvest(Harvester):
         Determine whether the bounds are a single point or bounding box area
         """
         # first check if coordinates are within valid bounds
-        if (all(abs(x) <= 90  for x in bbox[::2]) and
-            all(abs(y) <= 180 for y in bbox[1::2])):
+        if (all(abs(x) <= 180  for x in bbox[::2]) and
+            all(abs(y) <= 90 for y in bbox[1::2])):
             if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
                 return mapping(Point(bbox[0:2]))
             else:
