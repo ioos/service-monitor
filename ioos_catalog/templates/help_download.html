@@ -1,0 +1,279 @@
+{% extends "help_navbar.html" %}
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/help.css') }}">
+{% endblock %}
+{% block javascript %}
+<script src="{{url_for('static', filename='js/lorem.js')}}"></script>
+<script src="{{url_for('static', filename='js/help.js')}}"></script>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+  <h1>Accessing the Data</h1>
+  <h2>DAP (Data Access Protocol)</h2>
+  <p> 
+    OPeNDAP, an acronym for "Open-source Project for a Network Data Access
+    Protocol", is a data transport architecture and protocol widely used by earth
+    scientists. The protocol is based on HTTP and the current specification is
+    OPeNDAP 2.0 draft. OPeNDAP includes standards for encapsulating structured
+    data, annotating the data with attributes and adding semantics that describe
+    the data. The protocol is maintained by OPeNDAP.org, a publicly funded
+    non-profit organization that also provides free reference implementations of
+    OPeNDAP servers and clients.
+  </p>
+  <h4>DAP Clients</h4>
+  <div class="indent-block">
+    <div class="list-group">
+      <a data-id='ncc' class="list-group-item expandable" href="#ncc">
+        <h4 class="list-group-item-heading"> NetCDF-4 C </h4>
+      </a>
+      <a data-id='ncj' class='list-group-item expandable' href='#ncj'>
+        <h4 class="list-group-item-heading">NetCDF-4 Java</h4>
+      </a>
+      <a data-id='matl' class='list-group-item expandable' href='#matl'>
+        <h4 class="list-group-item-heading">MATLAB NcToolbox</h4>
+      </a>
+      <a data-id='panoply' class="list-group-item expandable" href="#panoply">
+        <h4 class="list-group-item-heading">Panoply</h4>
+      </a>
+      <a data-id='py' class="list-group-item expandable" href="#py">
+        <h4 class="list-group-item-heading">NetCDF4 Python</h4>
+      </a>
+    </div>
+    <div id="ncc" class="toggle-hide">
+      <a name='ncc' href="http://www.unidata.ucar.edu/downloads/netcdf/index.jsp"><h3>Download NetCDF-C</h3></a>
+      <p>
+        To view the metadata for a dataset from a command line terminal with netcdf-4 C installed on the host:
+        <pre>$ ncdump -h http://tds.glos.us/thredds/dodsC/SST/LakeOntarioSST-Agg
+        netcdf LakeOntarioSST-Agg {
+        dimensions:
+          lat = 842 ;
+          lon = 1906 ;
+          maxStrlen64 = 64 ;
+          time = 171 ;
+        variables:
+          char crs(maxStrlen64) ;
+            crs:grid_mapping_name = "latitude_longitude" ;
+            crs:longitude_of_prime_meridian = 0. ; 
+          ...</pre>
+      </p>
+      <p>
+        To download the dataset to your local machine from the command-line:
+        <pre>nccopy -k 3 http://tds.glos.us/thredds/dodsC/SST/LakeOntarioSST-Agg LakeOntarioSST-Agg.nc</pre>
+      </p>
+    </div>
+    <div id='matl' class='toggle-hide'>
+      <a name='matl' href="https://github.com/nctoolbox/nctoolbox"><h3>Download NCTOOLBOX</h3></a>
+      <p>
+        nctoolbox is a Matlab toolbox that provides read-only access to common
+        data model datasets. Under the hood, nctoolbox uses NetCDF-Java as the
+        data access layer. This allows nctoolbox to access NetCDF, OPeNDAP, HDF5,
+        GRIB, GRIB2, HDF4 and many (15+) other file formats and services using
+        the same API. It works with Matlab 2008a and later.
+      </p>
+      <p>Demos that display basic functionality are available on github: <a href="http://nctoolbox.github.io/nctoolbox/demos.html">here</a></p>
+    </div>
+    <div id='ncj' class='toggle-hide'>
+      <a name='ncj' href="http://www.unidata.ucar.edu/downloads/netcdf/index.jsp"><h3>download netcdf-java</h3></a>
+      <p>
+        the netcdf java library implements the common data model (cdm) to
+        interface netcdf files and other types of scientific data formats.
+      </p>
+      <p>
+        unidata’s common data model (cdm) is an abstract data model for
+        scientific datasets. it merges the netcdf, opendap, and hdf5 data models
+        to create a common api for many types of scientific data. the netcdf
+        java library is an implementation of the cdm which can read many file
+        formats besides netcdf. we call these cdm files, a shorthand for files
+        that can be read by the netcdf java library and accessed through the cdm
+        data model.
+      </p>
+    </div>
+    <div id='py' class='toggle-hide'>
+      <a name='py' href="https://pypi.python.org/pypi/netCDF4/1.1.1"><h3>Download netCDF4 for Python</h3></a>
+      <h4>Opening Datasets in Python</h4>
+      <p>
+        The netCDF4 module does most of the work for us. In order to open up the dataset:
+        <pre>from netCDF4 import Dataset
+nc = Dataset('http://tds.glos.us/thredds/dodsC/SST/LakeOntarioSST-Agg')
+
+nc.variables
+--> OrderedDict([(u'crs', <netCDF4.Variable object at 0x110c72b00>), (u'lat', <netCDF4.Variable object at 0x110c72b98>), (u'lon', <netCDF4.Variable object at 0x110c72c30>), (u'time', <netCDF4.Variable object at 0x110c72cc8>), (u'sst', <netCDF4.Variable object at 0x110c72d60>)])</pre>
+
+      </p>
+    </div>
+    <div id='panoply' class="toggle-hide">
+      <a name='panoply' href="http://www.giss.nasa.gov/tools/panoply/"><h3>Download Panoply</h3></a>
+      <br>
+      <h4>Opening Datasets in Panoply</h4>
+      <div class="indent-block">
+        <p>
+          <img src="{{url_for('static', filename='img/help/panoply/panoply_add.png')}}" alt="Panoply Add Remote Dataset"></img>
+        </p>
+        <p>
+          <img src="{{url_for('static', filename='img/help/panoply/panoply_url.png')}}" alt="Panoply Add URL"></img>
+        </p>
+        <p>
+          <img src="{{url_for('static', filename='img/help/panoply/panoply_create.png')}}" alt="Create Dataset"></img>
+        </p>
+      </div>
+    </div>
+  </div> <!-- indent block -->
+  <hr style="width:40%;">
+  <h2>WMS (Web Map Service)</h2>
+  <p>A Web Map Service (WMS) is a standard protocol for serving georeferenced map images over the Internet that are generated by a map server using data from a GIS database. The specification was developed and first published by the Open Geospatial Consortium in 1999.</p>
+  <h4>WMS Clients</h4>
+  <div class="indent-block">
+    <div class="list-group">
+      <a data-id='arce' class="list-group-item expandable" href="#">
+        <h4 class="list-group-item-heading">ArcGIS Explorer</h4>
+      </a>
+      <a data-id='google' class="list-group-item expandable" href="#">
+        <h4 class="list-group-item-heading">Google Earth</h4>
+      </a>
+      <a data-id='nasa' class="list-group-item expandable" href="#">
+        <h4 class="list-group-item-heading">NASA World Wind</h4>
+      </a>
+      <a data-id='udig' class="list-group-item expandable" href="#">
+        <h4 class="list-group-item-heading">uDig</h4>
+      </a>
+    </div>
+    <div id='google' class='toggle-hide'>
+      <a href="https://earth.google.com/"><h3>Download Google Earth</h3></a>
+      <p>
+        Google Earth lets you fly anywhere on Earth to view satellite imagery,
+        maps, terrain, 3D buildings, from galaxies in outer space to the canyons
+        of the ocean.
+      </p>
+      <a href="https://support.google.com/earth/answer/148100#wms">See how to add WMS layers to Google Earth</a>
+    </div>
+    <div id='nasa' class='toggle-hide'>
+      <a href="http://worldwind.arc.nasa.gov/java/"><h3>Download NASA World Wind</h3></a>
+      <h4>Adding WMS to Nasa World Wind</h4>
+      <p>
+        <img src="{{url_for('static', filename='img/help/nasa.png')}}" alt="NASA World Wind"></img>
+      </p>
+    </div>
+    <div id='udig' class='toggle-hide'>
+      <a href='http://udig.refractions.net/'><h3>Download uDig</h3></a>
+      <h4>Adding WMS Layers in uDig</h4>
+      <p>
+        <img src="{{url_for('static', filename='img/help/udig/udig_menu.png')}}" alt="uDig Menu"</img>
+      </p>
+      <p>
+        <img src="{{url_for('static', filename='img/help/udig/udig_wms.png')}}" alt="uDig WMS"</img>
+      </p>
+      <p>
+        <img src="{{url_for('static', filename='img/help/udig/udig_url.png')}}" alt="uDig URL"</img>
+      </p>
+      <p>
+        <img src="{{url_for('static', filename='img/help/udig/udig_selection.png')}}" alt="uDig Selection"</img>
+      </p>
+    </div>
+  </div>
+  <hr style="width:40%;">
+  <h2>SOS (Sensor Observation Service)</h2>
+  <p>
+     The Sensor Observation Service (SOS) is a web service to query real-time
+     sensor data and sensor data time series and is part of the Sensor Web. The
+     offered sensor data comprises descriptions of sensors themselves, which
+     are encoded in the Sensor Model Language (SensorML), and the measured
+     values in the Observations and Measurements (O &amp; M) encoding format. The
+     web service as well as both file formats are open standards and
+     specifications of the same name defined by the Open Geospatial Consortium
+     (OGC).
+  </p>
+  <h4>SOS Clients</h4>
+  <div class="indent-block">
+    <div class="list-group">
+      <a data-id="asa" class="list-group-item expandable" href="#asa">
+        <h4>Environmental Data Connector</h4>
+      </a>
+      <a data-id="52n" class="list-group-item expandable" href="#52n">
+        <h4>52N Sensor Web Client</h4>
+      </a>
+    </div>
+    <div id='asa' class='toggle-hide'>
+      <a name='asa' href='http://www.pfeg.noaa.gov/products/EDC/EDCdownloads.html'><h3>Download Environmental Data Connector</h3></a>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="{{url_for('static', filename='img/help/rpsasa_logo.jpg')}}" alt='RPS ASA'></img>
+        </a>
+        <div class='media-body'>
+          <h4 class='media-heading'>EDC</h4>
+          The Environmental Data Connector (EDC) is a tool that allows users to
+          connect to THREDDS/OPeNDAP/SOS/ERDDAP servers and download environmental
+          data.  It was developed for the National Oceanic and Atmospheric
+          Administration (NOAA) Fisheries by Applied Science Associates, Inc.
+          (ASA). Version 1.3 of the EDC is available in five versions: EDC for
+          ArcGIS 10.X, EDC for Matlab, EDC for R, EDC for Excel and EDC Standalone.
+        </div>
+      </div>
+    </div>
+    <div id='52n' class='toggle-hide'>
+      <a name='52n' href="http://52north.org/communities/sensorweb/clients/SensorWebClient/index.html"><h3>Download Sensor Web Client</h3></a>
+      <p>
+         The "Sensor Web Client" (formaly known as ThinSweClient) is a web-based
+         client application which offers an easy to use interface to generate
+         graphs from near-realtime sensor data. The client hides technical
+         details of SWE services and protocols, so that even non-experts can use
+         components of the Sensor Web transparantly. To enable maximal platform
+         independence the client is developed as a web-based browser application,
+         making use of newest web technologies such as asynchronous client/server
+         communication.
+      </p>
+    </div>
+  </div>
+  <hr style="width:40%;">
+  <h2>WCS (Web Coverage Service)</h2>
+  <p>
+     A WCS provides access to coverage data in forms that are useful for
+     client-side rendering, as input into scientific models, and for other
+     clients. The WCS may be compared to the OGC Web Feature Service (WFS) [4]
+     and the Web Map Service (WMS) [5]. As WMS and WFS service instances, a WCS
+     allows clients to choose portions of a server's information holdings based
+     on spatial constraints and other query criteria.
+   </p>
+   <p>
+    Unlike OGC Web Map Service (WMS), which portrays spatial data to return
+    static maps (rendered as pictures by the server), the Web Coverage Service
+    provides available data together with their detailed descriptions; defines
+    a rich syntax for requests against these data; and returns data with its
+    original semantics (instead of pictures) which may be interpreted,
+    extrapolated, etc., and not just portrayed.
+  </p>
+  <h4>WCS Clients</h4>
+  <div class="indent-block">
+    <div class="list-group">
+      <a data-id='gvsig' class="list-group-item expandable" href='#gvsig'>
+        <h4>gvSIG</h4>
+      </a>
+    </div>
+    <div id='gvsig' class='toggle-hide'>
+      <a name='gvsig' href="http://www.gvsig.org/web"><h3>Download gvSIG</h3></a>
+      <p>
+        gvSIG is a geographic information system (GIS), that is, a desktop
+        application designed for capturing, storing, handling, analyzing and
+        deploying any kind of referenced geographic information in order to solve
+        complex management and planning problems. gvSIG is known for having a
+        user-friendly interface, being able to access the most common formats,
+        both vector and raster ones. It features a wide range of tools for
+        working with geographic-like information (query tools, layout creation,
+        geoprocessing, networks, etc.), which turns gvSIG into the ideal tool for
+        users working in the land realm.
+      </p>
+    </div>
+  </div>
+  <hr style="width:40%;">
+
+</div>
+<script type="text/javascript">
+$(document).ready(function() {
+    console.log("Doc Ready");
+    initHelpJS();
+});
+
+</script>
+
+{% endblock %}

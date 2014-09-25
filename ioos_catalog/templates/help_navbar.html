@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block jumbo %}
+<div class="row">
+  <ul class="nav-header nav navbar-nav">
+    <li><a href="{{ url_for('help') }}">Help</a></li>
+    <li> <a href="https://github.com/ioos/catalog/wiki/Roadmap">Roadmap</a></li>
+    <li> <a href="https://github.com/ioos/catalog/milestones">Milestones</a></li>
+    <li> <a href="{{url_for('feedback')}}">Feedback</a></li>
+    <li> <a href="{{url_for('help_download')}}">Download Help</a></li>
+  <ul>
+</div>
+{% endblock %}

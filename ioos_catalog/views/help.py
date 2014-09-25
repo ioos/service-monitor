@@ -11,8 +11,14 @@ from sqlalchemy.exc import InvalidRequestError, DBAPIError
 import json
 
 @app.route('/help', methods=['GET'])
+@app.route('/help/', methods=['GET'])
 def help():
     return render_template('help.html')
+
+@app.route('/help/download', methods=['GET'])
+@app.route('/help/download/', methods=['GET'])
+def help_download():
+    return render_template('help_download.html')
 
 @app.route('/help/feedback', methods=['GET'])
 def feedback():
