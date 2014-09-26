@@ -10,6 +10,7 @@ from owslib.util import nspath_eval
 from owslib.namespaces import Namespaces
 
 from ioos_catalog import app,db
+import requests
 
 region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
                  'ATN_DAC'          : '07875897-E6A6-4EDB-B111-F5D6BE841ED6',
@@ -70,6 +71,8 @@ def reindex_services(filter_regions=None, filter_service_types=None):
         # discarding any query string parameters (i.e. some datasets on PacIOOS)
         re_string = r'(^.*erddap/(?:grid|table)dap.*)\.(?:html|graph)(:?\?.*)?$'
         erddap_re = re.compile(re_string)
+        erddap_all_re = re.compile(r'(^.*erddap/(?:(?:grid|table|)dap|wms).*)'
+                                   r'\.(?:html|graph)(:?\?.*)?$')
 
         for region,uuid in region_map.iteritems():
 
@@ -93,9 +96,22 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                     contact_email = ""
                     metadata_url = None
 
-                    iso_ref = [x['url'] for x in record.references if x['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document']
-                    if len(iso_ref):
-                        metadata_url = iso_ref[0]
+                    for r in record.references:
+                        if r['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document':
+                            metadata_url = r['url']
+                            break
+                        else:
+                            erddap_match = erddap_all_re.search(r['url'])
+                            if erddap_match:
+                                # test if there is an ISO metadata endpoint
+                                test_url = (erddap_match.group(1) +
+                                                '.iso19115')
+                                req = requests.get(test_url)
+                                # if we have a valid ERDDAP metadata endpoint,
+                                # store it.
+                                if req.status_code == 200:
+                                    metadata_url = test_url
+                                    break
 
                         # Don't query for contact info right now.  It takes WAY too long.
                         #r = requests.get(iso_ref[0])
