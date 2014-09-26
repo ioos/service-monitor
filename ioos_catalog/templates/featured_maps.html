@@ -1,0 +1,124 @@
+{% extends "help_navbar.html" %}
+{% block javascript %}
+<script type='text/javascript' src="{{url_for('static', filename='js/lorem.js')}}"></script>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+  <div class="row">
+    <div class='col-md-12'>
+      <h1>IOOS Featured Maps</h1>
+    </div>
+  </div>
+  <hr>
+  <div class='row'>
+    <div class='col-md-12'>
+      <div class='list-group'>
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://data.glos.us/portal/">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/glos.png')}}" alt="GLOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">GLOS Data Portal</h4>
+            The GLOS Data Portal provides access to near-realtime and archived observations and to model forecasts for the Great Lakes.
+          </div>
+        </div>
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://www.neracoos.org/realtime_map">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/neracoos.png')}}" alt="NERACOOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">NERACOOS Real-time Data Portal</h4>
+            This map displays real-time observations from buoys and monitoring stations in the Northeast region.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://assets.maracoos.org/">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/maracoos.png')}}" alt="MARACOOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">MARACOOS Asset Map</h4>
+            The MARACOOS asset map displays gridded datasets from model output in conjunction station data, for the mid-atlantic region.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://secoora.org/maps/">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/secoora.png')}}" alt="SECOORA">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">SECOORA Data Portal</h4>
+            The SECOORA asset map displays station information for the south east region with optional map-overlays of bathymetric data.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://data.gcoos.org">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/gcoos.png')}}" alt="GCOOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">GCOOS Data Portal</h4>
+            This Data Portal provides timely information about the environment
+            of the United States portion of the Gulf of Mexico and its
+            estuaries for use by decision-makers, including researchers,
+            government managers, industry, the military, educators, emergency
+            responders, and the general public. Observing stations in the
+            region are monitored constantly.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://data.cencoos.org">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/cencoos.png')}}" alt="CENCOOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">CENCOOS Data Portal</h4>
+            This map contains station data from the Californian coast, streaming in real-time with a history of up to seven days.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://nvs.nanoos.org">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/nanoos.png')}}" alt="NANOOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">NANOOS Visualization System</h4>
+            The NVS contains a data explorer which has a mapping of the NANOOS assets and an in-situ data graph and data comparison with model output.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://portal.aoos.org/alaska-statewide.php">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/aoos.png')}}" alt="AOOS">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">AOOS Ocean Data Explorer</h4>
+            This portal contains scientific and management information
+            including real-time sensor feeds, operational oceanographic and
+            atmospheric models, satellite observations and GIS data sets that
+            describe the biological, chemical and physical characteristics of
+            Alaska and its surrounding waters.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="http://hfradar.ndbc.noaa.gov/">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/ndbc.png')}}" alt="HFRADAR">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">NDBC HF-Radar</h4>
+            This is a demonstration of the NOAA HF Radar National Server and
+            Architecture Project. HF Radar is used to remotely measure ocean
+            surface currents.
+          </div>
+        </div> <!-- list-group-item -->
+        <div class="list-group-item media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="{{url_for('static', filename='img/featured_maps/cordc.png')}}" alt="CORDC">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">CORDC HF-Radar</h4>
+            An asset map of the coastal HF-Radar stations and their data output.
+          </div>
+        </div> <!-- list-group-item -->
+         <!-- list-group-item -->
+    </div>
+  </div>
+</div>
+
+{% endblock %}
