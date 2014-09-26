@@ -1,0 +1,341 @@
+{% extends "layout.html" %}
+
+{% block css %}
+  <link rel="stylesheet" href="{{url_for('static', filename='css/by_the_numbers.css')}}" />
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/help.css') }}">
+{% endblock %}
+
+{% block javascript %}
+  <script src="{{url_for('static', filename='js/help.js')}}"></script>
+  <script src="{{url_for('static', filename='js/lorem.js')}}"></script>
+{% endblock %}
+
+{% block jumbo %}
+<div class="row">
+  <ul class="nav-header nav navbar-nav">
+    <li><a href="{{ url_for('help') }}">Help</a></li>
+  <ul>
+</div>
+{% endblock %}
+
+{% block page %}
+
+<div class="container">
+  <div class="title">
+    <h1>IOOS BY THE NUMBERS</h1>
+  </div>
+  <div class="row">
+    <div class='col-md-12 constrained'>
+      <img src="{{url_for('static', filename='img/btn/btn.png')}}" alt="By The Numbers"></img>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8 explanation">
+      <div class="list-group">
+        <a data-id='fed' class='list-group-item expandable' href='#fed'>
+          <h4>
+            FEDERAL PARTNERS
+            <span class='pull-right glyphicon glyphicon-collapse-down'></span>
+          </h4>
+          
+        </a>
+        <div id='fed' class='toggle-hide list-group-item'>
+          <div class="media">
+            <a class="pull-left" href="http://www.noaa.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/noaa.png')}}" alt="NOAA">
+            </a>
+            <div class="media-body">
+              <h3>National Oceanic and Atmospheric Administration (NOAA)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.nsf.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/nsf.png')}}" alt="NSF">
+            </a>
+            <div class="media-body">
+              <h3>National Science Foundation (NSF)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.nasa.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/nasa.png')}}" alt="NASA">
+            </a>
+            <div class="media-body">
+              <h3>National Aeronautics and Space Administration (NASA)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.epa.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/epa.png')}}" alt="EPA">
+            </a>
+            <div class="media-body">
+              <h3>Environmental Protection Agency (EPA)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.boemre.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/boemre.png')}}" alt="BOEM">
+            </a>
+            <div class="media-body">
+              <h3>Bureau of Ocean Energy Management, Regulation and Enforcement  (BOEM and BSEE)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://mmc.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/mmc.png')}}" alt="MMC">
+            </a>
+            <div class="media-body">
+              <h3>Marine Mammal Commission (MMC)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.onr.navy.mil/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/onr.png')}}" alt="ONR">
+            </a>
+            <div class="media-body">
+              <h3>Office of Naval Research (ONR)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.jcs.mil/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/jcs.png')}}" alt="JCS">
+            </a>
+            <div class="media-body">
+              <h3>Oceanographer of the Navy, representing the Joint Chiefs of Staff (JCS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.usace.army.mil/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/usace.png')}}" alt="USACE">
+            </a>
+            <div class="media-body">
+              <h3>U.S. Army Corps of Engineers (USACE)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.uscg.mil/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/uscg.png')}}" alt="USCG">
+            </a>
+            <div class="media-body">
+              <h3>U.S. Coast Guard (USCG)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.usgs.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/usgs.png')}}" alt="USGS">
+            </a>
+            <div class="media-body">
+              <h3>U.S. Geological Survey (USGS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.csrees.usda.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/csrees.png')}}" alt="CSREES">
+            </a>
+            <div class="media-body">
+              <h3>Department of Agriculture, Cooperative State Research, Education, and Extension Service (CSREES)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.energy.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/doe.png')}}" alt="DOE">
+            </a>
+            <div class="media-body">
+              <h3>Department of Energy (DOE)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.state.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/dos.png')}}" alt="DOS">
+            </a>
+            <div class="media-body">
+              <h3>Department of State (DOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.dot.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/dot.png')}}" alt="DOT">
+            </a>
+            <div class="media-body">
+              <h3>Department of Transportation (DOT)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.fda.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/fda.png')}}" alt="FDA">
+            </a>
+            <div class="media-body">
+              <h3>Food and Drug Administration (FDA)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="http://www.arctic.gov/">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/usarc.png')}}" alt="USARC">
+            </a>
+            <div class="media-body">
+              <h3>U.S. Arctic Research Commision</h3>
+              <br>
+            </div>
+          </div>
+        </div>
+        <!-- -->
+        <a data-id='reg' class='list-group-item expandable' href='#reg'>
+          <h4>
+            REGIONAL ASSOCIATIONS
+            <span class='pull-right glyphicon glyphicon-collapse-down'></span>
+          </h4>
+        </a>
+        <div id='reg' class='list-group-item toggle-hide'>
+          <div class="media">
+            <a class="pull-left" href="{{url_for('show_ra', provider='AOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/blank.png')}}" alt="AOOS">
+            </a>
+            <div class="media-body">
+              <h3>Alaska Ocean Observing System (AOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='CARICOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/caricoos.png')}}" alt="CARICOOS">
+            </a>
+            <div class="media-body">
+              <h3>Caribbean Coastal Ocean Observing System (CARICOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='CENCOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/cencoos.png')}}" alt="CENCOOS">
+            </a>
+            <div class="media-body">
+              <h3>The Central and Northern California Ocean Observing System (CeNCOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='GCOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/gcoos.png')}}" alt="GCOOS">
+            </a>
+            <div class="media-body">
+              <h3>Gul of Mexico Ocean Observing System (GCOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='GLOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/glos.png')}}" alt="GLOS">
+            </a>
+            <div class="media-body">
+              <h3>Great Lakes Observing System (GLOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='MARACOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/maracoos.png')}}" alt="MARACOOS">
+            </a>
+            <div class="media-body">
+              <h3>Mid-Atlantic Regional Association Coastal Ocean Observing System (MARACOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='NANOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/nanoos.png')}}" alt="NANOOS">
+            </a>
+            <div class="media-body">
+              <h3>Northwest Association of Networked Ocean Observing Systems</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='NERACOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/neracoos.png')}}" alt="NERACOOS">
+            </a>
+            <div class="media-body">
+              <h3>Northeastern Regional Association of Coastal and Ocean Observing Systems (NERACOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='PacIOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/pacioos.png')}}" alt="PACIOOS">
+            </a>
+            <div class="media-body">
+              <h3>Pacific Islands Ocean Observing System (PacIOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='SCCOOS')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/sccoos.png')}}" alt="SCCOOS">
+            </a>
+            <div class="media-body">
+              <h3>Southern California Coastal Ocean Observing System (SCCOOS)</h3>
+              <br>
+            </div>
+            <a class="pull-left" href="{{url_for('show_ra', provider='SECOORA')}}">
+              <img class="media-object" src="{{url_for('static', filename='img/logos/secoora.png')}}" alt="SECOORA">
+            </a>
+            <div class="media-body">
+              <h3>Southeast Coastal Ocean Observing Regional Association (SECOORA)</h3>
+              <br>
+            </div>
+          </div>
+        </div>
+        <!-- -->
+        <a data-id='datasets' class='list-group-item' href="{{url_for('datasets')}}">
+          <h4>DATASETS</h4>
+        </a>
+        <!-- -->
+        <a data-id='qartod' class='list-group-item' href="http://www.ioos.noaa.gov/qartod/welcome.html">
+          <h4>QARTOD</h4>
+        </a>
+        <!-- -->
+        <a data-id='gliders' class='list-group-item' href="{{url_for('gliders')}}">
+          <h4>GLIDERS</h4>
+        </a>
+        <!-- -->
+        <a data-id='acoustic' class='list-group-item' href='//www.ioos.noaa.gov/observing/animal_telemetry/welcome.html'>
+          <h4>ACOUSTIC TELEMETRY PROJECTS</h4>
+        </a>
+        <!-- -->
+        <a data-id='hfradar' class='list-group-item' href='//www.ioos.noaa.gov/hfradar/welcome.html'>
+          <h4>HF-RADAR</h4>
+        </a>
+        <!-- -->
+        <a data-id='services' class='list-group-item' href="{{url_for('services')}}">
+          <h4>SERVICES</h4>
+        </a>
+        <!-- -->
+        <a data-id='servers' class='list-group-item expandable' href='#servers'>
+          <h4>
+            SERVERS
+            <span class='pull-right glyphicon glyphicon-collapse-down'></span>
+          </h4>
+        </a>
+        <div id='servers' class='list-group-item toggle-hide'>
+          <p>
+          There are a total of 38 top level domain (TLD) servers hosting the
+          data that compose the IOOS Catalog. Each server is owned and operated
+          by either a national partner or a regional association.
+          </p>
+        </div>
+        <!-- -->
+        <a data-id='regional' class='list-group-item' href='http://www.ioos.noaa.gov/communications/presentations/welcome.html'>
+          <h4>REGIONAL PLATFORMS</h4>
+        </a>
+        <!-- -->
+        <a data-id='national' class='list-group-item' href='http://www.ioos.noaa.gov/communications/presentations/welcome.html'>
+          <h4>NATIONAL PLATFORMS</h4>
+        </a>
+        <!-- -->
+        <a data-id='ioos' class='list-group-item' href='http://ioos.noaa.gov/'>
+          <h4>IOOS</h4>
+        </a>
+      </div>
+    </div>
+    <div class="col-md-4 about-btn">
+      <h2>About IOOS by the Numbers</h2>
+      <p>
+        These data were obtained from multiple sources on 9/16/2014. Each
+        source is identified on the left with a link to the original source.
+        The federal partners and regional associations are public information
+        and each association can be found on the left under the federal and
+        regional tabs.  At the time of collection, there were five QARTOD
+        manuals in-place for IOOS, which describe a comprehensive method for
+        QA/QC of oceanographpic data.  The number of datasets available on the
+        IOOS catalog are available on the 
+        <a href="{{url_for('index')}}">dashboard</a>. 
+        The number of glider days is as of 2013. More information about gliders
+        may be found on 
+        <a href="{{url_for('gliders')}}">our gliders page</a>.
+        Our services number is available on our 
+        <a href="{{url_for('index')}}">dashboard</a>
+        , a service describes an endpoint where clients may obtain either data
+        or metadata about oceanographic datasets.
+        The number of servers was calculated by totaling the number of
+        top-level-domains available for each partner and association for IOOS. 
+        The number of platforms is from public information available on the
+        IOOS homepage. 
+        
+      </p>
+    </div>
+  </div>
+  <p style="padding-bottom:8em;"></p>
+</div>
+<script type="text/javascript">
+  var g = null;
+  $(document).ready(function() {
+      initHelpJS();
+  });
+</script>
+
+{% endblock %}

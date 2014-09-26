@@ -1,18 +1,25 @@
 function initHelpJS() {
     $('.expandable').click(function(e) {
-        deselectAll();
-        console.log("Clicked");
-        console.log($(e.target));
+        e.preventDefault();
         if($(e.target).prop('tagName') == 'A') {
-            toggleItem(e.target);
+            if($(e.target).hasClass('active')) {
+                deselectAll();
+            } else {
+                deselectAll();
+                toggleItem(e.target);
+            }
         } else if($(e.target).prop('tagName') == 'H4') {
-            toggleItem($(e.target).parent());
+            if($(e.target).parent().hasClass('active')) {
+                deselectAll();
+            } else { 
+                deselectAll();
+                toggleItem($(e.target).parent());
+            }
         }
     });
 }
 
 function toggleItem(item) {
-    console.log(item);
     $('#' + $(item).attr('data-id')).toggleClass('toggle-hide');
     $(item).toggleClass('active');
 }
