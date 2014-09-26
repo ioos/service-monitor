@@ -143,6 +143,123 @@
           23.079731762449878
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "NOAA-CO-OPS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -130,
+          0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "USACE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -125,
+          -2.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "USGS-CMGP"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -120,
+          -4.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "NOAA-NDBC"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -115,
+          -7.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "CDIP"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -90,
+          -6.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "Glider_DAC"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -85,
+          -2.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "HFradar_DAC"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -80,
+          0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "MODELING_TESTBED"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75,
+          2.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "region": "NAVY"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -135,
+          2.5
+        ]
+      }
     }
   ]
 }
