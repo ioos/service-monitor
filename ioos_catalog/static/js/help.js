@@ -1,6 +1,6 @@
 function initHelpJS() {
     $('.expandable').click(function(e) {
-        event.preventDefault();
+        e.preventDefault();
         if($(e.target).prop('tagName') == 'A') {
             if($(e.target).hasClass('active')) {
                 deselectAll();
