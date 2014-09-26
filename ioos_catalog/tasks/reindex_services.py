@@ -98,7 +98,7 @@ def reindex_services(filter_regions=None, filter_service_types=None):
 
                     for r in record.references:
                         if r['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document':
-                            metadata_url = r['url']
+                            metadata_url = unicode(r['url'])
                             break
                         else:
                             erddap_match = erddap_all_re.search(r['url'])
@@ -110,7 +110,7 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                 # if we have a valid ERDDAP metadata endpoint,
                                 # store it.
                                 if req.status_code == 200:
-                                    metadata_url = test_url
+                                    metadata_url = unicode(test_url)
                                     break
 
                         # Don't query for contact info right now.  It takes WAY too long.
@@ -161,7 +161,7 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                 s.tld          = unicode(urlparse(url).netloc)
                                 s.updated      = datetime.utcnow()
                                 s.contact      = unicode(contact_email)
-                                s.metadata_url = unicode(metadata_url)
+                                s.metadata_url = metadata_url
 
                                 # grab opendap form url if present
                                 if s.service_type == 'DAP':

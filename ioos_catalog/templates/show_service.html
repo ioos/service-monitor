@@ -66,7 +66,11 @@
       <dt>Contact(s)</dt>
       <dd>{{ service.contact | default('None',true) }}</dd>
       <dt>Source Metadata URL</dt>
-      <dd><a href="{{ service.metadata_url }}">{{ service.metadata_url | truncate(90, true) }}</a></dd>
+      {% if service.metadata_url is none -%}
+          <dd>None</dd>
+      {% else -%}
+          <dd><a href="{{ service.metadata_url }}">{{ service.metadata_url | truncate(90, true) }}</a></dd>
+      {% endif %}
     </dl>
     <dl class="dl-horizontal col-lg-4">
       <dt>Active</dt>
