@@ -14,14 +14,14 @@ from ioos_catalog.tasks.reindex_services import region_map
 
 @app.route('/map/', defaults={'filter_provider': 'SECOORA'}, methods=['GET'])
 @app.route('/map/<path:filter_provider>', methods=['GET'])
-def asset_map(filter_provider):
+def catalog_map(filter_provider):
     # filter_provider ultimately is do-nothing arg that serves as a placeholder
     # for the location to be processed by javascript
 
-    g.title = "Asset Map"
+    g.title = "Catalog Map"
     regions = sorted(region_map.iterkeys())
 
-    return render_template('asset_map.html', regions=regions)
+    return render_template('catalog_map.html', regions=regions)
 
 
 @app.route('/map/geojson/<path:filter_provider>/', methods=['GET'])
