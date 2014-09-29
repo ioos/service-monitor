@@ -370,6 +370,14 @@ var clusterGroup = new L.MarkerClusterGroup({disableClusteringAtZoom: 9,
                                              maxClusterRadius: 60});
 
 function addData(error, geojson) {
+  //remove hover/selected indicators for points on switch, if present
+  if (map.hasLayer(targetLayer)) {
+      map.removeLayer(targetLayer);
+  }
+
+  if (map.hasLayer(hoverLayer)) {
+      map.removeLayer(hoverLayer);
+  }
 
   //zoom to currently selected dataset
   var datasetBounds = L.geoJson(geojson).getBounds();
