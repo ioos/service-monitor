@@ -1,0 +1,158 @@
+.welcome {
+    background: -webkit-linear-gradient(#4c7797, #395972); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#4c7797, #395972); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#4c7797, #395972); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#4c7797, #395972); /* Standard syntax (must be last) */
+    color: #fff;
+    font-size: 18px;
+}
+.welcome h1 {
+    font-size: 34px;
+}
+
+.img-block {
+    margin-top: 15px;
+    margin-left: -30px;
+    margin-right: -30px;
+
+}
+
+.spad {
+    margin-top: 14px;
+}
+
+.mpad {
+    margin-top: 6px;
+}
+
+
+
+.left-img {
+    float: left;
+    width: 348px;
+    margin-top: 15px;
+}
+
+.right-lg-img {
+    float: right;
+    width: 810px;
+    text-align: right;
+    margin-top: 15px;
+    background: black;
+}
+
+.right-sm-img {
+    float: right;
+    margin-left: 15px;
+    margin-top: 15px;
+    text-align: right;
+    width: 396px;
+    background: black;
+}
+
+.news {
+    margin-top: 15px;
+}
+
+.news h1 {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #838486;
+}
+
+
+.right-caption {
+    float: left;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.right-caption-img img {
+    float: left;
+    margin-right: 9px;
+    max-width: 100%;
+    max-height: 100%;
+}
+.right-caption-img {
+    width: 20%;
+}
+
+.right-caption > .caption {
+    float: right;
+    padding: 4px;
+    width: 78%;
+    text-align: left;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #838486;
+    vertical-align: text-top;
+}
+
+.nopadding {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.smpadding {
+    padding: 2 !important;
+    margin: 0 !important;
+}
+
+.row-top-pad {
+    margin-top: 5px;
+}
+
+.img-text {
+    position: relative;
+}
+
+.overlay {
+    color: white;
+    font: bold 24px/45px Helvetica, Sans-Serif; 
+    padding: 10px;
+    letter-spacing: -1px;
+    position: absolute;
+    top: 70%;
+    width: 100%;
+    background: rgb(0, 0, 0); /* fallback color */
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.overlay.overlay-map {
+    top: 80%;
+}
+
+.overlay.overlay-sq {
+    top: 77%;
+}
+
+.overlay h2 {
+    left: 20px;
+    color: white;
+}
+
+
+.img-text h2 {
+    position: absolute;
+    top: 200px;
+    left: 20px;
+    width: 100%;
+    color: #dfdfdf;
+}
+
+.img-text.map h2 {
+    position: absolute;
+    top: 400px;
+    left: 20px;
+    width: 100%;
+    color: #dfdfdf;
+}
+
+.img-text h2 span {
+   color: white; 
+   font: bold 24px/45px Helvetica, Sans-Serif; 
+   letter-spacing: -1px;  
+   background: rgb(0, 0, 0); /* fallback color */
+   background: rgba(0, 0, 0, 0.7);
+   padding: 10px; 
+}
+
+

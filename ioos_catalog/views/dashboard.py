@@ -19,8 +19,9 @@ def inject_ra_providers():
         return {'ra_providers': sorted(ra_list),
                 'national_partners': sorted(national_list)}
 
-@app.route('/', methods=['GET'])
-def index():
+@app.route('/dashboard', methods=['GET'])
+@app.route('/dashboard/', methods=['GET'])
+def dashboard():
     # provider list
     providers = sorted(region_map.keys())
 
