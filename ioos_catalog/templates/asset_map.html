@@ -467,7 +467,6 @@ function addData(error, geojson) {
 
   polyFeatures = L.geoJson(polygons, featureProc);
   traj = L.geoJson(trajectories, featureProc);
-  g = trajectories;
   mpFeatures = L.geoJson(mp, featureProc)
   pointFeatures = L.geoJson(points, featureProc);
   clusterGroup.addLayer(pointFeatures);
@@ -480,7 +479,6 @@ function addData(error, geojson) {
   map.addLayer(clusterGroup);
 }
 
-var g = null;
 
 /* standard controls */
 $('#map_infobar .close').click(function() {
