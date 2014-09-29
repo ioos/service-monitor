@@ -369,6 +369,16 @@ var individualStation = L.layerGroup();
 var clusterGroup = new L.MarkerClusterGroup({disableClusteringAtZoom: 9,
                                              maxClusterRadius: 60});
 
+function filterTrajectory(trajectoryFeature) {
+    var coordinates = trajectoryFeature.geometry.coordinates.filter(function(coord) {
+        if ( coord[0] < -180 || coord[0] > 180 || coord[1] > 90 || coord[1] < -90 ) {
+            return false;
+        }
+        return true;
+    });
+    trajectoryFeature.geometry.coordinates = coordinates;
+}
+
 function addData(error, geojson) {
   //remove hover/selected indicators for points on switch, if present
   if (map.hasLayer(targetLayer)) {
@@ -409,6 +419,7 @@ function addData(error, geojson) {
           case 'Polygon':
               polygons.push(feat); break;
           case 'LineString':
+              filterTrajectory(feat);
               trajectories.push(feat); break;
           case 'MultiPoint':
               mp.push(feat); break;
@@ -467,6 +478,7 @@ function addData(error, geojson) {
   map.addLayer(mpFeatures);
   map.addLayer(clusterGroup);
 }
+
 
 /* standard controls */
 $('#map_infobar .close').click(function() {
