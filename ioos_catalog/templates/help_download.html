@@ -137,6 +137,9 @@ nc.variables
       <a data-id='udig' class="list-group-item expandable" href="#">
         <h4 class="list-group-item-heading">uDig</h4>
       </a>
+      <a data-id='godiva' class="list-group-item expandable" href="#">
+        <h4 class="list-group-item-heading">godiva 2</h4>
+      </a>
     </div>
     <div id='arce' class='toggle-hide'>
       <a href="http://www.esri.com/software/arcgis/explorer"><h3>Download ArcGIS Explorer</h3></a>
@@ -200,6 +203,18 @@ nc.variables
         <img src="{{url_for('static', filename='img/help/udig/udig_selection.png')}}" alt="uDig Selection"</img>
       </p>
     </div>
+    <div id='godiva' class='toggle-hide'>
+      <a href='http://behemoth.nerc-essc.ac.uk/ncWMS/godiva2.html'><h3>See Godiva in action</h3></a>
+      <p>
+        Godiva 2 is a WMS client that is integrated directly into the THREDDS
+        Data Server. It comes as part of a standard THREDDS installation and
+        provides clients with the ability to see WMS datasets hosted on a THREDDS
+        instance in a proper WMS interface. The nice thing about Godiva is that
+        it requires no configuration other than enabling a WMS dataset on the
+        thredds instance, and it has a decent featureset for being a
+        micro-client. 
+      </p>
+    </div>
   </div>
   <hr style="width:40%;">
   <h2>SOS (Sensor Observation Service)</h2>
@@ -216,12 +231,26 @@ nc.variables
   <h4>SOS Clients</h4>
   <div class="indent-block">
     <div class="list-group">
+      <a data-id="pyoos" class="list-group-item expandable" href="#pyoos">
+        <h4>Pyoos</h4>
+      </a>
       <a data-id="asa" class="list-group-item expandable" href="#asa">
         <h4>Environmental Data Connector</h4>
       </a>
       <a data-id="52n" class="list-group-item expandable" href="#52n">
         <h4>52N Sensor Web Client</h4>
       </a>
+    </div>
+    <div id='pyoos' class='toggle-hide'>
+      <a name='pyoos' href="https://github.com/ioos/pyoos"><h3>Pyoos</h3></a>
+      <p>
+        A Python library for collecting Met/Ocean observations
+      </p>
+      <p>
+        Pyoos attempts to fill the need for a high level data collection
+        library for met/ocean data publically available through many different
+        websites and webservices.
+      </p>
     </div>
     <div id='asa' class='toggle-hide'>
       <a name='asa' href='http://www.pfeg.noaa.gov/products/EDC/EDCdownloads.html'><h3>Download Environmental Data Connector</h3></a>
@@ -241,13 +270,13 @@ nc.variables
       </div>
     </div>
     <div id='52n' class='toggle-hide'>
-      <a name='52n' href="http://52north.org/communities/sensorweb/clients/SensorWebClient/index.html"><h3>Download Sensor Web Client</h3></a>
+      <a name='52n' href="http://52north.org/communities/sensorweb/clients/sensorwebclient/index.html"><h3>download sensor web client</h3></a>
       <p>
-         The "Sensor Web Client" (formaly known as ThinSweClient) is a web-based
+         the "sensor web client" (formaly known as thinsweclient) is a web-based
          client application which offers an easy to use interface to generate
-         graphs from near-realtime sensor data. The client hides technical
-         details of SWE services and protocols, so that even non-experts can use
-         components of the Sensor Web transparantly. To enable maximal platform
+         graphs from near-realtime sensor data. the client hides technical
+         details of swe services and protocols, so that even non-experts can use
+         components of the sensor web transparantly. to enable maximal platform
          independence the client is developed as a web-based browser application,
          making use of newest web technologies such as asynchronous client/server
          communication.
@@ -275,9 +304,23 @@ nc.variables
   <h4>WCS Clients</h4>
   <div class="indent-block">
     <div class="list-group">
+      <a data-id='arcgis' class="list-group-item expandable" href='#arcgis'>
+        <h4>ArcGIS</h4>
+      </a>
       <a data-id='gvsig' class="list-group-item expandable" href='#gvsig'>
         <h4>gvSIG</h4>
       </a>
+    </div>
+    <div id='arcgis' class='toggle-hide'>
+      <a name='arcgis' href="http://www.esri.com/software/arcgis"><h3>Download ArcGIS</h3></a>
+      <p>
+        Esri's ArcGIS is a geographic information system (GIS) for working with
+        maps and geographic information. It is used for: creating and using maps;
+        compiling geographic data; analyzing mapped information; sharing and
+        discovering geographic information; using maps and geographic information
+        in a range of applications; and managing geographic information in a
+        database.
+      </p>
     </div>
     <div id='gvsig' class='toggle-hide'>
       <a name='gvsig' href="http://www.gvsig.org/web"><h3>Download gvSIG</h3></a>
