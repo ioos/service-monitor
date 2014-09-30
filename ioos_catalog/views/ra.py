@@ -38,6 +38,15 @@ provider_info = {
             {'title':'CeNCOOS Data Portal', 'url': 'http://data.cencoos.org'},
         ],
     },
+    'CDIP': {
+        'fullname': 'Coastal Data Information Program',
+        'provider_type': 'national',
+        'banner': '/static/img/np/cdip.png',
+        'description': 'The Coastal Data Information Program (CDIP) measures, analyzes, archives, and disseminates coastal environment data for use by coastal engineers, planners, and managers as well as scientists and mariners.',
+        'links': [
+            {'title':'CDIP Site', 'url': 'http://cdip.ucsd.edu/'}
+        ],
+    },
     'GCOOS': {
         'fullname': 'Gulf of Mexico Ocean Observing System',
         'provider_type': 'regional',
