@@ -369,8 +369,8 @@ var individualStation = L.layerGroup();
 var clusterGroup = new L.MarkerClusterGroup({disableClusteringAtZoom: 9,
                                              maxClusterRadius: 60});
 function filter_coords(coord) {
-        return ( coord[0] >= -180 || coord[0] <= 180 ||
-             coord[1] <= 90 || coord[1] >= -90 )
+        return ( coord[0] >= -180 && coord[0] <= 180 &&
+             coord[1] <= 90 && coord[1] >= -90 )
 }
 
 function filterTrajectory(trajectoryFeature) {
