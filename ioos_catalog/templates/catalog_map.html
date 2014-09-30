@@ -368,15 +368,23 @@ var mpFeatures = L.layerGroup();
 var individualStation = L.layerGroup();
 var clusterGroup = new L.MarkerClusterGroup({disableClusteringAtZoom: 9,
                                              maxClusterRadius: 60});
+function filter_coords(coord) {
+        return ( coord[0] >= -180 || coord[0] <= 180 ||
+             coord[1] <= 90 || coord[1] >= -90 )
+}
 
 function filterTrajectory(trajectoryFeature) {
-    var coordinates = trajectoryFeature.geometry.coordinates.filter(function(coord) {
-        if ( coord[0] < -180 || coord[0] > 180 || coord[1] > 90 || coord[1] < -90 ) {
-            return false;
-        }
-        return true;
-    });
-    trajectoryFeature.geometry.coordinates = coordinates;
+    var filteredCoords = trajectoryFeature.geometry.coordinates.filter(filter_coords);
+    //side effects
+    trajectoryFeature.geometry.coordinates = filteredCoords;
+}
+
+function filterPoint(pointFeature) {
+    if (filter_coords(pointFeature.geometry.coordinates)) {
+        return pointFeature;
+    } else {
+        return null;
+    }
 }
 
 function addData(error, geojson) {
@@ -411,6 +419,8 @@ function addData(error, geojson) {
   mp = [];
   points = [];
 
+  var filtPoint;
+
   for (var i = 0; i < geojson.features.length; ++i) {
       //FIXME: How should we handle multipoints (i.e. AOOS has many)
       var feat = geojson.features[i];
@@ -420,11 +430,17 @@ function addData(error, geojson) {
               polygons.push(feat); break;
           case 'LineString':
               filterTrajectory(feat);
-              trajectories.push(feat); break;
+              if (feat.geometry.coordinates.length > 0) {
+                  trajectories.push(feat);
+              }
+              break;
           case 'MultiPoint':
               mp.push(feat); break;
           case 'Point':
-              points.push(feat);
+              filtPoint = filterPoint(feat)
+              if (filtPoint !== null) {
+                  points.push(feat);
+              }
       }
   }
 
