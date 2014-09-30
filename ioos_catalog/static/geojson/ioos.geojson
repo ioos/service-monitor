@@ -4,6 +4,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "NERACOOS"
       },
       "geometry": {
@@ -17,6 +18,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "MARACOOS"
       },
       "geometry": {
@@ -30,6 +32,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "SECOORA"
       },
       "geometry": {
@@ -43,6 +46,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "GLOS"
       },
       "geometry": {
@@ -56,6 +60,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "GCOOS"
       },
       "geometry": {
@@ -69,6 +74,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "CARICOOS"
       },
       "geometry": {
@@ -82,6 +88,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "SCCOOS"
       },
       "geometry": {
@@ -95,6 +102,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "CENCOOS"
       },
       "geometry": {
@@ -108,6 +116,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "NANOOS"
       },
       "geometry": {
@@ -121,6 +130,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "AOOS"
       },
       "geometry": {
@@ -134,6 +144,7 @@
     {
       "type": "Feature",
       "properties": {
+        "CRS":"WGS84",
         "region": "PacIOOS"
       },
       "geometry": {
@@ -147,120 +158,175 @@
     {
       "type": "Feature",
       "properties": {
-        "region": "NOAA-CO-OPS"
+        "CRS":"Native",
+        "region": "ATN_DAC"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -130,
-          0
+            50,
+            400
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "region": "USACE"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -125,
-          -2.3
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "region": "USGS-CMGP"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -120,
-          -4.3
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "region": "NOAA-NDBC"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -115,
-          -7.0
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+        "CRS":"Native",
         "region": "CDIP"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -90,
-          -6.2
+            140,
+            400
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
+        "CRS":"Native",
         "region": "Glider_DAC"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -85,
-          -2.4
+            195,
+            400
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
+        "CRS":"Native",
+        "region": "Glider_DAC_2"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+            290,
+            400
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CRS":"Native",
         "region": "HFradar_DAC"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -80,
-          0
+            400,
+            400
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
+        "CRS":"Native",
         "region": "MODELING_TESTBED"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -75,
-          2.4
+            50,
+            425
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
+        "CRS":"Native",
         "region": "NAVY"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -135,
-          2.5
+            215,
+            425
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CRS":"Native",
+        "region": "NOAA-CO-OPS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+            275,
+            425
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CRS":"Native",
+        "region": "NOAA-NDBC"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+            400,
+            425
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CRS":"Native",
+        "region": "Other"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+            50,
+            450
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CRS":"Native",
+        "region": "USACE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+            115,
+            450
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CRS":"Native",
+        "region": "USGS-CMGP"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+            195,
+            450
         ]
       }
     }
+
+
+
+
   ]
 }
 
