@@ -38,9 +38,11 @@
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Explore <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                  <li role="presentation" class="dropdown-header">All</li>
+                  <li role="presentation" class="dropdown-header">IOOS Catalog</li>
+                  <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                   <li><a href="{{ url_for('services') }}">Services</a></li>
                   <li><a href="{{ url_for('datasets') }}">Datasets</a></li>
+                  <li><a href="{{ url_for('gliders') }}">Gliders</a></li>
 
                   <li role="presentation" class="dropdown-header">Regional Associations</li>
                   {% for ra_provider in ra_providers %}
@@ -52,8 +54,8 @@
                   {% endfor %}
                 </ul>
               </li>
-              <li><a href="{{ url_for('metadatas') }}">Asset Inventory</a></li>
-              <li><a href="{{ url_for('catalog_map') }}">Catalog Map <span class="label label-info">BETA</span></a></li>
+              <li><a href="{{ url_for('metadatas') }}">Metadata Catalog</a></li>
+              <li><a href="{{ url_for('catalog_map') }}">Catalog Map</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li><a href="{{ url_for('help') }}">Help</a></li>
