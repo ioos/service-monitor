@@ -42,11 +42,11 @@ def services(filter_provider, filter_type, oformat):
     filters = {'active':True}
     titleparts = []
 
-    if filter_provider is not None and filter_provider != "null":
+    if filter_provider is not None and filter_provider != "none":
         titleparts.append(filter_provider)
         filters['data_provider'] = {'$in': filter_provider.split(',')}
 
-    if filter_type is not None and filter_type != "null":
+    if filter_type is not None and filter_type != "none":
         titleparts.append(filter_type)
         filters['service_type'] = {'$in': filter_type.split(',')}
 

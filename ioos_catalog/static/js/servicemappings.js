@@ -6,7 +6,7 @@
  */
 function sanitizeServiceUrl(serviceNames) {
     if(!serviceNames || !serviceNames.length) {
-        return "null";
+        return "none";
     }
     return serviceNames;
 };
@@ -19,8 +19,8 @@ function sanitizeServiceUrl(serviceNames) {
 function urlToServiceArray(urlComponent) {
     var services = [];
 
-    if(!urlComponent) {
-        return "null";
+    if(!urlComponent || !urlComponent.length) {
+        return "none";
     }
     return urlComponent.split(',');
 }
