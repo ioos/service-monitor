@@ -32,7 +32,8 @@ function getSelected() {
     var selected = {};
     /* Split the URL up to parse out the provider and filter components */
     //replace only HTML encoded spaces currently
-    var currentURL = document.URL.replace('%20', ' ');
+    var currentURL = document.URL.replace(/%20/g, ' ');
+    currentURL = currentURL.replace(/%2[cC]/g, ',');
     var filters = currentURL.split("/filter/")[1]; /* Split on the /filter/ */
     if(typeof filters == 'undefined') { // no need to go any further
         return selected;
@@ -42,6 +43,7 @@ function getSelected() {
     if(filterSplit.length > 1) {
         selected.filters = filterSplit[1].split(",");
     }
+    console.log(currentURL);
 
 
 
@@ -88,7 +90,7 @@ function applyFilter(urlBase) {
     }
 
     var url = urlBase + regionString;
-    if(filterType != "null") {
+    if(filterType !== null && filterType != "null") {
         url += "/" + filterType;
     }
     window.location = url;
