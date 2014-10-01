@@ -33,7 +33,15 @@ def admin():
 def monitoring():
     env.user = os.environ.get('IOOS_USER', "monitoring")
 
+def maintenance():
+    run('cp ioos_catalog/static/nomaintenance.html ioos_catalog/static/maintenance.html')
+
+def clear_maintenance():
+    run('rm ioos_catalog/static/maintenance.html')
+
 def deploy():
+    with cd(code_dir):
+        maintenance()
     stop_supervisord()
 
     monitoring()
@@ -45,6 +53,7 @@ def deploy():
         #create_index()
         start_supervisord()
         run("supervisorctl -c ~/supervisord.conf start all")
+        clear_maintenance()
 
 def update_supervisord():
     monitoring()
