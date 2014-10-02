@@ -21,23 +21,22 @@
 
 {% block page %}
 
-<div class="container">
-  <div class="container overflow">
-    <table class="table table-bordered table-condensed" style="font-size: 11px;">
-      <thead>
-        <tr>
-          <th>Serv/DS</th>
-          <th>Provider</th>
-          <th>Type</th>
-          {%- for col in columns %}
-          <th>{{ col }}</th>
-          {%- endfor %}
-        </tr>
-      </thead>
-      <tbody>
-      {%- for m in metadatas %}
-      {# Each main row is going to have a rowspan equal to the number of variable names #}
-      {#
+<div class="table-view overflow">
+  <table class="table table-bordered table-condensed" style="font-size: 11px;">
+    <thead>
+      <tr>
+        <th>Serv/DS</th>
+        <th>Provider</th>
+        <th>Type</th>
+        {%- for col in columns %}
+        <th>{{ col }}</th>
+        {%- endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {%- for m in metadatas %}
+    {# Each main row is going to have a rowspan equal to the number of variable names #}
+    {#
 | Station Publisher Email | Variable Names | Variable Units           | Altitude Units |
 |                         | time           | seconds since 1970-01-01 |                |
 |                         | depth          | meters                   |                |
@@ -45,49 +44,49 @@
 |                         | longitude      | degrees_east             |                |
 |                         | u              | m/s                      |                |
 |                         | v              | m/s                      |                |
-  #}    
-        {%- set varcount = m.get("varcount", 1) %}
-        <tr>
-          <td rowspan="{{varcount}}">{{ services[m['ref_id']].name if m['ref_type']=='service' }}</td>
-          <td rowspan="{{varcount}}">{{ services[m['ref_id']].data_provider if m['ref_type']=='service' }}</td>
-          <td rowspan="{{varcount}}">{{ m['ref_type'] }}</td>
-          <td rowspan="{{varcount}}"><a href="{{ url_for("show_service", service_id=m['service_id'])}}">{{m['service_id']}}</a></td>
+#}    
+      {%- set varcount = m.get("varcount", 1) %}
+      <tr>
+        <td rowspan="{{varcount}}">{{ services[m['ref_id']].name if m['ref_type']=='service' }}</td>
+        <td rowspan="{{varcount}}">{{ services[m['ref_id']].data_provider if m['ref_type']=='service' }}</td>
+        <td rowspan="{{varcount}}">{{ m['ref_type'] }}</td>
+        <td rowspan="{{varcount}}"><a href="{{ url_for("show_service", service_id=m['service_id'])}}">{{m['service_id']}}</a></td>
 
-          {%- for col in columns %}
-            {%- set v=m.get(col, "-") %}
+        {%- for col in columns %}
+          {%- set v=m.get(col, "-") %}
 
-            {%- if col == 'Variable Names*' %}
-            <td> {{ v[0] }} </td>
-            {%- elif col == 'Variable Units*' %}
-            <td> {{ v[0] }} </td>
-            {%- elif v|is_list %}
-            <td rowspan="{{varcount}}">
-              <ul class="list-unstyled">
-                {%- for vv in v %}
-                <li>{{ vv }}</li>
-                {%- endfor %}
-              </ul>
-            </td>
-            {% else %}
-            <td rowspan="{{varcount}}">{{ v }}</td>
-            {% endif %}
-          {%- endfor %}
-        </tr>
-        {% for i in range(1, varcount) %}
-        <tr>
-          <td>{{m['Variable Names*'][i]}}</td>
-          <td>{{m['Variable Units*'][i]}}</td>
-        </tr>
-        {% endfor %}
-      {%- endfor %}
-      </tbody>
-    </table>
-  </div> <!-- .overflow -->
-  </div>
-  <script type="text/javascript">
+          {%- if col == 'Variable Names*' %}
+          <td> {{ v[0] }} </td>
+          {%- elif col == 'Variable Units*' %}
+          <td> {{ v[0] }} </td>
+          {%- elif v|is_list %}
+          <td rowspan="{{varcount}}">
+            <ul class="list-unstyled">
+              {%- for vv in v %}
+              <li>{{ vv }}</li>
+              {%- endfor %}
+            </ul>
+          </td>
+          {% else %}
+          <td rowspan="{{varcount}}">{{ v }}</td>
+          {% endif %}
+        {%- endfor %}
+      </tr>
+      {% for i in range(1, varcount) %}
+      <tr>
+        <td>{{m['Variable Names*'][i]}}</td>
+        <td>{{m['Variable Units*'][i]}}</td>
+      </tr>
+      {% endfor %}
+    {%- endfor %}
+    </tbody>
+  </table>
+</div>  <!-- overflow -->
+
+<script type="text/javascript">
+
 function set_table_height() {
-      $('.overflow').css('max-height', 
-                         Math.round($(window).height() * 0.7) + 'px'); 
+    $('.overflow').css('max-height',Math.round($(window).height() * 0.9) + 'px'); 
 }
     $(function() {
 
