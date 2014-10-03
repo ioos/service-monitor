@@ -16,7 +16,7 @@ region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
                  'ATN_DAC'          : '07875897-E6A6-4EDB-B111-F5D6BE841ED6',
                  'CARICOOS'         : '117F1684-A5E3-400E-98D8-A270BDBA1603',
                  'CDIP'             : '4EA30508-7E2B-474E-BFD2-9B482E8DE9B6',
-                 'CENCOOS'          : '4BA5624D-A61F-4C7E-BAEE-7F8BDDB8D9C4',
+                 'CeNCOOS'          : '4BA5624D-A61F-4C7E-BAEE-7F8BDDB8D9C4',
                  'GCOOS'            : '003747E7-4818-43CD-937D-44D5B8E2F4E9',
                  'Glider_DAC'       : '2546E50F-F0C7-4365-9D45-694DD22E5F26',
                  # Should this be given a separate UID or eventually migrated
