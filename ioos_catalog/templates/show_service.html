@@ -72,8 +72,8 @@
       {% endif %}
     </dl>
     <dl class="dl-horizontal col-lg-4">
-      <dt>Active</dt>
-      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.active else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
+      <dt>Harvest Successful</dt>
+      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if harvest_data['harvest_successful'] else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
       <dt>Last Harvest Attempt</dt>
       <dd><abbr title="{{ harvest_data['harvest_time'] | datetimeformat }}">{{ harvest_data['harvest_time'] | prettydate }}</abbr></dd>
       <dt>Last Harvest Status</dt>

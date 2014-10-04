@@ -40,6 +40,7 @@ def services(filter_provider, filter_type, oformat):
         filter_type = "null"
         oformat = None
 
+    #filters = {}
     filters = {'active':True}
     titleparts = []
 
@@ -58,7 +59,7 @@ def services(filter_provider, filter_type, oformat):
     f                 = ServiceForm()
     services          = list(db.Service.find(filters))
     sids              = [s._id for s in services]
-    latest_stats      = db.PingLatest.find({'service_id':{'$in':sids}})#, {'service_id':1,
+    latest_stats      = db.Harvest.find({'service_id':{'$in':sids}})   #, {'service_id':1,
                                                                        #  'last_operational_status':1,
                                                                        #  'last_response_time':1,
                                                                        #  'last_response_code':1,
@@ -72,28 +73,15 @@ def services(filter_provider, filter_type, oformat):
                                 'last_response_time'      : None,
                                 'last_response_code'      : None,
                                 'last_update'             : None,
+                                'harvest_status'          : u'No harvest attempted',
                                 'avg_response_time'       : None}
 
         if s._id in latest_stats:
             stat = latest_stats[s._id]
 
-            service_stats[s._id]['last_operational_status'] = stat.last_operational_status
-            service_stats[s._id]['last_response_time']      = stat.last_response_time
-            service_stats[s._id]['last_response_code']      = stat.last_response_code
-            service_stats[s._id]['last_update']             = stat.updated
-
-            # calc averages
-            #good_statuses = [x for x in stat.operational_statuses if x is not None]
-            good_responses = [x for x in stat.response_times if x is not None]
-
-            if len(good_responses):
-                total = len(stat.response_times)
-
-                #service_stats[s._id]['avg_operational_status  = float(good_statuses.count(True)) / total
-                service_stats[s._id]['avg_response_time']       = float(sum(good_responses)) / total
-            else:
-                #service_stats[s._id]['avg_operational_status  = 0
-                service_stats[s._id]['avg_response_time']       = None
+            service_stats[s._id]['last_operational_status'] = stat.harvest_successful
+            service_stats[s._id]['last_update']             = stat.harvest_date
+            service_stats[s._id]['harvest_status' ]         = stat.harvest_status
 
     if oformat is not None and oformat == 'json':
         resp = json.dumps({'services':[dict(dict(s).items() + service_stats[s._id].items()) for s in services]}, default=json_util.default)
@@ -107,7 +95,7 @@ def services(filter_provider, filter_type, oformat):
         tld_stats[k] = {'ok':0, 'total':0}
         for sid in v:
             tld_stats[k]['total'] += 1
-            if sid in latest_stats and latest_stats[sid].last_operational_status:
+            if sid in latest_stats and latest_stats[sid].harvest_successful:
                 tld_stats[k]['ok'] += 1
 
     # get list of unique providers in system
@@ -153,8 +141,9 @@ def show_service(service_id):
     harvest = db.Harvest.find_one({'service_id':service._id})
     if harvest:
         harvest_data = {}
-        harvest_data['harvest_time'] = harvest.harvest_date
-        harvest_data['harvest_status'] = harvest.harvest_status
+        harvest_data['harvest_time']       = harvest.harvest_date
+        harvest_data['harvest_status']     = harvest.harvest_status
+        harvest_data['harvest_successful'] = harvest.harvest_successful
         if harvest.harvest_messages:
             harvest_data['harvest_message'] = harvest.harvest_messages[0]
         else:

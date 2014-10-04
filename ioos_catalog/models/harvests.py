@@ -3,6 +3,7 @@ from bson import ObjectId
 from ioos_catalog import app, db
 from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.tasks.harvest import DapHarvest, SosHarvest, WmsHarvest, WcsHarvest
+from lxml.etree import XMLSyntaxError
 from datetime import datetime
 
 import requests
@@ -19,11 +20,12 @@ class Harvest(BaseDocument):
     use_schemaless   = True
 
     structure = {
-        'service_id' : ObjectId,
-        'harvest_date' : datetime,
-        'harvest_status' : unicode,
-        'harvest_messages' : [ {
-            'date' : datetime,
+        'service_id'         : ObjectId,
+        'harvest_date'       : datetime,
+        'harvest_status'     : unicode,
+        'harvest_successful' : bool,
+        'harvest_messages'   : [ {
+            'date'    : datetime,
             'message' : unicode
         } ]
             
@@ -50,22 +52,36 @@ class Harvest(BaseDocument):
             #service.cancel_harvest()
             self.new_message("Service %s is not active, not harvesting" % service_id)
             self.set_status("Service is down")
+            self.harvest_successful = False
             return
 
         # ping it first to see if alive
         try:
             _, response_code = service.ping(timeout=15)
             operational_status = True if response_code in [200,400] else False
-        except (requests.ConnectionError, requests.HTTPError, requests.Timeout):
+        except (requests.ConnectionError, requests.HTTPError):
             operational_status = False
+            response_code = 0
+        except requests.Timeout as e:
+            self.new_message("Service Timeout: %s" % e.message)
+            self.set_status("Timed Out")
+            self.harvest_successful = False
+            return
+
 
         if not operational_status:
             # not a failure
             # @TODO: record last attempt time/this message
-            self.new_message("Aborted harvest due to service down")
-            self.set_status("Service is down")
-            service.active = False
-            service.save()
+            if response_code == 403:
+                self.new_message("Permission Denied")
+                self.set_status("Permission Denied")
+            elif response_code == 404:
+                self.new_message("Service Not Found, please check the URL")
+                self.set_status("Not Found")
+            else:
+                self.new_message("Aborted harvest due to service down")
+                self.set_status("Service is down")
+            self.harvest_successful = False
             return
 
         try:
@@ -79,13 +95,26 @@ class Harvest(BaseDocument):
             elif service.service_type == "WCS":
                 message = WcsHarvest(service).harvest()
             self.new_message(message or 'Successful Harvest')
-            self.set_status("Good")
+            self.set_status("Harvest Successful")
+            self.harvest_successful = True
             return
+        except XMLSyntaxError as e:
+            from traceback import format_exc
+            app.logger.exception("Failed harvesting service %s: XMLSyntaxError", service)
+            if service.service_type == 'SOS':
+                self.set_status("Invalid SOS")
+            else:
+                self.set_status("Harvest Failed")
+            self.harvest_successful = False
+            # More descriptive
+            self.new_message("Harvester failed to parse the XML response from the SOS endpoint\n\n%s" % format_exc())
+
         except Exception as e:
             from traceback import format_exc
             app.logger.exception("Failed harvesting service %s", service)
             self.new_message(format_exc())
             self.set_status("Harvest Failed")
+            self.harvest_successful = False
             return
 
     

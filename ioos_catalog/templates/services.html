@@ -43,17 +43,15 @@
                 <th>Service Provider</th>
                 <th>Service Type</th>
                 <th>Service Name</th>
-                <th title="The date of the last status update for the service">Last Status Update</th>
-                <th title="The service response code. 200 means the service is up and running succesfully">HTTP Status Code</th>
-                <th title="The time for a return trip response from the service, measured in milliseconds">Response Time (ms)</th>
-                <th title="The average of the response times over the span of a week">Weekly Average Response Time (ms)</th>
+                <th title="The last time a harvest of this service was attempted">Last Harvest Attempt</th>
+                <th title="The status message of the latest harvest attempt">Latest Harvest Status</th>
                 <th>Service Status</th>
             </tr>
         </thead>
         {%- for service_group in services|groupby('tld') %}
         <tbody>
             <tr class="hilite">
-              <td colspan="7">{{ service_group.grouper }}</td>
+              <td colspan="5">{{ service_group.grouper }}</td>
               <td>{{ tld_stats[service_group.grouper]['ok'] }}/{{ tld_stats[service_group.grouper]['total'] }}</td>
             </tr>
             {%- for service in service_group.list %}
@@ -62,11 +60,9 @@
                 <td>{{ service.data_provider }}</td>
                 <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
+                <td>{{ ss['harvest_status'] | safe }}</td>
                 <td><abbr title="{{ ss['last_update'] | datetimeformat }}">{{ ss['last_update'] | prettydate }}</abbr></td>
-                <td>{{ ss['last_response_code'] }}</td>
-                <td>{{ ss['last_response_time'] }}</td>
-                <td>{{ ss['avg_response_time'] | float | round }}</td>
-                <td>{{ ss['last_operational_status'] | status_icon | safe }}</td>
+                <td><abbr title="{{ ss['harvest_status'] | safe }}">{{ ss['last_operational_status'] | status_icon | safe }}</abbr></td>
             </tr>
             {%- endfor %}
          </tbody>
