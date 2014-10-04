@@ -33,7 +33,8 @@ import json
 
 from ioos_catalog import app, db, queue
 from ioos_catalog.tasks.send_email import send_service_down_email
-from ioos_catalog.tasks.debug import debug_wrapper
+from ioos_catalog.tasks.debug import debug_wrapper, breakpoint
+from functools import wraps
 
 def queue_harvest_tasks():
     """
@@ -46,36 +47,26 @@ def queue_harvest_tasks():
         for sid in sids:
             queue.enqueue(harvest, sid)
 
+def context_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        with app.app_context():
+            return f(*args, **kwargs)
+    return wrapper
+
 @debug_wrapper
+@context_decorator
 def harvest(service_id):
-    with app.app_context():
-        service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
 
-        # make sure service is active before we harvest
-        if not service.active:
-            #service.cancel_harvest()
-            return "Service %s is not active, not harvesting" % service_id
+    # Get the harvest or make a new one
+    harvest = db.Harvest.find_one( { 'service_id' : ObjectId(service_id) } )
+    if harvest is None:
+        harvest = db.Harvest()
+        harvest.service_id = ObjectId(service_id)
 
-        # ping it first to see if alive
-        try:
-            _, response_code = service.ping(timeout=15)
-            operational_status = True if response_code in [200,400] else False
-        except (requests.ConnectionError, requests.HTTPError, requests.Timeout):
-            operational_status = False
+    harvest.harvest()
+    harvest.save()
 
-        if not operational_status:
-            # not a failure
-            # @TODO: record last attempt time/this message
-            return "Aborted harvest due to service down"
-
-        if service.service_type == "DAP":
-            return DapHarvest(service).harvest()
-        elif service.service_type == "SOS":
-            return SosHarvest(service).harvest()
-        elif service.service_type == "WMS":
-            return WmsHarvest(service).harvest()
-        elif service.service_type == "WCS":
-            return WcsHarvest(service).harvest()
 
 
 def unicode_or_none(thing):
@@ -126,6 +117,7 @@ class Harvester(object):
     def __init__(self, service):
         self.service = service
 
+    @context_decorator
     def save_ccheck_and_metadata(self, service_id, checker_name, ref_id, ref_type, scores, metamap):
         """
         Saves the result of a compliance checker scores and metamap document.
@@ -135,52 +127,53 @@ class Harvester(object):
         if not (scores or metamap):
             return
 
-        with app.app_context():
-            def res2dict(r):
-                cl = []
-                if r.children:
-                    cl = map(res2dict, r.children)
+        def res2dict(r):
+            cl = []
+            if getattr(r, 'children', None):
+                cl = map(res2dict, r.children)
 
-                return {'name'     : unicode(r.name),
-                        'score'    : float(r.value[0]),
-                        'maxscore' : float(r.value[1]),
-                        'weight'   : int(r.weight),
-                        'children' : cl}
+            return {'name'     : unicode(r.name),
+                    'score'    : float(r.value[0]),
+                    'maxscore' : float(r.value[1]),
+                    'weight'   : int(r.weight),
+                    'children' : cl}
 
-            metadata = db.Metadata.find_one({'ref_id': ref_id})
-            if metadata is None:
-                metadata             = db.Metadata()
-                metadata.ref_id      = ref_id
-                metadata.ref_type    = unicode(ref_type)
+        metadata = db.Metadata.find_one({'ref_id': ref_id})
+        if metadata is None:
+            metadata             = db.Metadata()
+            metadata.ref_id      = ref_id
+            metadata.ref_type    = unicode(ref_type)
 
-            cc_results = map(res2dict, scores)
+        if isinstance(scores, tuple): # New API of compliance-checker
+            scores = scores[0]
+        cc_results = map(res2dict, scores)
 
-            # @TODO: srsly need to decouple from cchecker
-            score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
-            max_score = sum((r.weight for r in scores))
+        # @TODO: srsly need to decouple from cchecker
+        score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
+        max_score = sum((r.weight for r in scores))
 
-            score_doc = {'score'     : float(score),
-                         'max_score' : float(max_score),
-                         'pct'       : float(score) / max_score}
+        score_doc = {'score'     : float(score),
+                     'max_score' : float(max_score),
+                     'pct'       : float(score) / max_score}
 
-            update_doc = {'cc_score'   : score_doc,
-                          'cc_results' : cc_results,
-                          'metamap'    : metamap}
+        update_doc = {'cc_score'   : score_doc,
+                      'cc_results' : cc_results,
+                      'metamap'    : metamap}
 
-            for mr in metadata.metadata:
-                if mr['service_id'] == service_id and mr['checker'] == checker_name:
-                    mr.update(update_doc)
-                    break
-            else:
-                metarecord = {'service_id': service_id,
-                              'checker'   : unicode(checker_name)}
-                metarecord.update(update_doc)
-                metadata.metadata.append(metarecord)
+        for mr in metadata.metadata:
+            if mr['service_id'] == service_id and mr['checker'] == checker_name:
+                mr.update(update_doc)
+                break
+        else:
+            metarecord = {'service_id': service_id,
+                          'checker'   : unicode(checker_name)}
+            metarecord.update(update_doc)
+            metadata.metadata.append(metarecord)
 
-            metadata.updated = datetime.utcnow()
-            metadata.save()
+        metadata.updated = datetime.utcnow()
+        metadata.save()
 
-            return metadata
+        return metadata
 
 class SosHarvest(Harvester):
     def __init__(self, service):
@@ -190,8 +183,11 @@ class SosHarvest(Harvester):
         """
         Issues a DescribeSensor request with fallback behavior for oddly-acting SOS servers.
         """
-        kwargs = {'outputFormat':'text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"',
-                  'procedure':uid}
+        kwargs = {
+                    'outputFormat':'text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"',
+                    'procedure':uid,
+                    'timeout' : 120
+                 }
 
         try:
             return self.sos.describe_sensor(**kwargs)
