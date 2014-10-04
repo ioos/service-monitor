@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
-from wtforms import TextField, IntegerField, SelectField
+from wtforms import TextField, IntegerField, SelectField, BooleanField
 from bson import json_util
 
 from ioos_catalog import app, db, queue, support_jsonp, requires_auth
@@ -25,6 +25,7 @@ class ServiceForm(Form):
     geophysical_params = TextField(u'Geophysical Parameters')
     contact            = TextField(u'Contact Emails', description="A list of emails separated by commas")
     interval           = IntegerField(u'Update Interval', description="In seconds")
+    active             = BooleanField(u'Active', description="Service is active")
 
 @app.route('/services/', defaults={'filter_provider':None, 'filter_type':None, 'oformat':None}, methods=['GET'])
 @app.route('/services/filter/', defaults={'filter_provider':None, 'filter_type':None, 'oformat':None}, methods=['GET'])
@@ -148,29 +149,30 @@ def show_service(service_id):
                   'response_time'      : None,
                   'operational_status' : None }
 
-    pl = db.PingLatest.find_one({'service_id':service._id})
-    if pl:
-        # set ping data for graph
-        latest_pings, latest_statuses = pl.get_current_data()
-        for i in xrange(0, len(latest_pings)):
-            v = {'x':i, 'y':latest_pings[i] or 50}
-            if latest_statuses[i]:
-                ping_data['good'].append(v)
-                ping_data['bad'].append({'x':i, 'y':0})
-            else:
-                ping_data['bad'].append(v)
-                ping_data['good'].append({'x':i, 'y':0})
 
-        # latest ping info
-        last_ping.update({'time':pl.updated,
-                          'response_time': pl.last_response_time,
-                          'operational_status': pl.last_operational_status})
+    harvest = db.Harvest.find_one({'service_id':service._id})
+    if harvest:
+        harvest_data = {}
+        harvest_data['harvest_time'] = harvest.harvest_date
+        harvest_data['harvest_status'] = harvest.harvest_status
+        if harvest.harvest_messages:
+            harvest_data['harvest_message'] = harvest.harvest_messages[0]
+        else:
+            harvest_data['harvest_message'] = {'date' : datetime.utcnow(), 'message' : u'No messages'}
+
+    else: # Just in case no harvest has been attempted
+        harvest_data = {
+            'harvest_time' : datetime.utcnow(),
+            'harvest_status' : 'No harvest attempted',
+            'harvest_message' : {'date' : datetime.utcnow(), 'message' : u'No messages'}
+        }
+
+
 
     return render_template('show_service.html',
                            service=service,
-                           ping_data=ping_data,
                            datasets=datasets,
-                           last_ping=last_ping,
+                           harvest_data=harvest_data,
                            metadatas=metadatas)
 
 @app.route('/services/', methods=['POST'])
@@ -224,7 +226,7 @@ def ping_service(service_id):
 def harvest_service(service_id):
     s = db.Service.find_one({ '_id' : service_id })
 
-    h = harvest(service_id)
+    h = harvest(service_id, ignore_active=True)
     flash(h)
     return redirect(url_for('show_service', service_id=service_id))
 

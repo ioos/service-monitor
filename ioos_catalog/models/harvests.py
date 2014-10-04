@@ -29,7 +29,7 @@ class Harvest(BaseDocument):
             
     }
 
-    def harvest(self):
+    def harvest(self, ignore_active=False):
 
         service_id = self.service_id
 
@@ -41,8 +41,12 @@ class Harvest(BaseDocument):
             self.delete()
             return
 
+        if ignore_active:
+            app.logger.info("Ignoring service active, harvesting anyway")
+
         # make sure service is active before we harvest
-        if not service.active:
+        if not ignore_active and not service.active:
+            app.logger.info("Service is down, not harvesting")
             #service.cancel_harvest()
             self.new_message("Service %s is not active, not harvesting" % service_id)
             self.set_status("Service is down")
@@ -60,6 +64,8 @@ class Harvest(BaseDocument):
             # @TODO: record last attempt time/this message
             self.new_message("Aborted harvest due to service down")
             self.set_status("Service is down")
+            service.active = False
+            service.save()
             return
 
         try:

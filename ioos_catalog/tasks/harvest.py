@@ -56,7 +56,7 @@ def context_decorator(f):
 
 @debug_wrapper
 @context_decorator
-def harvest(service_id):
+def harvest(service_id, ignore_active=False):
 
     # Get the harvest or make a new one
     harvest = db.Harvest.find_one( { 'service_id' : ObjectId(service_id) } )
@@ -64,8 +64,9 @@ def harvest(service_id):
         harvest = db.Harvest()
         harvest.service_id = ObjectId(service_id)
 
-    harvest.harvest()
+    harvest.harvest(ignore_active=ignore_active)
     harvest.save()
+    return harvest.harvest_status
 
 
 
