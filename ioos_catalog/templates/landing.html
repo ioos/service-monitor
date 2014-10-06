@@ -19,8 +19,13 @@
         <a href="{{url_for('dashboard')}}">
           <img class="img-responsive" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Dashboard"></img>
         </a>
+        <div class="dynamic-overlay">
+          <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
+        </div>
         <div class="overlay">
-          Catalog Dashboard
+          <a href="{{url_for('dashboard')}}">
+            Catalog Dashboard
+          </a>
         </div>
       </div>
       <div class="img-text">
@@ -36,7 +41,9 @@
           <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/map.png')}}" alt="Download Help"></img>
         </a>
         <div class="overlay">
-          Download Help
+          <a href="{{url_for('help_download')}}">
+            Download Help
+          </a>
         </div>
       </div>
     </div> <!-- col -->
@@ -48,7 +55,9 @@
               <img class="img-responsive" src="{{url_for('static', filename='img/landing/earth.png')}}" alt="Catalog Map"></img>
             </a>
             <div class="overlay overlay-map">
-              Catalog Map
+              <a href="{{url_for('catalog_map')}}">
+                Catalog Map
+              </a>
             </div>
           </div>
         </div>
@@ -60,7 +69,9 @@
               <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/btn.png')}}" alt="By the numbers"></img>
             </a>
             <div class="overlay overlay-sq">
-              IOOS By The Numbers
+              <a href="{{url_for('by_the_numbers')}}">
+                IOOS By The Numbers
+              </a>
             </div>
           </div>
         </div>
@@ -70,7 +81,9 @@
               <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/asset_map.png')}}" alt="Featured Maps"></img>
             </a>
             <div class="overlay overlay-sq">
-              Featured Maps
+              <a href="{{url_for('featured_maps')}}">
+                Featured Maps
+              </a>
             </div> <!-- overlay -->
           </div> <!-- img-text -->
         </div> <!-- col -->

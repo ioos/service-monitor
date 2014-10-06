@@ -129,6 +129,39 @@
     color: white;
 }
 
+.overlay a {
+    color: white;
+}
+
+.overlay a:link {
+    text-decoration: none;
+}
+
+.overlay a:visited {
+    text-decoration: none;
+}
+
+.overlay a:hover {
+    text-decoration: none;
+}
+
+.overlay a:active {
+    text-decoration: none;
+}
+
+.dynamic-overlay {
+    position: absolute;
+    top: 2%;
+    width: 100%;
+    background: rgb(0, 0, 0); /* fallback color */
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.dynamic-overlay h5 {
+    padding-left: 20px;
+    color: white;
+}
+
 
 .img-text h2 {
     position: absolute;
