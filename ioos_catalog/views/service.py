@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
-from wtforms import TextField, IntegerField, SelectField
+from wtforms import TextField, IntegerField, SelectField, BooleanField
 from bson import json_util
 
 from ioos_catalog import app, db, queue, support_jsonp, requires_auth
@@ -25,6 +25,7 @@ class ServiceForm(Form):
     geophysical_params = TextField(u'Geophysical Parameters')
     contact            = TextField(u'Contact Emails', description="A list of emails separated by commas")
     interval           = IntegerField(u'Update Interval', description="In seconds")
+    active             = BooleanField(u'Active', description="Service is active")
 
 @app.route('/services/', defaults={'filter_provider':None, 'filter_type':None, 'oformat':None}, methods=['GET'])
 @app.route('/services/filter/', defaults={'filter_provider':None, 'filter_type':None, 'oformat':None}, methods=['GET'])
@@ -39,6 +40,7 @@ def services(filter_provider, filter_type, oformat):
         filter_type = "null"
         oformat = None
 
+    #filters = {}
     filters = {'active':True}
     titleparts = []
 
@@ -57,7 +59,7 @@ def services(filter_provider, filter_type, oformat):
     f                 = ServiceForm()
     services          = list(db.Service.find(filters))
     sids              = [s._id for s in services]
-    latest_stats      = db.PingLatest.find({'service_id':{'$in':sids}})#, {'service_id':1,
+    latest_stats      = db.Harvest.find({'service_id':{'$in':sids}})   #, {'service_id':1,
                                                                        #  'last_operational_status':1,
                                                                        #  'last_response_time':1,
                                                                        #  'last_response_code':1,
@@ -71,28 +73,15 @@ def services(filter_provider, filter_type, oformat):
                                 'last_response_time'      : None,
                                 'last_response_code'      : None,
                                 'last_update'             : None,
+                                'harvest_status'          : u'No harvest attempted',
                                 'avg_response_time'       : None}
 
         if s._id in latest_stats:
             stat = latest_stats[s._id]
 
-            service_stats[s._id]['last_operational_status'] = stat.last_operational_status
-            service_stats[s._id]['last_response_time']      = stat.last_response_time
-            service_stats[s._id]['last_response_code']      = stat.last_response_code
-            service_stats[s._id]['last_update']             = stat.updated
-
-            # calc averages
-            #good_statuses = [x for x in stat.operational_statuses if x is not None]
-            good_responses = [x for x in stat.response_times if x is not None]
-
-            if len(good_responses):
-                total = len(stat.response_times)
-
-                #service_stats[s._id]['avg_operational_status  = float(good_statuses.count(True)) / total
-                service_stats[s._id]['avg_response_time']       = float(sum(good_responses)) / total
-            else:
-                #service_stats[s._id]['avg_operational_status  = 0
-                service_stats[s._id]['avg_response_time']       = None
+            service_stats[s._id]['last_operational_status'] = stat.harvest_successful
+            service_stats[s._id]['last_update']             = stat.harvest_date
+            service_stats[s._id]['harvest_status' ]         = stat.harvest_status
 
     if oformat is not None and oformat == 'json':
         resp = json.dumps({'services':[dict(dict(s).items() + service_stats[s._id].items()) for s in services]}, default=json_util.default)
@@ -106,7 +95,7 @@ def services(filter_provider, filter_type, oformat):
         tld_stats[k] = {'ok':0, 'total':0}
         for sid in v:
             tld_stats[k]['total'] += 1
-            if sid in latest_stats and latest_stats[sid].last_operational_status:
+            if sid in latest_stats and latest_stats[sid].harvest_successful:
                 tld_stats[k]['ok'] += 1
 
     # get list of unique providers in system
@@ -148,29 +137,31 @@ def show_service(service_id):
                   'response_time'      : None,
                   'operational_status' : None }
 
-    pl = db.PingLatest.find_one({'service_id':service._id})
-    if pl:
-        # set ping data for graph
-        latest_pings, latest_statuses = pl.get_current_data()
-        for i in xrange(0, len(latest_pings)):
-            v = {'x':i, 'y':latest_pings[i] or 50}
-            if latest_statuses[i]:
-                ping_data['good'].append(v)
-                ping_data['bad'].append({'x':i, 'y':0})
-            else:
-                ping_data['bad'].append(v)
-                ping_data['good'].append({'x':i, 'y':0})
 
-        # latest ping info
-        last_ping.update({'time':pl.updated,
-                          'response_time': pl.last_response_time,
-                          'operational_status': pl.last_operational_status})
+    harvest = db.Harvest.find_one({'service_id':service._id})
+    if harvest:
+        harvest_data = {}
+        harvest_data['harvest_time']       = harvest.harvest_date
+        harvest_data['harvest_status']     = harvest.harvest_status
+        harvest_data['harvest_successful'] = harvest.harvest_successful
+        if harvest.harvest_messages:
+            harvest_data['harvest_message'] = harvest.harvest_messages[0]
+        else:
+            harvest_data['harvest_message'] = {'date' : datetime.utcnow(), 'message' : u'No messages'}
+
+    else: # Just in case no harvest has been attempted
+        harvest_data = {
+            'harvest_time' : datetime.utcnow(),
+            'harvest_status' : 'No harvest attempted',
+            'harvest_message' : {'date' : datetime.utcnow(), 'message' : u'No messages'}
+        }
+
+
 
     return render_template('show_service.html',
                            service=service,
-                           ping_data=ping_data,
                            datasets=datasets,
-                           last_ping=last_ping,
+                           harvest_data=harvest_data,
                            metadatas=metadatas)
 
 @app.route('/services/', methods=['POST'])
@@ -224,7 +215,7 @@ def ping_service(service_id):
 def harvest_service(service_id):
     s = db.Service.find_one({ '_id' : service_id })
 
-    h = harvest(service_id)
+    h = harvest(service_id, ignore_active=True)
     flash(h)
     return redirect(url_for('show_service', service_id=service_id))
 

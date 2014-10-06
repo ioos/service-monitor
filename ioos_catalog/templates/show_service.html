@@ -8,7 +8,6 @@
     Admin <span class="caret"></span>
   </button>
   <ul class="dropdown-menu pull-right">
-    <li><a href="{{ url_for('ping_service', service_id=service._id) }}">Ping</a></li>
     <li><a href="{{ url_for('harvest_service', service_id=service._id) }}">Harvest</a></li>
     <li><a href="{{ url_for('edit_service', service_id=service._id) }}">Edit</a></li>
     <li class="divider"></li>
@@ -73,14 +72,12 @@
       {% endif %}
     </dl>
     <dl class="dl-horizontal col-lg-4">
-      <dt>Active</dt>
-      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if service.active else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
-      <dt>Last Attempt</dt>
-      <dd><abbr title="{{ last_ping['time'] | datetimeformat }}">{{ last_ping['time'] | prettydate }}</abbr></dd>
-      <dt>Last Ping</dt>
-      <dd>{{ last_ping['response_time'] }}</dd>
-      <dt>Last Status</dt>
-      <dd>{{ last_ping['operational_status'] | status_icon | safe }}</dd>
+      <dt>Harvest Successful</dt>
+      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if harvest_data['harvest_successful'] else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
+      <dt>Last Harvest Attempt</dt>
+      <dd><abbr title="{{ harvest_data['harvest_time'] | datetimeformat }}">{{ harvest_data['harvest_time'] | prettydate }}</abbr></dd>
+      <dt>Last Harvest Status</dt>
+      <dd>{{ harvest_data['harvest_status'] }}</dd>
     </dl>
   </div>
 
@@ -140,14 +137,13 @@
     </ul>
   </div>
 
-  <h4>Last Week of Responses</h4>
+  <h4>Latest Harvest Messages</h4>
   <div class="row">
-    <div id="y_axis">
+    {{ harvest_data['harvest_message']['date'] | datetimeformat }}
+    <pre>
+    {{ harvest_data['harvest_message']['message'] }}
+    </pre>
 
-    </div>
-    <div id="pings">
-
-    </div>
   </div>
 
   <br/>
@@ -159,10 +155,10 @@
 
 <script type="text/javascript">
 
-var pingData = {{ ping_data | tojson }};
+//var pingData = { ping_data | tojson };
 
 $(function() {
-
+  /*
   var width = 1100,
       height = 50;
 
@@ -185,6 +181,7 @@ $(function() {
 
     graph.render();
   }
+  */
 
 });
 
