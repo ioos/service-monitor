@@ -5,8 +5,10 @@ from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.tasks.harvest import DapHarvest, SosHarvest, WmsHarvest, WcsHarvest
 from lxml.etree import XMLSyntaxError
 from datetime import datetime
+from traceback import format_exc
 
 import requests
+import socket
 
 @db.register
 class Harvest(BaseDocument):
@@ -98,8 +100,15 @@ class Harvest(BaseDocument):
             self.set_status("Harvest Successful")
             self.harvest_successful = True
             return
+
+        except socket.timeout as e:
+            app.logger.exception("Failed to harvest service due to timeout")
+            self.new_message("Service Timeout: %s" % e.message)
+            self.set_status("Timed Out")
+            self.harvest_successful = False
+            return
+
         except XMLSyntaxError as e:
-            from traceback import format_exc
             app.logger.exception("Failed harvesting service %s: XMLSyntaxError", service)
             if service.service_type == 'SOS':
                 self.set_status("Invalid SOS")
@@ -110,7 +119,6 @@ class Harvest(BaseDocument):
             self.new_message("Harvester failed to parse the XML response from the SOS endpoint\n\n%s" % format_exc())
 
         except Exception as e:
-            from traceback import format_exc
             app.logger.exception("Failed harvesting service %s", service)
             self.new_message(format_exc())
             self.set_status("Harvest Failed")
