@@ -114,3 +114,13 @@ class Dataset(BaseDocument):
 
         return ret_val
 
+    @classmethod
+    def total_datasets(cls):
+        '''
+        Returns the total datasets
+        '''
+
+        counts = cls.count_types_by_provider()
+        vals = [ v['_all'] for v in counts.itervalues() ]
+        return sum(vals)
+        
