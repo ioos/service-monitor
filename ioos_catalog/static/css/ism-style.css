@@ -96,6 +96,7 @@ svg .dataset path {
 }
 
 .jumbotron a:hover {
+  text-decoration: none;
 }
 
 .jumbotron label {

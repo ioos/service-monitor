@@ -3,7 +3,7 @@
 {% block jumbo %}
 <div class="row">
   <div class="col-lg-6">
-    <h3> <a href="{{ url_for('metadatas') }}">Metadata Inventory</a></h3>
+    <h3> <a href="{{ url_for('metadatas') }}">Asset Inventory <span class="label label-info">ALPHA</span></a></h3>
   </div>
 </div>
 {% endblock %}
@@ -56,9 +56,18 @@
   </div>
 
   <div class="col-sm-6">
-    <h2>Metadata/Asset Inventory</h2>
-
-    <p>Services and Datasets generate Metadata records when harvested, according to the IOOS Asset Inventory Map document. The concepts contained in this mapping is a normalization of data across disparate Datasets and sources.  Using the Metadata/Asset Inventory tool, you can view or download (in CSV) table of these Metadata concepts.</p>
+    <h2>Asset Inventory <span class="label label-info">ALPHA</span></h2>
+    <p>
+      A comprehensive, automated inventory of observational assets is key goal of
+      IOOS. The services in this Catalog publish metadata records of various formats
+      that describe the source of the data published via the services. This initial
+      version of the Asset Inventory is an attempt to automatically infer the
+      inventory of observing assets deployed in a given region from the metadata
+      published by data services. Continued attentiveness to metadata maintenance,
+      through communication between dataset providers and regional and federal web
+      service providers, is needed to ensure the effectiveness and accuracy of the
+      Asset Inventory.
+    </p>
 
   </div>
 </div>
