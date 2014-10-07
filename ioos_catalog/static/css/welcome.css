@@ -153,8 +153,6 @@
     position: absolute;
     top: 2%;
     width: 100%;
-    background: rgb(0, 0, 0); /* fallback color */
-    background: rgba(0, 0, 0, 0.4);
 }
 
 .dynamic-overlay h5 {

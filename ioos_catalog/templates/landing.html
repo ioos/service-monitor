@@ -19,9 +19,6 @@
         <a href="{{url_for('dashboard')}}">
           <img class="img-responsive" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Dashboard"></img>
         </a>
-        <div class="dynamic-overlay">
-          <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
-        </div>
         <div class="overlay">
           <a href="{{url_for('dashboard')}}">
             Catalog Dashboard
@@ -54,6 +51,9 @@
             <a href="{{url_for('catalog_map')}}">
               <img class="img-responsive" src="{{url_for('static', filename='img/landing/earth.png')}}" alt="Catalog Map"></img>
             </a>
+            <div class="dynamic-overlay">
+              <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
+            </div>
             <div class="overlay overlay-map">
               <a href="{{url_for('catalog_map')}}">
                 Catalog Map
