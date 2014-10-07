@@ -96,6 +96,7 @@ svg .dataset path {
 }
 
 .jumbotron a:hover {
+  text-decoration: none;
 }
 
 .jumbotron label {
@@ -329,6 +330,11 @@ svg path.dataset.active {
 
 .overflow {
   overflow-x: auto;
+}
+
+.table-view {
+    margin-left: 1%;
+    margin-right: 1%;
 }
 
 .nav-header {
