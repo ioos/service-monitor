@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from ioos_catalog.views import dashboard
+from ioos_catalog.views import inventory
 from ioos_catalog.views import service
 from ioos_catalog.views import dataset
 from ioos_catalog.views import catalog_map
