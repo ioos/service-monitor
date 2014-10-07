@@ -39,15 +39,19 @@
     <table class="table table-striped table-bordered table-condensed" style="font-size: 11px;">
         <thead>
             <tr>
-                <th>uid</th>
-                <th>updated (utc)</th>
+                <th>Data Provider</th>
+                <th>Name</th>
+                <th>Dataset Identifier</th>
+                <th>Updated (UTC)</th>
             </tr>
         </thead>
         <tbody>
         {%- for d in datasets %}
             <tr>
-                <td><a href="{{ url_for('show_dataset', dataset_id=d._id) }}">{{ d.uid }}</a></td>
-                <td>{{ d.updated | datetimeformat }}</td>
+                <td>{{d['data_provider'] | safe}}</td>
+                <td>{{d['name'] | safe}}</td>
+                <td><a href="{{ url_for('show_dataset', dataset_id=d['_id']) }}">{{ d.uid }}</a></td>
+                <td><abbr title="{{ d['updated'] | datetimeformat }}">{{ d['updated'] | prettydate }}</abbr></td>
             </tr>
         {%- endfor %}
          </tbody>

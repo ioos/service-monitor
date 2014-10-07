@@ -45,8 +45,16 @@ def datasets(filter_provider, filter_type):
     titleparts.append("Datasets")
     g.title = " ".join(titleparts)
 
-    f          = DatasetFilterForm()
-    datasets   = list(db.Dataset.find(filters))
+    f        = DatasetFilterForm()
+    datasets = list(db.Dataset.find(filters))
+    datasets = map(dict, datasets)
+    for dataset in datasets:
+        if dataset['services']:
+            dataset['data_provider'] = dataset['services'][0]['data_provider']
+            dataset['name'] = dataset['services'][0]['name'] or 'None'
+        else:
+            dataset['data_provider'] = 'None'
+            dataset['name'] = 'None'
     try:
         # find all service ids with an associated active service endpoint
         assettypes = (db.Dataset.find({'services.service_id':
