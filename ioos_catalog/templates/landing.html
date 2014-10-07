@@ -20,11 +20,13 @@
           <img class="img-responsive" src="{{url_for('static', filename='img/landing/glider.png')}}" alt="Gliders"></img>
         </a>
         <div class="overlay">
-          Gliders
+          <a href="{{url_for('gliders')}}">
+            Gliders
+          </a>
         </div>
       </div>
       <div class="img-text">
-        <a href="{{url_for('inventory')}}">
+        <a href="{{url_for('featured_maps')}}">
           <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/bathy.png')}}" alt="Featured Maps"></img>
         </a>
         <div class="overlay">
@@ -77,7 +79,7 @@
         </div>
         <div class="col-xs-6 col-md-6 smpadding">
           <div class="img-text">
-            <a href="{{url_for('featured_maps')}}">
+            <a href="{{url_for('inventory')}}">
               <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Inventory"></img>
             </a>
             <div class="overlay overlay-sq">
