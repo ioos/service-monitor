@@ -16,24 +16,23 @@
   <div class="row img-block">
     <div class="col-xs-12 col-md-4 smpadding">
       <div class="img-text">
-        <a href="{{url_for('dashboard')}}">
-          <img class="img-responsive" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Dashboard"></img>
+        <a href="{{url_for('gliders')}}">
+          <img class="img-responsive" src="{{url_for('static', filename='img/landing/glider.png')}}" alt="Gliders"></img>
         </a>
-        <div class="dynamic-overlay">
-          <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
-        </div>
         <div class="overlay">
-          <a href="{{url_for('dashboard')}}">
-            Catalog Dashboard
+          <a href="{{url_for('gliders')}}">
+            Gliders
           </a>
         </div>
       </div>
       <div class="img-text">
-        <a href="{{url_for('gliders')}}">
-          <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/glider.png')}}" alt="Gliders"></img>
+        <a href="{{url_for('featured_maps')}}">
+          <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/bathy.png')}}" alt="Featured Maps"></img>
         </a>
         <div class="overlay">
-          Gliders
+          <a href="{{url_for('featured_maps')}}">
+            Featured Maps
+          </a>
         </div>
       </div>
       <div class="img-text">
@@ -54,6 +53,9 @@
             <a href="{{url_for('catalog_map')}}">
               <img class="img-responsive" src="{{url_for('static', filename='img/landing/earth.png')}}" alt="Catalog Map"></img>
             </a>
+            <div class="dynamic-overlay">
+              <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
+            </div>
             <div class="overlay overlay-map">
               <a href="{{url_for('catalog_map')}}">
                 Catalog Map
@@ -77,12 +79,12 @@
         </div>
         <div class="col-xs-6 col-md-6 smpadding">
           <div class="img-text">
-            <a href="{{url_for('featured_maps')}}">
-              <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/asset_map.png')}}" alt="Featured Maps"></img>
+            <a href="{{url_for('inventory')}}">
+              <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Inventory"></img>
             </a>
             <div class="overlay overlay-sq">
-              <a href="{{url_for('featured_maps')}}">
-                Featured Maps
+              <a href="{{url_for('inventory')}}">
+                Catalog Inventory
               </a>
             </div> <!-- overlay -->
           </div> <!-- img-text -->

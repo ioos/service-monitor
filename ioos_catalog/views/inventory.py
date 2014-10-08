@@ -19,9 +19,9 @@ def inject_ra_providers():
         return {'ra_providers': sorted(ra_list),
                 'national_partners': sorted(national_list)}
 
-@app.route('/dashboard', methods=['GET'])
-@app.route('/dashboard/', methods=['GET'])
-def dashboard():
+@app.route('/inventory', methods=['GET'])
+@app.route('/inventory/', methods=['GET'])
+def inventory():
     # provider list
     providers = sorted(region_map.keys())
 
@@ -70,7 +70,7 @@ def dashboard():
                             'id':str(d._id),
                             'url':url_for('show_dataset', dataset_id=d._id)})
 
-    return render_template('index.html',
+    return render_template('inventory.html',
                            counts_by_provider=counts_by_provider,
                            dataset_counts_by_provider=dataset_counts_by_provider,
                            updates=updates,
