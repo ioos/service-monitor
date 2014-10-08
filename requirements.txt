@@ -1,3 +1,4 @@
+python-dateutil
 Flask==0.10.1
 Flask-WTF==0.9.0
 Flask-MongoKit==0.6
@@ -15,9 +16,9 @@ paegan>=1.1.1
 pyoos>=0.6.1
 # unreleased parsing fixes in OWSLib
 git+https://github.com/geopython/OWSLib.git
+git+https://github.com/ioos/wicken.git
 geojson
-petulant-bear>=0.1.2
-wicken>=0.1.2
-compliance-checker>=0.2.0
+git+https://github.com/ioos/petulant-bear.git
+git+https://github.com/ioos/compliance-checker.git
 Flask-Captcha==0.1.8
 arrow==0.4.3
