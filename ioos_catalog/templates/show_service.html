@@ -49,21 +49,25 @@
       <dd>{{ service.service_id | truncate(90, true) }}</dd>
       <dt>Provider</dt>
       <dd><a href="{{ url_for("services", filter_provider=service.data_provider, filter_type='null') }}">{{ service.data_provider }}</a></dd>
+      <dt>Contact(s)</dt>
+      <dd>{{ service.contact | default('None',true) }}</dd>
       <dt>Type</dt>
       <dd><a href="{{ url_for("services", filter_provider='null', filter_type=service.service_type) }}">{{ service.service_type }}</a></dd>
       {% if service.service_type == 'DAP' %}
-      {% if service.extra_url %}
-      <dt>URL</dt>
-      <dd><a href="{{ service.extra_url }}">{{ service.extra_url | truncate(90, true) }}</a></dd>
-      {% endif %}
-      <dt>Data Access URL</dt>
-      <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+        {% if service.extra_url %}
+        <dt>Data Info URL</dt>
+        <dd><a href="{{ service.extra_url }}">{{ service.extra_url | truncate(90, true) }}</a></dd>
+        <dt>Data Access URL</dt>
+        <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+        {% else %}
+        <dt>Data Access URL</dt>
+        <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+        {% endif %}
       {% else %}
-      <dt>URL</dt>
-      <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+        <dt>Data Access URL</dt>
+        <dd><a href="{{ service.url }}">{{ service.url | truncate(90, true) }}</a></dd>
+
       {% endif %}
-      <dt>Contact(s)</dt>
-      <dd>{{ service.contact | default('None',true) }}</dd>
       <dt>Source Metadata URL</dt>
       {% if service.metadata_url is none -%}
           <dd>None</dd>
@@ -106,15 +110,6 @@
     </div>
     <div class="col-lg-4">
       {%- if metadata %}
-      <div class="progress progress-striped">
-        <div class="progress-bar progress-bar-success" style="width: {{ metadata.cc_score.pct * 100}}%">
-          <span class="sr-only">{{metadata.cc_score.pct * 100}}%</span>
-        </div>
-      </div>
-      <dl class="dl-horizontal">
-        <dt>Compliance Score</dt>
-        <dd>{{metadata.cc_score.score }}<small>/{{metadata.cc_score.max_score}}</small> ({{ "%.1f"|format(metadata.cc_score.pct * 100) }}%)</dd>
-      </dl>
       {%- else %}
       {%- endif %}
 
