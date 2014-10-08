@@ -103,7 +103,7 @@
       "type": "Feature",
       "properties": {
         "CRS":"WGS84",
-        "region": "CENCOOS"
+        "region": "CeNCOOS"
       },
       "geometry": {
         "type": "Point",

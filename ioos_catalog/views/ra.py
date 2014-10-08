@@ -28,7 +28,7 @@ provider_info = {
             {'title':'CariCOOS Site', 'url': 'http://www.caricoos.org'},
         ]
     },
-    'CENCOOS': {
+    'CeNCOOS': {
         'fullname': 'The Central and Northern California Ocean Observing System',
         'provider_type': 'regional',
         'banner': '/static/img/ra/cencoos.jpg',
