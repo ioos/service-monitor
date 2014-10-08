@@ -677,7 +677,11 @@ class DapHarvest(Harvester):
                     # one less order of magnitude eg 390000 -> 10000
                     slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)
 
+                    # FIXME: Use more robust mechanism to ensure tabledap work
+                    #        perhaps geojson?
+                    xvar[-1:]
                     xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
+                    yvar[-1:]
                     ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
                     # both coords must be valid to have a valid vertex
                     # get rid of any nans and unreasonable lon/lats
