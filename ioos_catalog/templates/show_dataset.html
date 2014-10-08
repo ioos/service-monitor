@@ -16,7 +16,7 @@
     <div class="col-lg-2">
       <ul class="nav nav-tabs nav-stacked" id="service_tabs">
         {%- for s in dataset.services %}
-        <li><a data-target="#{{ s.service_id }}" data-toggle="tab">{{ s['service_type'] }}</a></li>
+        <li><a data-target="#{{ s.service_id }}" data-toggle="tab"> {{ s['service_type'] }} | {{s['data_provider']}}</a></li>
         {%- endfor %}
       </ul>
     </div>
