@@ -140,9 +140,6 @@ function updateTypeBtns(srcData, keyFunc, btnContainerSel, urlBase, overviewSel,
 
   // both new and existing hrefs get updated
   svcbtns.attr('href', function(d) {
-    if (d.key == "All") {
-      return "/" + urlBase + "/filter/";
-    }
     var ltype = (d.key != "All") ? d.key : "none";
     var rtype = sanitizeServiceUrl(region);
     return '/' + urlBase + '/filter/' + rtype + '/' + ltype;
