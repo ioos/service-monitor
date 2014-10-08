@@ -74,6 +74,7 @@ def services(filter_provider, filter_type, oformat):
                                 'last_response_code'      : None,
                                 'last_update'             : None,
                                 'harvest_status'          : u'No harvest attempted',
+                                'harvest_rate'            : '0/0',
                                 'avg_response_time'       : None}
 
         if s._id in latest_stats:
@@ -82,6 +83,8 @@ def services(filter_provider, filter_type, oformat):
             service_stats[s._id]['last_operational_status'] = stat.harvest_successful
             service_stats[s._id]['last_update']             = stat.harvest_date
             service_stats[s._id]['harvest_status' ]         = stat.harvest_status
+            service_stats[s._id]['harvest_rate' ]           = stat.success_rate()
+
 
     if oformat is not None and oformat == 'json':
         resp = json.dumps({'services':[dict(dict(s).items() + service_stats[s._id].items()) for s in services]}, default=json_util.default)

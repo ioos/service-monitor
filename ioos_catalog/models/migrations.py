@@ -52,6 +52,16 @@ class MetadataMigration(DocumentMigration):
         self.update = {'$set' : {'active' : False}}
 
 
+from ioos_catalog.models import harvests
+class HarvestMigration(DocumentMigration):
+    def allmigration_01__add_status_field(self):
+        for doc in db.Harvest.find({"harvest_messages.successful": {"$exists":False}}):
+            for message in doc.harvest_messages:
+                message['successful'] = False
+            doc.save()
+
+
+
 with app.app_context():
     migration = ServiceMigration(service.Service)
     migration.migrate_all(collection=db['services'])
@@ -62,3 +72,5 @@ with app.app_context():
     migration = MetadataMigration(metadata.Metadata)
     migration.migrate_all(collection=db['metadatas'])
 
+    migration = HarvestMigration(harvests.Harvest)
+    migration.migrate_all(collection=db['harvests'])
