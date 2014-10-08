@@ -58,11 +58,11 @@
             {%- set ss = service_stats[service._id] %}
             <tr class="{{ "danger" if ss['last_operational_status'] == 0 and ss['last_update'] }}">
                 <td>{{ service.data_provider }}</td>
-                <td><a href="{{ service.url }}">{{ service.service_type }}</a></td>
+                <td>{{ service.service_type }}</td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
                 <td>{{ ss['harvest_status'] | safe }}</td>
                 <td><abbr title="{{ ss['last_update'] | datetimeformat }}">{{ ss['last_update'] | prettydate }}</abbr></td>
-                <td><abbr title="Blah">{{ ss['harvest_rate'] | safe }}</abbr></td>
+                <td><abbr title="successes out of attempts">{{ ss['harvest_rate'] | safe }}</abbr></td>
             </tr>
             {%- endfor %}
          </tbody>
