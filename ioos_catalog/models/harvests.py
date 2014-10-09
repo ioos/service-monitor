@@ -151,6 +151,6 @@ class Harvest(BaseDocument):
         Returns a STRING X/Y, where X is the successes, Y is the attempts
         '''
         attempts = len(self.harvest_messages)
-        successes = sum([i['successful'] for i in self.harvest_messages])
+        successes = sum([i.get('successful', False) for i in self.harvest_messages])
         return '%s/%s' % (successes, attempts)
 
