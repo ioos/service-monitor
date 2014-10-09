@@ -4,94 +4,69 @@
 {% endblock %}
 
 
+{% block javascript %}
+<script type="text/javascript" src="{{url_for('static', filename='js/packery.pkgd.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery.backstretch.min.js')}}"></script>
+{% endblock %}
+
 {% block page %}
 
 <div class="container">
-  <div class="row">
+  <div class="row shrunk">
     <div class="col-sm-12 col-md-12 welcome">
-      <h1>Welcome</h1>
+  <h1>Welcome</h1>
       <p>U.S. IOOS is a vital tool for tracking, predicting, managing, and adapting to changes in our ocean, coastal and Great Lakes environment. U.S. IOOS delivers the data and information needed, so that decision-makers can take action to improve safety, enhance the economy, and protect the environment. Explore the interactive features of the new IOOS Data Catalog.</p>
     </div> <!-- welcome -->
   </div> <!-- row -->
-  <div class="row img-block">
-    <div class="col-xs-12 col-md-4 smpadding">
-      <div class="img-text">
-        <a href="{{url_for('gliders')}}">
-          <img class="img-responsive" src="{{url_for('static', filename='img/landing/glider.png')}}" alt="Gliders"></img>
-        </a>
+  <div id='packery-container' class="row">
+    <div id="gliders-ico" class="item item-smallest">
         <div class="overlay">
           <a href="{{url_for('gliders')}}">
             Gliders
           </a>
         </div>
+    </div>
+    <div id="map-ico" class="item item-larger">
+      <div class="dynamic-overlay">
+        <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
       </div>
-      <div class="img-text">
-        <a href="{{url_for('featured_maps')}}">
-          <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/bathy.png')}}" alt="Featured Maps"></img>
+      <div class="overlay overlay-map">
+        <a href="{{url_for('catalog_map')}}">
+          Catalog Map
         </a>
-        <div class="overlay">
+      </div>
+    </div>
+    <div id="featured-ico" class="item item-smallest">
+      <div class="overlay">
           <a href="{{url_for('featured_maps')}}">
             Featured Maps
           </a>
-        </div>
       </div>
-      <div class="img-text">
-        <a href="{{url_for('help_download')}}">
-          <img class="img-responsive spad" src="{{url_for('static', filename='img/landing/map.png')}}" alt="Download Help"></img>
+    </div>
+    <div id="btn-ico" class="item item-smaller">
+      <div class="overlay overlay-sq">
+        <a href="{{url_for('by_the_numbers')}}">
+          IOOS By The Numbers
         </a>
+      </div>
+    </div>
+    <div id="inventory-ico" class="item item-smaller">
+      <div class="overlay overlay-sq">
+        <a href="{{url_for('inventory')}}">
+          Catalog Inventory
+        </a>
+      </div>
+    </div>
+    <div id="download-ico" class="item item-smallest">
         <div class="overlay">
           <a href="{{url_for('help_download')}}">
             Download Help
           </a>
         </div>
-      </div>
-    </div> <!-- col -->
-    <div class="col-xs-12 col-md-8 smpadding">
-      <div class="row">
-        <div class="col-xs-12 col-md-12">
-          <div class="img-text">
-            <a href="{{url_for('catalog_map')}}">
-              <img class="img-responsive" src="{{url_for('static', filename='img/landing/earth.png')}}" alt="Catalog Map"></img>
-            </a>
-            <div class="dynamic-overlay">
-              <h5>{{ total_datasets | safe }} Datasets | {{ total_services | safe }} Services</h5>
-            </div>
-            <div class="overlay overlay-map">
-              <a href="{{url_for('catalog_map')}}">
-                Catalog Map
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row row-top-pad">
-        <div class="col-xs-6 col-md-6 smapdding">
-          <div class="img-text">
-            <a href="{{url_for('by_the_numbers')}}">
-              <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/btn.png')}}" alt="By the numbers"></img>
-            </a>
-            <div class="overlay overlay-sq">
-              <a href="{{url_for('by_the_numbers')}}">
-                IOOS By The Numbers
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="col-xs-6 col-md-6 smpadding">
-          <div class="img-text">
-            <a href="{{url_for('inventory')}}">
-              <img class="img-responsive mpad" src="{{url_for('static', filename='img/landing/wave.png')}}" alt="Catalog Inventory"></img>
-            </a>
-            <div class="overlay overlay-sq">
-              <a href="{{url_for('inventory')}}">
-                Catalog Inventory
-              </a>
-            </div> <!-- overlay -->
-          </div> <!-- img-text -->
-        </div> <!-- col -->
-      </div> <! -- row -->
-    </div> <!-- col -->
-  </div> <!-- row -->
+    </div>
+
+  </div>
+   <!-- row -->
   <div class="row news">
     <div class="col-sm-12 col-md-6"> <!-- social media -->
       <h1> SOCIAL MEDIA </h1>
@@ -124,5 +99,50 @@
     </div> <!-- col -->
 
 </div>
+
+<script type='text/javascript'>
+
+$(document).ready(function() {
+    $('#gliders-ico')
+      .backstretch("{{url_for('static', filename='img/landing/glider.png')}}")
+      .click(function() {
+        window.location = "{{url_for('gliders')}}";
+      });
+    $('#map-ico')
+      .backstretch("{{url_for('static', filename='img/landing/earth.png')}}")
+      .click(function() {
+        window.location = "{{url_for('catalog_map')}}";
+      });
+
+    $('#featured-ico')
+      .backstretch("{{url_for('static', filename='img/landing/bathy.png')}}")
+      .click(function() {
+        window.location = "{{url_for('featured_maps')}}";
+      });
+    $('#btn-ico')
+      .backstretch("{{url_for('static', filename='img/landing/btn.png')}}")
+      .click(function() {
+        window.location = "{{url_for('by_the_numbers')}}";
+      });
+
+    $('#inventory-ico')
+      .backstretch("{{url_for('static', filename='img/landing/wave.png')}}")
+      .click(function() {
+        window.location = "{{url_for('inventory')}}";
+      });
+    $('#download-ico')
+      .backstretch("{{url_for('static', filename='img/landing/map.png')}}")
+      .click(function() {
+        window.location = "{{url_for('help_download')}}";
+      });
+    var packeryContainer = $('#packery-container');
+    packeryContainer.packery({
+      itemSelector: '.item',
+      gutter:10
+    });
+
+});
+
+</script>
 
 {% endblock %}
