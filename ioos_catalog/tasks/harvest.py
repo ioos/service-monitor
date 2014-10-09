@@ -6,6 +6,8 @@ import re
 import requests
 import math
 from urllib2 import HTTPError
+# py2/3 compat
+from six.moves.urllib.request import urlopen
 
 from owslib.sos import SensorObservationService
 from owslib.swe.sensor.sml import SensorML
@@ -540,6 +542,18 @@ class DapHarvest(Harvester):
                     axisVars['yname'] = var_name
         return axisVars
 
+    def erddap_geojson_url(self, coord_names):
+        """Return geojson from a tabledap ERDDAP endpoint"""
+        # truncate "s."
+        x_name_trunc = coord_names['xname'][2:]
+        y_name_trunc = coord_names['yname'][2:]
+        gj_url = (self.service.get('url') + '.geoJson?' +
+                  x_name_trunc + ',' + y_name_trunc)
+        url_res = urlopen(gj_url)
+        gj = json.load(url_res)
+        url_res.close()
+        return gj
+
     def harvest(self):
         """
         Identify the type of CF dataset this is:
@@ -677,12 +691,23 @@ class DapHarvest(Harvester):
                     # one less order of magnitude eg 390000 -> 10000
                     slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)
 
-                    # FIXME: Use more robust mechanism to ensure tabledap work
-                    #        perhaps geojson?
-                    xvar[-1:]
-                    xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
-                    yvar[-1:]
-                    ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
+                    # TODO: don't split x/y as separate arrays.  Refactor to
+                    # use single numpy array instead with both lon/lat
+
+                    # tabledap datasets must be treated differently than
+                    # standard DAP endpoints.  Retrieve geojson instead of
+                    # trying to access as a DAP endpoint
+                    if 'erddap/tabledap' in unique_id:
+                        # take off 's.' from erddap
+                        gj = self.erddap_geojson_url(coord_names)
+                        # type defaults to MultiPoint, change to LineString
+                        coords = np.array(gj['coordinates'][::slice_factor] +
+                                          gj['coordinates'][-1:])
+                        xs = coords[:, 0]
+                        ys = coords[:, 1]
+                    else:
+                        xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
+                        ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
                     # both coords must be valid to have a valid vertex
                     # get rid of any nans and unreasonable lon/lats
                     valid_idx = ((~np.isnan(xs)) & (np.absolute(xs) <= 180) &
