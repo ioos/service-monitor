@@ -1,6 +1,7 @@
 import os
 import datetime
 import json
+import re
 from functools import wraps
 
 from flask import Flask, redirect, request, current_app
@@ -123,11 +124,24 @@ def trim_star(val):
 
     return val
 
+def trim_dataset(val):
+    try:
+        if val.endswith('.nc'):
+            matches = re.match(r'^http://.*/([a-zA-Z0-9_]+\.nc)$', val)
+            return matches.group(1)
+        if val.startswith('urn'):
+            matches = re.match(r'^urn:ioos:station:(.*)$', val)
+            return matches.group(1)
+    except Exception:
+        pass
+    return val
+
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['timedeltaformat'] = timedeltaformat
 app.jinja_env.filters['prettydate'] = prettydate
 app.jinja_env.filters['is_list'] = is_list
 app.jinja_env.filters['trim_star'] = trim_star
+app.jinja_env.filters['trim_dataset'] = trim_dataset
 
 # pad/truncate filter (for making text tables)
 def padfit(value, size):
