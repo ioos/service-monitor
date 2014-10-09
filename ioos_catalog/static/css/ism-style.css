@@ -2,6 +2,10 @@
   max-height: 350px;
 }
 
+.help-tooltip {
+  cursor: help;
+}
+
 tr.hilite>td {
   background-color: #C6D4E1 !important;
   color: #565C61;

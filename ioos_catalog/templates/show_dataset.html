@@ -94,8 +94,17 @@
                 <span class="sr-only">{{metadata.cc_score.pct * 100}}%</span>
               </div>
             </div>
-            <dl class="dl-horizontal">
-              <dt>Compliance Score</dt>
+            <dl>
+                <dt>Compliance Score 
+                     <small>(
+                         <span class="help-tooltip text-primary"
+                               data-toggle="tooltip"
+                               data-placement="left"
+                               title="Compliance score is based upon how well the dataset adheres to the IOOS Asset Inventory version 1.0 specifications">
+                         What's this <span class="glyphicon glyphicon-question-sign"></span>
+                       </span>
+                     )</small>
+                </dt>
               <dd>{{metadata.cc_score.score }}<small>/{{metadata.cc_score.max_score}}</small> ({{ "%.1f"|format(metadata.cc_score.pct * 100) }}%)</dd>
             </dl>
             {%- else %}
@@ -107,6 +116,7 @@
 
       <script type="text/javascript">
         $(function () {
+          $("[data-toggle='tooltip']").tooltip();
           var width = 500,
               height = 300;
 
