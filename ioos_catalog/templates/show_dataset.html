@@ -118,7 +118,7 @@
         $(function () {
           $("[data-toggle='tooltip']").tooltip();
           $("#compliance-score").click(function() {
-            window.location = "http://ioos.noaa.gov/";
+            window.location = "{{url_for('metadatas')}}";
           });
           var width = 500,
               height = 300;
