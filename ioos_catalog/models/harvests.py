@@ -97,7 +97,7 @@ class Harvest(BaseDocument):
                 message = WmsHarvest(service).harvest()
             elif service.service_type == "WCS":
                 message = WcsHarvest(service).harvest()
-            self.new_message(message or 'Successful Harvest', True)
+            self.new_message(message or 'Harvest Successful', True)
             self.set_status("Harvest Successful")
             self.harvest_successful = True
             return
