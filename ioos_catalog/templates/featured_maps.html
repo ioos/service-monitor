@@ -1,4 +1,9 @@
 {% extends "help_navbar.html" %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/featured_maps.css')}}" />
+{% endblock %}
+
 {% block javascript %}
 <script type='text/javascript' src="{{url_for('static', filename='js/lorem.js')}}"></script>
 {% endblock %}
@@ -16,11 +21,13 @@
     <div class='col-md-12'>
       <div class='list-group'>
         <div class="list-group-item media">
-          <a class="pull-left" href="http://portal.aoos.org/alaska-statewide.php">
+          <a target="_blank" class="pull-left" href="http://portal.aoos.org/alaska-statewide.php">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/aoos.png')}}" alt="AOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">AOOS Ocean Data Explorer</h4>
+            <a target="_blank" href="http://portal.aoos.org/alaska-statewide.php">
+              <h4 class="media-heading">AOOS Ocean Data Explorer</h4>
+            </a>
             This portal contains scientific and management information
             including real-time sensor feeds, operational oceanographic and
             atmospheric models, satellite observations and GIS data sets that
@@ -29,40 +36,48 @@
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://sccoos.org/interactive-map/">
+          <a target="_blank" class="pull-left" href="http://sccoos.org/interactive-map/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/caricoos.png')}}" alt="CariCOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">CariCOOS Latest Conditions and Forecasts Map</h4>
+            <a target="_blank" href="http://sccoos.org/interactive-map/">
+              <h4 class="media-heading">CariCOOS Latest Conditions and Forecasts Map</h4>
+            </a>
             The CariCOOS Latest Conditions and Forecasts Map graphically
             displays the latest observations and forcasts form the Caribbean
             Coastal Ocean Observing System (CariCOOS).
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://data.cencoos.org">
+          <a target="_blank" class="pull-left" href="http://data.cencoos.org">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/cencoos.png')}}" alt="CeNCOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">CeNCOOS Data Portal</h4>
+            <a target="_blank" href="http://data.cencoos.org">
+              <h4 class="media-heading">CeNCOOS Data Portal</h4>
+            </a>
             This map contains station data from the Californian coast, streaming in real-time with a history of up to seven days.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="#">
+          <a target="_blank" class="pull-left" href="http://cordc.ucsd.edu/projects/mapping/maps/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/cordc.png')}}" alt="CORDC">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">CORDC HF-Radar</h4>
+            <a target="_blank" href="http://cordc.ucsd.edu/projects/mapping/maps/">
+              <h4 class="media-heading">CORDC HF-Radar</h4>
+            </a>
             An asset map of the coastal HF-Radar stations and their data output.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://data.gcoos.org">
+          <a target="_blank" class="pull-left" href="http://data.gcoos.org">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/gcoos.png')}}" alt="GCOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">GCOOS Data Portal</h4>
+            <a target="_blank" href="http://data.gcoos.org">
+              <h4 class="media-heading">GCOOS Data Portal</h4>
+            </a>
             This Data Portal provides timely information about the environment
             of the United States portion of the Gulf of Mexico and its
             estuaries for use by decision-makers, including researchers,
@@ -72,58 +87,70 @@
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://data.glos.us/portal/">
+          <a target="_blank" class="pull-left" href="http://data.glos.us/portal/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/glos.png')}}" alt="GLOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">GLOS Data Portal</h4>
+            <a target="_blank" href="http://data.glos.us/portal/">
+              <h4 class="media-heading">GLOS Data Portal</h4>
+            </a>
             The GLOS Data Portal provides access to near-realtime and archived observations and to model forecasts for the Great Lakes.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://assets.maracoos.org/">
+          <a target="_blank" class="pull-left" href="http://assets.maracoos.org/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/maracoos.png')}}" alt="MARACOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">MARACOOS Asset Map</h4>
+            <a target="_blank" href="http://assets.maracoos.org/">
+              <h4 class="media-heading">MARACOOS Asset Map</h4>
+            </a>
             The MARACOOS asset map displays gridded datasets from model output in conjunction station data, for the mid-atlantic region.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://nvs.nanoos.org">
+          <a target="_blank" class="pull-left" href="http://nvs.nanoos.org">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/nanoos.png')}}" alt="NANOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">NANOOS Visualization System</h4>
+            <a target="_blank" href="http://nvs.nanoos.org">
+              <h4 class="media-heading">NANOOS Visualization System</h4>
+            </a>
             The NVS contains a data explorer which has a mapping of the NANOOS assets and an in-situ data graph and data comparison with model output.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://hfradar.ndbc.noaa.gov/">
+          <a target="_blank" class="pull-left" href="http://hfradar.ndbc.noaa.gov/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/ndbc.png')}}" alt="HFRADAR">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">NDBC HF-Radar</h4>
+            <a target="_blank" href="http://hfradar.ndbc.noaa.gov/">
+              <h4 class="media-heading">NDBC HF-Radar</h4>
+            </a>
             This is a demonstration of the NOAA HF Radar National Server and
             Architecture Project. HF Radar is used to remotely measure ocean
             surface currents.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://www.neracoos.org/realtime_map">
+          <a target="_blank" class="pull-left" href="http://www.neracoos.org/realtime_map">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/neracoos.png')}}" alt="NERACOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">NERACOOS Real-time Data Portal</h4>
+            <a target="_blank" href="http://www.neracoos.org/realtime_map">
+              <h4 class="media-heading">NERACOOS Real-time Data Portal</h4>
+            </a>
             This map displays real-time observations from buoys and monitoring stations in the Northeast region.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://oos.soest.hawaii.edu/pacioos/voyager/index.html">
+          <a target="_blank" class="pull-left" href="http://oos.soest.hawaii.edu/pacioos/voyager/index.html">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/pacioos.png')}}" alt="PacIOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">PacIOOS Voyager</h4>
+            <a target="_blank" href="http://oos.soest.hawaii.edu/pacioos/voyager/index.html">
+              <h4 class="media-heading">PacIOOS Voyager</h4>
+            </a>
             The PacIOOS Data Management System focuses on the management,
             service, and delivery of PacIOOS-related data, allowing PacIOOS to
             respond to partner needs for sharing and integrating data, offer
@@ -132,22 +159,26 @@
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://sccoos.org/interactive-map/">
+          <a target="_blank" class="pull-left" href="http://sccoos.org/interactive-map/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/sccoos.png')}}" alt="SCCOOS">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">SCCOOS Interactive Map</h4>
+            <a target="_blank" href="http://sccoos.org/interactive-map/">
+              <h4 class="media-heading">SCCOOS Interactive Map</h4>
+            </a>
             The SCCOOS Interactive Map has a listing of available products that
             can be displayed on an interactive map as well as an interface for
             all SCCOOS observations.
           </div>
         </div> <!-- list-group-item -->
         <div class="list-group-item media">
-          <a class="pull-left" href="http://secoora.org/maps/">
+          <a target="_blank" class="pull-left" href="http://secoora.org/maps/">
             <img class="media-object" src="{{url_for('static', filename='img/featured_maps/secoora.png')}}" alt="SECOORA">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">SECOORA Data Portal</h4>
+            <a target="_blank" href="http://secoora.org/maps/">
+              <h4 class="media-heading">SECOORA Data Portal</h4>
+            </a>
             The SECOORA asset map displays station information for the south east region with optional map-overlays of bathymetric data.
           </div>
         </div> <!-- list-group-item -->
