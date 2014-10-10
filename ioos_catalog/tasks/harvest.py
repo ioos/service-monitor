@@ -348,7 +348,7 @@ class SosHarvest(Harvester):
             except Exception as e:
                 app.logger.warn("could not save compliancecheck/metamap information: %s", e)
 
-            return "Harvested"
+            return "Harvest Successful"
 
     def ccheck_service(self):
         assert self.sos
