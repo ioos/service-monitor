@@ -40,7 +40,10 @@
     color: #838383;
 }
 
-img.maxwidth-logo {
+img.logo {
+    height: 64px;
+    width: 64px;
+    max-height: 64px;
     max-width: 64px;
 }
 
