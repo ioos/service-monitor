@@ -43,3 +43,23 @@
 img.maxwidth-logo {
     max-width: 64px;
 }
+
+.media-body a {
+    color: black;
+}
+
+.media-body a:link {
+    text-decoration: none;
+}
+
+.media-body a:visited {
+    text-decoration: none;
+}
+
+.media-body a:hover {
+    text-decoration: none;
+}
+
+.media-body a:active {
+    text-decoration: none;
+}
