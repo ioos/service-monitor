@@ -51,9 +51,9 @@
         {%- for service_group in services|groupby('tld') %}
         <tbody>
             <tr class="hilite">
-              <td colspan="4"><b>{{ service_group.grouper }}</b></td>
-              <td><b>Services Available:</b></td>
-              <td><b>{{ tld_stats[service_group.grouper]['ok'] }}/{{ tld_stats[service_group.grouper]['total'] }}<b></td>
+              <td colspan="3"><b>{{ service_group.grouper }}</b></td>
+              <td><b>Services Available: {{ tld_stats[service_group.grouper]['ok'] }}/{{ tld_stats[service_group.grouper]['total'] }}<b></td>
+              <td colspan="2"></td>
             </tr>
             {%- for service in service_group.list %}
             {%- set ss = service_stats[service._id] %}
