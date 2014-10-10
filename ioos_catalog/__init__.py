@@ -127,9 +127,12 @@ def trim_star(val):
 def trim_dataset(val):
     try:
         if val.endswith('.nc'):
-            matches = re.match(r'^http://.*/([a-zA-Z0-9_]+\.nc)$', val)
+            matches = re.match(r'^http://.*/([a-zA-Z0-9_ \-]+\.ncd?)$', val)
             return matches.group(1)
-        if val.startswith('urn'):
+        elif val.startswith('http'):
+            matches = re.match(r'^https?://.*/(.*)$', val)
+            return matches.group(1)
+        elif val.startswith('urn'):
             matches = re.match(r'^urn:ioos:station:(.*)$', val)
             return matches.group(1)
     except Exception:

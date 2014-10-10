@@ -42,7 +42,7 @@
                 <th>Data Provider</th>
                 <th>Name</th>
                 <th>Dataset Identifier</th>
-                <th>Updated (UTC)</th>
+                <th>Last Updated</th>
             </tr>
         </thead>
         <tbody>
@@ -50,7 +50,7 @@
             <tr>
                 <td>{{d['data_provider'] | safe}}</td>
                 <td>{{d['name'] | truncate(80) | safe}}</td>
-                <td><a href="{{ url_for('show_dataset', dataset_id=d['_id']) }}">{{ d.uid | trim_dataset }}</a></td>
+                <td><a href="{{ url_for('show_dataset', dataset_id=d['_id']) }}">{{ d.uid | trim_dataset | truncate(80) }}</a></td>
                 <td><abbr title="{{ d['updated'] | datetimeformat }}">{{ d['updated'] | prettydate }}</abbr></td>
             </tr>
         {%- endfor %}
