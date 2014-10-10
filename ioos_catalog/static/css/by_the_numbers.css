@@ -40,3 +40,6 @@
     color: #838383;
 }
 
+img.maxwidth-logo {
+    max-width: 64px;
+}
