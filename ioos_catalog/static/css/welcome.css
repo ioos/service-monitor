@@ -110,18 +110,18 @@
     padding: 10px;
     letter-spacing: -1px;
     position: absolute;
-    top: 70%;
+    top: 67%;
     width: 100%;
     background: rgb(0, 0, 0); /* fallback color */
     background: rgba(0, 0, 0, 0.4);
 }
 
 .overlay.overlay-map {
-    top: 80%;
+    top: 83%;
 }
 
 .overlay.overlay-sq {
-    top: 77%;
+    top: 71%;
 }
 
 .overlay h2 {
@@ -161,6 +161,10 @@
 }
 
 
+#packery-container {
+    padding-top: 10px;
+}
+
 .img-text h2 {
     position: absolute;
     top: 200px;
@@ -186,4 +190,30 @@
    padding: 10px; 
 }
 
+.item {
+  float: left;
+  background: #C09;
+  border-color: hsla(0, 0%, 0%, 0.3);
+  cursor: pointer;
+}
+
+.item.item-smallest {
+  height: 200px;
+  width: 33%;
+  background-color: #ff4e2b;
+}
+.item.item-smaller {
+  height: 230px;
+  width: 32%;
+  background-color: #4bff2b;
+}
+.item.item-larger {
+  height: 380px;
+  width: 65%;
+  background-color: #ff2bb5;
+}
+
+.row.shrunk {
+    margin-right: -2px;
+}
 
