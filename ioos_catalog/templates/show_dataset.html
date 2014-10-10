@@ -95,7 +95,7 @@
               </div>
             </div>
             <dl>
-                <dt>Compliance Score 
+                <dt id='compliance-score'>Compliance Score 
                      <small>(
                          <span class="help-tooltip text-primary"
                                data-toggle="tooltip"
@@ -117,6 +117,9 @@
       <script type="text/javascript">
         $(function () {
           $("[data-toggle='tooltip']").tooltip();
+          $("#compliance-score").click(function() {
+            window.location = "{{url_for('metadatas')}}";
+          });
           var width = 500,
               height = 300;
 
