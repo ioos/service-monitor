@@ -45,7 +45,7 @@
                 <th>Service Name</th>
                 <th title="The status message of the latest harvest attempt">Latest Harvest Status</th>
                 <th title="The last time a harvest of this service was attempted">Last Harvest Attempt</th>
-                <th>Harvest Success Rate</th>
+                <th title="The ratio of successful harvests to harvest attempts for this service">Harvest Success Rate</th>
             </tr>
         </thead>
         {%- for service_group in services|groupby('tld') %}
