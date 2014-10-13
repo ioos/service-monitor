@@ -1,0 +1,19 @@
+Earth (earth.png)               - Copyright NASA under the Creative Commons 2.0 License
+                                - Source https://www.flickr.com/photos/gsfc/
+
+Earth Bathymetric (bathy.png)   - Copyright Kevn M. Gill under the Creative Commons 2.0 Share-alike License
+                                - Source https://www.flickr.com/photos/gsfc/
+
+Gliders (gliders.png)           - Copyright 2014 Rutgers Marine & Coastal Sciences
+                                - One source of many http://marine.rutgers.edu/main/Featured-Student/Featured-student-Donglai-Gong.html
+
+Wind Currents (map.png)         - Image is a capture of software and not copyrighted.
+                                - Software is Copyright 2014 Cameron Beccario under the MIT license.
+                                - Source: http://earth.nullschool.net/
+                                - Source: https://github.com/cambecc/earth/blob/master/LICENSE.md
+
+Wave (wave.png)                 - Copyright 2010 Sunova Surfboards under Creative Commons License
+                                - Source https://www.flickr.com/photos/sunova_surfboards/5444811562/
+
+The remaining images are Copyright 2014 RPS ASA Used with permissions and distributed freely under the Creative Commons 2.0 Share-alike License.
+        
