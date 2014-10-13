@@ -62,8 +62,22 @@
                 <td>{{ service.service_type }}</td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>
                 <td>{{ ss['harvest_status'] | safe }}</td>
-                <td><abbr title="{{ ss['last_update'] | datetimeformat }}">{{ ss['last_update'] | prettydate }}</abbr></td>
-                <td><abbr title="successes out of attempts">{{ ss['harvest_rate'] | safe }}</abbr></td>
+                <td>
+                  <span class="help-tooltip text-primary"
+                        data-toggle="tooltip"
+                        data-placement="left"
+                        title="{{ ss['last_update'] | datetimeformat }}">
+                    {{ ss['last_update'] | prettydate }}
+                  </span>
+                </td>
+                <td>
+                  <span class="help-tooltip text-primary"
+                        data-toggle="tooltip"
+                        data-placement="left"
+                        title="Successes out of attempts">
+                    {{ ss['harvest_rate'] | safe }}
+                  </span>
+                </td>
             </tr>
             {%- endfor %}
          </tbody>
@@ -105,6 +119,7 @@
     <script type="text/javascript">
       $(function() {
         populateBoxes();
+        $("[data-toggle='tooltip']").tooltip();
 
         $('#region-select').chosen();
         $('#filter-select').chosen();
