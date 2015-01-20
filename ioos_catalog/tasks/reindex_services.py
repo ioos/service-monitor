@@ -19,9 +19,6 @@ region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
                  'CeNCOOS'          : '4BA5624D-A61F-4C7E-BAEE-7F8BDDB8D9C4',
                  'GCOOS'            : '003747E7-4818-43CD-937D-44D5B8E2F4E9',
                  'Glider_DAC'       : '2546E50F-F0C7-4365-9D45-694DD22E5F26',
-                 # Should this be given a separate UID or eventually migrated
-                 # to Glider_DAC?
-                 'Glider_DAC_2'     : '',
                  'GLOS'             : 'B664427E-6953-4517-A874-78DDBBD3893E',
                  'HFradar_DAC'      : 'A4A65346-6B65-4ED2-A2DC-5D529074EE6D',
                  'MARACOOS'         : 'C664F631-6E53-4108-B8DD-EFADF558E408',
