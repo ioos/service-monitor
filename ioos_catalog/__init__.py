@@ -6,6 +6,7 @@ from functools import wraps
 
 from flask import Flask, redirect, request, current_app
 
+__version__ = "3.2.2"
 # Create application object
 app = Flask(__name__)
 
