@@ -9,6 +9,7 @@ from urllib2 import HTTPError
 # py2/3 compat
 from six.moves.urllib.request import urlopen
 
+from owslib import ows
 from owslib.sos import SensorObservationService
 from owslib.swe.sensor.sml import SensorML
 from owslib.util import testXMLAttribute, testXMLValue
@@ -40,14 +41,26 @@ from functools import wraps
 
 def queue_harvest_tasks():
     """
-    Generate a number of harvet tasks.
+    Generate a number of harvest tasks.
 
     Meant to be called via cron. Only queues services that are active.
     """
     with app.app_context():
-        sids = [s._id for s in db.Service.find({'active':True}, {'_id':True})]
-        for sid in sids:
-            queue.enqueue(harvest, sid)
+        for s in db.Service.find({'active':True}, {'_id':True}):
+            service_id = s._id
+            # count all the datasets associated with this particular service
+            datalen = db.datasets.find({'services.service_id':
+                                         service_id}).count()
+            # handle timeouts for services with large numbers of datasets
+            if datalen <= 36:
+                timeout_secs = 180
+            else:
+                # for large numbers of requests, 5 seconds should be enough
+                # for each request, on average
+                timeout_secs = datalen * 5
+            queue.enqueue_call(harvest, args=(service_id,),
+                               timeout=timeout_secs)
+
 
 def context_decorator(f):
     @wraps(f)
@@ -182,6 +195,18 @@ class SosHarvest(Harvester):
     def __init__(self, service):
         Harvester.__init__(self, service)
 
+    def _handle_ows_exception(self, **kwargs):
+        try:
+            return self.sos.describe_sensor(**kwargs)
+        except ows.ExceptionReport as e:
+            if e.code == 'InvalidParameterValue':
+                # TODO: use SOS getCaps to determine valid formats
+                # some only work with plain SensorML as the format
+                kwargs['outputFormat'] = 'text/xml;subtype="sensorML/1.0.1"'
+                return self._handle_ows_exception(**kwargs)
+            elif e.msg == 'No data found for this station':
+                return None
+
     def _describe_sensor(self, uid):
         """
         Issues a DescribeSensor request with fallback behavior for oddly-acting SOS servers.
@@ -192,14 +217,8 @@ class SosHarvest(Harvester):
                     'timeout' : 120
                  }
 
-        try:
-            return self.sos.describe_sensor(**kwargs)
-        except HTTPError as e:
-            # try again without the outputFormat
-            kwargs['outputFormat'] = ''
+        return self._handle_ows_exception(**kwargs)
 
-            # if this raises, let it happen
-            return self.sos.describe_sensor(**kwargs)
 
     def harvest(self):
         self.sos = SensorObservationService(self.service.get('url'))
@@ -240,6 +259,8 @@ class SosHarvest(Harvester):
                     self.process_station(uid)
                 processed.append(uid)
 
+
+
     def process_station(self, uid):
         """ Makes a DescribeSensor request based on a 'uid' parameter being a station procedure """
 
@@ -249,10 +270,18 @@ class SosHarvest(Harvester):
         with app.app_context():
 
             app.logger.info("process_station: %s", uid)
-
-            metadata_value = etree.fromstring(self._describe_sensor(uid))
-            sensor_ml      = SensorML(metadata_value)
-            station_ds     = IoosDescribeSensor(metadata_value)
+            desc_sens = self._describe_sensor(uid)
+            # FIXME: add some kind of notice saying the station failed
+            if desc_sens is None:
+                return None
+            metadata_value = etree.fromstring(desc_sens)
+            sensor_ml = SensorML(metadata_value)
+            try:
+                station_ds = IoosDescribeSensor(metadata_value)
+            # if this doesn't conform to IOOS SensorML sub, fall back to
+            # manually picking apart the SensorML
+            except ows.ExceptionReport:
+                station_ds = process_sensorml(sensor_ml.members[0])
 
             unique_id = station_ds.id
             if unique_id is None:
@@ -285,7 +314,8 @@ class SosHarvest(Harvester):
                 messages.append(u"Could not get a 'longName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/longName'")
 
             # PLATFORM TYPE
-            asset_type = unicode_or_none(station_ds.platformType)
+            asset_type = unicode_or_none(getattr(station_ds,
+                                                 'platformType', None))
             if asset_type is None:
                 messages.append(u"Could not get a 'platformType' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/platformType'")
 
@@ -294,8 +324,13 @@ class SosHarvest(Harvester):
             loc = station_ds.location
             if loc is not None and loc.tag == "{%s}Point" % GML_NS:
                 pos_element = loc.find("{%s}pos" % GML_NS)
+                # some older responses may uses the deprecated coordinates
+                # element
+                if pos_element is None:
+                    # if pos not found use deprecated coordinates element
+                    pos_element = loc.find("{%s}coordinates" % GML_NS)
                 # strip out points
-                positions = map(float, testXMLValue(pos_element).split(" "))
+                positions = map(float, pos_element.text.split(" "))
 
                 for el in [pos_element, loc]:
                     srs_name = testXMLAttribute(el, "srsName")
