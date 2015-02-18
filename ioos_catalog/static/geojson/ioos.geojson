@@ -201,20 +201,6 @@
       "type": "Feature",
       "properties": {
         "CRS":"Native",
-        "region": "Glider_DAC_2"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-            290,
-            400
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "CRS":"Native",
         "region": "HFradar_DAC"
       },
       "geometry": {
