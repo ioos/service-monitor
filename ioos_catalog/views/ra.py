@@ -21,7 +21,7 @@ provider_info = {
         'provider_type': 'national',
     },
     'CARICOOS': {
-        'fullname': 'Carribean Coastal Ocean Observing System',
+        'fullname': 'Caribbean Coastal Ocean Observing System',
         'provider_type': 'regional',
         'description': 'CarICOOS is the observing arm of the Caribbean Regional Association for Integrated Coastal Ocean Observing (CaRA) http://cara.uprm.edu/. This effort, funded by the NOAA IOOS office http://ioos.noaa.gov/, is one of eleven coastal observing systems and regional associations which along with federal agencies constitute the national coastal component of the US Integrated Ocean Observing System.',
         'links': [
