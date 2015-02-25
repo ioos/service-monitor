@@ -77,11 +77,11 @@
     </dl>
     <dl class="dl-horizontal col-lg-4">
       <dt>Harvest Successful</dt>
-      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if harvest_data['harvest_successful'] else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
+      <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if harvest.harvest_successful else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
       <dt>Last Harvest Attempt</dt>
-      <dd><abbr title="{{ harvest_data['harvest_time'] | datetimeformat }}">{{ harvest_data['harvest_time'] | prettydate }}</abbr></dd>
+      <dd><abbr title="{{ harvest.harvest_date | datetimeformat }}">{{ harvest.harvest_date | prettydate }}</abbr></dd>
       <dt>Last Harvest Status</dt>
-      <dd>{{ harvest_data['harvest_status'] }}</dd>
+      <dd>{{ harvest.harvest_status }}</dd>
     </dl>
   </div>
 
@@ -132,18 +132,27 @@
     </ul>
   </div>
 
-  <h4>Latest Harvest Messages</h4>
-  <div class="row">
-    {{ harvest_data['harvest_message']['date'] | datetimeformat }}
-    <pre>
-    {{ harvest_data['harvest_message']['message'] }}
-    </pre>
+  {% set res = harvest.get_last_harvests() %}
+  {% if res %}
+  <h4>Latest {{ res | length }} Harvest Messages</h4>
+   <table class="table-bordered">
+   <tr><th>Date</th><th>Success Status</th><th>message</th></tr>
+    {%- for h in harvest.get_last_harvests() %}
+   <tr class={{ 'bg-danger' if not h['successful'] }}><td>{{ h['date'].strftime("%Y-%m-%d %H:%M") }}</td><td>{{ h['successful'] }}</td><td>{{ h['message']}}</td></tr>
+    {%- endfor %}
+    </table>
+  {# display message if no results #}
+  {% else %}
+    <div class="row">
+        <pre>No harvests have been attempted on this service.</pre>
+    </div>
+  {% endif %}
+  <div>
 
   </div>
 
   <br/>
 
-</div>
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/rickshaw.min.js') }}"></script>

@@ -164,7 +164,7 @@ def show_service(service_id):
     return render_template('show_service.html',
                            service=service,
                            datasets=datasets,
-                           harvest_data=harvest_data,
+                           harvest=harvest,
                            metadatas=metadatas)
 
 @app.route('/services/', methods=['POST'])

@@ -31,7 +31,7 @@ class Harvest(BaseDocument):
             'successful' : bool,
             'message'    : unicode
         } ]
-            
+
     }
 
     def harvest(self, ignore_active=False):
@@ -127,7 +127,7 @@ class Harvest(BaseDocument):
             self.harvest_successful = False
             return
 
-    
+
     def new_message(self, message, successful):
         if not isinstance(message, unicode):
             message = unicode(message)
@@ -154,3 +154,14 @@ class Harvest(BaseDocument):
         successes = sum([i.get('successful', False) for i in self.harvest_messages])
         return '%s/%s' % (successes, attempts)
 
+    def get_last_harvests(self, limit_number=30):
+        query = [{"$match": {"service_id": self.service_id}},
+                 {"$project": {"harvest_messages": 1}},
+                 {'$unwind': '$harvest_messages'},
+                 {'$project': {'date': '$harvest_messages.date',
+                               'successful': "$harvest_messages.successful",
+                               'message': "$harvest_messages.message"}},
+                 {'$sort': {'date': -1}},
+                 {'$limit': limit_number}]
+
+        return db.Harvest.aggregate(query)
