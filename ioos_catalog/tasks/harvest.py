@@ -37,7 +37,9 @@ import json
 from ioos_catalog import app, db, queue
 from ioos_catalog.tasks.send_email import send_service_down_email
 from ioos_catalog.tasks.debug import debug_wrapper, breakpoint
+#from ioos_catalog.models import MetricCount
 from functools import wraps
+from datetime import datetime
 
 def queue_harvest_tasks():
     """
@@ -61,6 +63,76 @@ def queue_harvest_tasks():
             queue.enqueue_call(harvest, args=(service_id,),
                                timeout=timeout_secs)
 
+
+    # record dataset/service metrics after harvest
+    add_counts()
+
+# TODO: Roll into respective model methods instead
+def add_counts():
+    """Returns a timestamped aggregated count"""
+    collection = db.metric_counts
+    services_pipeline_ra = [{'$group': {'_id': '$data_provider',
+                          "count": {"$sum": 1},
+                          "active_count": {"$sum": {"$cond": ["$active", 1, 0]}}}},
+                          {"$project": {"_id": 1, "count": 1, "active_count": 1,
+                           "inactive_count": {"$subtract":
+                                                ["$count", "$active_count"]}}}]
+    services_arr = db.services.aggregate(services_pipeline_ra)['result']
+
+    services_by_ra = collection.MetricCount({'date': datetime.utcnow(),
+                                            'stats_type': u'services_by_ra',
+                                            'count': services_arr})
+    services_by_ra.save()
+
+
+    services_pipeline_type = [{'$group': {'_id': '$service_type',
+                          "count": {"$sum": 1},
+                          "active_count": {"$sum": {"$cond": ["$active", 1, 0]}}}},
+                          {"$project": {"_id": 1, "count": 1, "active_count": 1,
+                           "inactive_count": {"$subtract":
+                                                ["$count", "$active_count"]}}}]
+
+    services_arr_type = db.services.aggregate(services_pipeline_type)['result']
+
+    services_by_type = collection.MetricCount({'date': datetime.utcnow(),
+                                               'stats_type':
+                                               u'services_by_type',
+                                               'count': services_arr_type})
+    services_by_type.save()
+
+    # get the total, active, inactive counts per RA for datasets by getting
+    # unique data providers in the services array
+    # When a dataset is shared between services, count once for each data
+    # provider
+    datasets_pipeline = [{"$unwind": "$services"},
+                         {"$project":
+                            {"data_provider": '$services.data_provider',
+                             "active": "$active"}},
+                         {"$group": { "_id": {"_id": "$_id",
+                                              "data_provider": "$data_provider",
+                                              "active": "$active"}}},
+                         {"$project": {"_id": "$_id._id",
+                                       "data_provider": "$_id.data_provider",
+                                       "active": "$_id.active"}},
+                         {"$group": {"_id": "$data_provider",
+                                     "total_services": {"$sum": 1},
+                                     "active_services": { "$sum":
+                                            {"$cond": ["$active", 1, 0]}} }},
+                         {"$project": {"_id": 1, "total_services": 1,
+                                       "active_services": 1,
+                                       "inactive_services": {"$subtract":
+                                                             ["$total_services",
+                                                              "$active_services"
+                                                             ]}
+                                        }
+                         }]
+
+    datasets_arr = db.datasets.aggregate(datasets_pipeline)['result']
+
+    datasets_by_ra = collection.MetricCount({'date': datetime.utcnow(),
+                                             'stats_type': u'datasets_by_ra',
+                                             'count': datasets_arr})
+    datasets_by_ra.save()
 
 def context_decorator(f):
     @wraps(f)
