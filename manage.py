@@ -57,6 +57,11 @@ def migrate_141008():
     queue.enqueue(migrate)
 
 @manager.command
+def migrate_150120():
+    from ioos_catalog.models.migration.migrate_150120 import migrate
+    queue.enqueue(migrate)
+
+@manager.command
 def captcha_init():
     initialize_captcha_db()
 
