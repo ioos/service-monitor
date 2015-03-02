@@ -1,4 +1,5 @@
-python-dateutil
+# numpy is required
+python-dateutil==2.4.0
 Flask==0.10.1
 Flask-WTF==0.9.0
 Flask-MongoKit==0.6
@@ -13,10 +14,9 @@ git+https://github.com/nvie/rq.git@09d461c2c0523784e893b94eba65b287248d0ec0
 rq-dashboard==0.3.1
 
 paegan>=1.1.1
-# BWA: temporarily use my pyoos branch which works with NDBC until it is merged
-# into pyoos master
 #pyoos>=0.6.1
-git+https://github.com/benjwadams/pyoos@semi_ioos_improvements
+# This is temporary, we will use a specific version once we release it
+git+https://github.com/ioos/pyoos.git@f6addf03b67987e1b050755d0c76fae20e33415c
 # unreleased parsing fixes in OWSLib
 git+https://github.com/geopython/OWSLib.git
 git+https://github.com/ioos/wicken.git
@@ -24,4 +24,5 @@ geojson
 git+https://github.com/ioos/petulant-bear.git
 git+https://github.com/ioos/compliance-checker.git
 Flask-Captcha==0.1.8
+six==1.9.0
 arrow==0.4.3
