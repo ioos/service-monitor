@@ -134,13 +134,29 @@
 
   {% set res = harvest.get_last_harvests() %}
   {% if res %}
-  <h4>Latest {{ res | length }} Harvest Messages</h4>
-   <table class="table-bordered">
-   <tr><th>Date</th><th>Success Status</th><th>message</th></tr>
-    {%- for h in harvest.get_last_harvests() %}
-   <tr class={{ 'bg-danger' if not h['successful'] }}><td>{{ h['date'].strftime("%Y-%m-%d %H:%M") }}</td><td>{{ h['successful'] }}</td><td>{{ h['message']}}</td></tr>
-    {%- endfor %}
-    </table>
+  <div class="row">
+    <div class="col-sm-12">
+      <h4>Latest {{ res | length }} Harvest Messages</h4>
+       <table class="table table-bordered message-table">
+         <thead>
+           <tr>
+             <th class="message-date">Date</th>
+             <th class="message-success">Success Status</th>
+             <th class="message">message</th>
+           </tr>
+         </thead>
+         <tbody>
+          {%- for h in harvest.get_last_harvests() %}
+            <tr class={{ 'bg-danger' if not h['successful'] }}>
+              <td>{{ h['date'].strftime("%Y-%m-%d %H:%M") }}</td>
+              <td>{{ h['successful'] }}</td>
+              <td style="overflow-x: auto;"><pre>{{ h['message']}}</pre></td>
+            </tr>
+          {%- endfor %}
+        </tbody>
+      </table>
+    </div> <!-- .col-sm-12 -->
+  </div> <!-- .row -->
   {# display message if no results #}
   {% else %}
     <div class="row">

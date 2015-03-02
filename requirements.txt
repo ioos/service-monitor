@@ -1,4 +1,5 @@
-python-dateutil
+# numpy is required
+python-dateutil==2.4.0
 Flask==0.10.1
 Flask-WTF==0.9.0
 Flask-MongoKit==0.6
@@ -24,4 +25,5 @@ geojson
 git+https://github.com/ioos/petulant-bear.git
 git+https://github.com/ioos/compliance-checker.git
 Flask-Captcha==0.1.8
+six==1.9.0
 arrow==0.4.3

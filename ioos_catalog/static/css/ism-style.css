@@ -351,3 +351,24 @@ svg path.dataset.active {
     margin-left: auto;
     margin-right: auto;
 }
+
+table.message-table {
+  table-layout: fixed;
+}
+
+.message-table th.message-date {
+  width: 12%;
+}
+
+.message-table th.message-success {
+  width: 10%;
+}
+
+.message-table th.message {
+  width: 67%;
+}
+
+.message-table td.message {
+  overflow-x: auto;
+}
+
