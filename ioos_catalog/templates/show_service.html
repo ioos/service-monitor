@@ -150,7 +150,7 @@
             <tr class={{ 'bg-danger' if not h['successful'] }}>
               <td>{{ h['date'].strftime("%Y-%m-%d %H:%M") }}</td>
               <td>{{ h['successful'] }}</td>
-              <td style="overflow-x: auto;"><pre>{{ h['message']}}</pre></td>
+              <td><pre>{{ h['message']}}</pre></td>
             </tr>
           {%- endfor %}
         </tbody>
