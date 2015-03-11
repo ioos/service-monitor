@@ -322,6 +322,8 @@ class SosHarvest(Harvester):
             # template:   urn:ioos:type:authority:id
             # sample:     ioos:station:wmo:21414
             if len(sp_uid) > 2 and sp_uid[2] == "network": # Network Offering
+                if uid[-3:].lower() == 'all':
+                    continue # Skip the all
                 net = self._describe_sensor(uid, timeout=net_timeout)
                 network_ds = IoosDescribeSensor(net)
                 # Iterate over stations in the network and process them individually
