@@ -279,14 +279,15 @@ class SosHarvest(Harvester):
             elif e.msg == 'No data found for this station':
                 return None
 
-    def _describe_sensor(self, uid):
+    def _describe_sensor(self, uid, timeout=120,
+                         outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"'):
         """
         Issues a DescribeSensor request with fallback behavior for oddly-acting SOS servers.
         """
         kwargs = {
-                    'outputFormat':'text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"',
-                    'procedure':uid,
-                    'timeout' : 120
+                    'outputFormat': outputFormat,
+                    'procedure': uid,
+                    'timeout': timeout
                  }
 
         return self._handle_ows_exception(**kwargs)
@@ -308,6 +309,9 @@ class SosHarvest(Harvester):
         # This is kept and checked later to avoid servers that have the same stations in many offerings.
         processed = []
 
+        # handle network:all by increasing max timeout
+        net_len = len(self.sos.offerings)
+        net_timeout = 120 if net_len <= 36 else 5 * net_len
         for offering in self.sos.offerings:
             # TODO: We assume an offering should only have one procedure here
             # which will be the case in sos 2.0, but may not be the case right now
@@ -318,7 +322,8 @@ class SosHarvest(Harvester):
             # template:   urn:ioos:type:authority:id
             # sample:     ioos:station:wmo:21414
             if len(sp_uid) > 2 and sp_uid[2] == "network": # Network Offering
-                network_ds = IoosDescribeSensor(self._describe_sensor(uid))
+                net = self._describe_sensor(uid, timeout=net_timeout)
+                network_ds = IoosDescribeSensor(net)
                 # Iterate over stations in the network and process them individually
                 for proc in network_ds.procedures:
                     if proc is not None and proc.split(":")[2] == "station":
