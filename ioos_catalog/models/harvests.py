@@ -60,13 +60,13 @@ class Harvest(BaseDocument):
 
         # ping it first to see if alive
         try:
-            _, response_code = service.ping(timeout=15)
+            _, response_code = service.ping(timeout=60)
             operational_status = True if response_code in [200,400] else False
         except (requests.ConnectionError, requests.HTTPError):
             operational_status = False
             response_code = 0
         except requests.Timeout as e:
-            self.new_message("Service Timeout: %s" % e.message, False)
+            self.new_message("Service Ping Timeout: %s" % e.message, False)
             self.set_status("Timed Out")
             self.harvest_successful = False
             return
