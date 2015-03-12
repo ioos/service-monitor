@@ -59,7 +59,7 @@ def queue_harvest_tasks():
             else:
                 # for large numbers of requests, 5 seconds should be enough
                 # for each request, on average
-                timeout_secs = datalen * 5
+                timeout_secs = datalen * 60
             queue.enqueue_call(harvest, args=(service_id,),
                                timeout=timeout_secs)
 
@@ -349,7 +349,7 @@ class SosHarvest(Harvester):
         with app.app_context():
 
             app.logger.info("process_station: %s", uid)
-            desc_sens = self._describe_sensor(uid)
+            desc_sens = self._describe_sensor(uid, timeout=1200)
             # FIXME: add some kind of notice saying the station failed
             if desc_sens is None:
                 return None
