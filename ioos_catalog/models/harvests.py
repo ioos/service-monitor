@@ -6,6 +6,7 @@ from ioos_catalog.tasks.harvest import DapHarvest, SosHarvest, WmsHarvest, WcsHa
 from lxml.etree import XMLSyntaxError
 from datetime import datetime
 from traceback import format_exc
+from owslib import ows
 
 import requests
 import socket
@@ -118,6 +119,14 @@ class Harvest(BaseDocument):
             self.harvest_successful = False
             # More descriptive
             self.new_message("Harvester failed to parse the XML response from the SOS endpoint\n\n%s" % format_exc(), False)
+            return
+
+        except ows.ExceptionReport as e:
+            if 'NULL dataset' in e.message:
+                app.logger.exception("Failed to harvest SOS due to NULL Dataset Feature Type Error")
+            self.set_status("Harvest Failed: Invalid SOS Response or Invalid URL")
+            self.harvest_successful = False
+            self.new_message("Harvest Failed: Please check the URL\nThis generally happens when the URL is malformed or the dataset no longer exists.", False)
             return
 
         except Exception as e:
