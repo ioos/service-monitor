@@ -11,7 +11,7 @@ def index():
 @app.route('/landing', methods=['GET'])
 @app.route('/landing/', methods=['GET'])
 def landing():
-    total_datasets = db.Dataset.total_datasets()
+    total_datasets = db.Dataset.total_unique_datasets()
     total_services = db.Service.find({"active":True}).count()
     return render_template('landing.html', total_datasets=total_datasets, total_services=total_services)
 
