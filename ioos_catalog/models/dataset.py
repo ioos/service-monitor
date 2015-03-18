@@ -123,4 +123,12 @@ class Dataset(BaseDocument):
         counts = cls.count_types_by_provider()
         vals = [ v['_all'] for v in counts.itervalues() ]
         return sum(vals)
-        
+
+    @classmethod
+    def total_unique_datasets(cls):
+        '''
+        Returns the total unique datasets
+        '''
+        counts = db.datasets.distinct('uid')
+        return len(counts)
+
