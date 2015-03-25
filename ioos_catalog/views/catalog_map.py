@@ -44,17 +44,19 @@ def geoj(filter_provider):
         for idx, s in enumerate(d.services):
             if s.get('geojson', None) is None:
                 continue
-            else:
-                service_name = db.Service.find_one({'_id':
-                                                    s['service_id']})['name']
-                feat = {'type':'Feature',
-                        'properties':{'id':str(d._id),
-                                      'sindex': idx,        # service index
-                                      'name':s['name'],
-                                      'service_name': service_name,
-                                      'description':s['description']},
-                        'geometry': s.get('geojson')}
-                features.append(feat)
+            service = db.Service.find_one({'_id' : s['service_id']})
+            if service is None:
+                app.logger.critical("UNLINKED DATASET: %s", d._id)
+                continue
+            service_name = service['name']
+            feat = {'type':'Feature',
+                    'properties':{'id':str(d._id),
+                                  'sindex': idx,        # service index
+                                  'name':s['name'],
+                                  'service_name': service_name,
+                                  'description':s['description']},
+                    'geometry': s.get('geojson')}
+            features.append(feat)
 
     #        continue
 
