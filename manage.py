@@ -69,6 +69,11 @@ def migrate_150120():
 def captcha_init():
     initialize_captcha_db()
 
+@manager.command
+def remove_dangle():
+    from ioos_catalog.tasks.cleanup import queue_remove_dangle
+    queue_remove_dangle()
+
 if __name__ == "__main__":
     manager.run()
 
