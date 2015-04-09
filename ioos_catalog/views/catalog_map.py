@@ -22,8 +22,11 @@ def catalog_map(filter_provider):
 
     g.title = "Catalog Map"
     regions = sorted(region_map.iterkeys())
+    # does not filter out types by region
+    asset_types = sorted(db.services.distinct('service_type'))
 
-    return render_template('catalog_map.html', regions=regions)
+    return render_template('catalog_map.html', regions=regions,
+                           asset_types=asset_types)
 
 
 @app.route('/map/geojson/<path:filter_provider>/', methods=['GET'])
@@ -44,6 +47,10 @@ def geoj(filter_provider):
 
     if filter_provider != 'null':
         query_params['services.data_provider'] = filter_provider
+
+    asset_type = request.args.get('asset_type')
+    if asset_type is not None:
+        query_params['services.service_type'] = asset_type
 
     datasets = list(db.Dataset.find(query_params))
 
