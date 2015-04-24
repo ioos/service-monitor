@@ -40,6 +40,10 @@ from ioos_catalog.tasks.debug import debug_wrapper, breakpoint
 #from ioos_catalog.models import MetricCount
 from functools import wraps
 from datetime import datetime
+# mainly for conversion from np.datetime64 -> datetime.datetime
+from pandas import Timestamp
+from dateutil.parser import parse
+from netCDF4 import num2date
 
 def queue_harvest_tasks():
     """
@@ -700,6 +704,69 @@ class DapHarvest(Harvester):
         url_res.close()
         return gj
 
+
+    @classmethod
+    def get_time_from_dim(cls, time_var):
+        """Get min/max from a NetCDF time variable and convert to datetime"""
+        ndim = len(time_var.shape)
+        if ndim == 0:
+            ret_val = time_var.item()
+            res = ret_val, ret_val
+        elif ndim == 1:
+            # NetCDF Users' Guide states that when time is a coordinate variable,
+            # it should be monotonically increasing or decreasing with no
+            # repeated variables. Therefore, first and last elements for a
+            # vector should correspond to start and end time or end and start
+            # time respectively. See Section 2.3.1 of the NUG
+            res = time_var[0], time_var[-1]
+        else:
+            # TODO: use more efficient algorithm for finding max here
+            try:
+                if hasattr(time_var, 'calendar'):
+                    times = num2date(var[:], var.units, var.calendar)
+                else:
+                    times = num2date(var[:], var.units)
+                return np.min(times), np.max(times)
+            # need to add test
+            except ValueError:
+                return None, None
+
+        # if not > 1d, return the min and max elements found
+        min_elem, max_elem = np.min(res), np.max(res)
+        if hasattr(time_var, 'calendar'):
+            num2date([min_elem, max_elem], time_var.units,
+                      time_var.calendar)
+            return num2date([min_elem, max_elem], time_var.units,
+                            time_var.calendar)
+        else:
+            return num2date([min_elem, max_elem], time_var.units)
+
+
+
+    def get_min_max_time(self, cd):
+        """
+           Attempt to naively find a time variable in the dataset
+           and get the min/max
+        """
+        for v in cd._current_variables:
+            # we need a udunits time string in order for this to work
+            var = cd.nc.variables[v]
+            if hasattr(var, 'units'):
+                # assume this is time if 'since' is in the units string
+                # or this is the 'T' axis
+                if ('since' in var.units.lower() or
+                    (hasattr(var, 'axis') and var.axis == 'T') or
+                    (hasattr(var, 'standard_name') and
+                     var.standard_name == 'time')):
+                    try:
+                        return DapHarvest.get_time_from_dim(var)
+                    except:
+                        return None, None
+        return None, None
+
+
+
+
     def harvest(self):
         """
         Identify the type of CF dataset this is:
@@ -717,7 +784,18 @@ class DapHarvest(Harvester):
                                                    type(e).__name__, e))
             return 'Not harvested'
 
-
+        # rely on times in the file first over global atts for calculating
+        # start/end times of dataset.
+        tmin, tmax = self.get_min_max_time(cd)
+        # if nothing was returned, try to get from global atts
+        if (tmin == None and tmax == None and
+            'time_coverage_start' in cd.metadata and
+            'time_coverage_end' in cd.metadata):
+            try:
+                tmin, tmax = (parse(cd.metadata[t]) for t in
+                                   ('time_coverage_start', 'time_coverage_end'))
+            except ValueError:
+                tmin, tmax = None, None
         # For DAP, the unique ID is the URL
         unique_id = self.service.get('url')
 
@@ -932,6 +1010,8 @@ class DapHarvest(Harvester):
             'data_provider':  self.service.get('data_provider'),
             'metadata_type':  u'ncml',
             'metadata_value': unicode(dataset2ncml(cd.nc, url=self.service.get('url'))),
+            'time_min': tmin,
+            'time_max': tmax,
             'messages':       map(unicode, messages),
             'keywords':       keywords,
             'variables':      map(unicode, final_var_names),

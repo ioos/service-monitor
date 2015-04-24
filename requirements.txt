@@ -25,4 +25,3 @@ git+https://github.com/ioos/petulant-bear.git
 git+https://github.com/ioos/compliance-checker.git
 Flask-Captcha==0.1.8
 six==1.9.0
-arrow==0.4.3
