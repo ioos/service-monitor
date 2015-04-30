@@ -2,11 +2,13 @@ import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
-from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
+from flask import (render_template, redirect, url_for, request, flash, jsonify,
+                   Response, g)
 from wtforms import TextField, IntegerField, SelectField
 from bson import json_util
 from collections import defaultdict
 from itertools import chain
+import re
 import shapely.geometry
 
 from ioos_catalog import app, db, support_jsonp, requires_auth
@@ -26,8 +28,20 @@ def catalog_map(filter_provider):
 
 @app.route('/map/geojson/<path:filter_provider>/', methods=['GET'])
 def geoj(filter_provider):
-
+    """Retrieves GeoJSON based on a number of filter criteria"""
     query_params = {}
+    var_filter = request.args.get('variable')
+    f_vars = var_filter.split(',') if var_filter is not None else None
+    if f_vars is not None:
+        # escape any special chars, and strip leading and trailing whitespace
+        # from variable name
+        vars_str = '|'.join([re.escape(f_var.strip()) for f_var in f_vars])
+        # this will be slow, but thorough since it is not anchored,
+        # similar to SQL LIKE -- cannot use index
+        vars_regex = re.compile(r".*(?:{}).*".format(vars_str))
+        query_params['services.variables'] = vars_regex
+
+
     if filter_provider != 'null':
         query_params['services.data_provider'] = filter_provider
 

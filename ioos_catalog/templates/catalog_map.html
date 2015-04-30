@@ -82,6 +82,7 @@
 
   <div id="sidebar-content">
     <div id="filters">
+      <label for="filter-provider">Data Provider</label>
       <select name="filter-provider" class="form-control">
         <option value="-">Select a region</option>
         <!-- <option value="null">All</option> -->
@@ -89,8 +90,13 @@
         <option value={{ region }}>{{region}}</option>
         {% endfor %}
       </select>
+      <label for="variable-filter">
+          Filter by variable text (separate multiple terms with commas)
+      </label>
+      <input type="text" name="variable-filter">
     </div>
 
+    <h4 id="search_contents"></h4>
     <div id="thumbnails" class="list-group">
 
     </div>
@@ -153,18 +159,42 @@ function toggleInfo(did, sindex) {
 }
 
 function setupFilters() {
-  $('select[name^="filter"]').change(function() {
-    var provVal = $('select[name="filter-provider"]').val();
-    if (provVal == "-") {
-      return;
+  // build up url from filter parameters
+  function build_filter_url() {
+      var baseUrl = '/map/geojson/';
+      var url = baseUrl;
+      var provVal = $('select[name="filter-provider"]').val();
+      if (provVal != "-") {
+        url += provVal + "/";
+      } else {
+        url += "null/";
+      }
+      var inputVal = $('input[name="variable-filter"]').val(); 
+      if (inputVal != '') {
+        url += '?variable=' + encodeURIComponent(inputVal);
+      }
+
+      // if no filters at all selected, don't return everything
+      if (url === baseUrl + 'null/') {
+         return
+      } else {
+        console.log("Loading...");
+        /* Overlay a spinner to let the user know that
+           the data is being loaded */
+        addSpinner();
+        d3.json(url, addData);
+      }
     }
-    var url = '/map/geojson/';
-    url += provVal + "/";
-    console.log("Loading...");
-    /* Overlay a spinner to let the user know that the data is being loaded */
-    addSpinner();
-    d3.json(url, addData);
-  })
+
+  $('select[name^="filter"]').change(function() {
+      build_filter_url();
+  });
+
+  var varInput = $('input[name="variable-filter"]');
+  varInput.change(function () {
+      build_filter_url()
+  });
+
 }
 
 
@@ -397,6 +427,7 @@ function addData(error, geojson) {
       map.removeLayer(hoverLayer);
   }
 
+ 
   //zoom to currently selected dataset
   var datasetBounds = L.geoJson(geojson).getBounds();
   //guard against providers which currently no datasets,
@@ -420,6 +451,13 @@ function addData(error, geojson) {
   points = [];
 
   var filtPoint;
+
+  if (geojson.features.length > 0) { 
+     $('#search_contents').text("Search returned " + geojson.features.length +
+                                " results");
+  } else {
+     $('#search_contents').text("Search returned no results"); 
+  }
 
   for (var i = 0; i < geojson.features.length; ++i) {
       //FIXME: How should we handle multipoints (i.e. AOOS has many)
