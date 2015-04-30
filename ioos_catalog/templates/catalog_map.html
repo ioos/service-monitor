@@ -89,6 +89,7 @@
         <option value={{ region }}>{{region}}</option>
         {% endfor %}
       </select>
+      <input type="text" name="variable-filter">
     </div>
 
     <div id="thumbnails" class="list-group">
@@ -153,18 +154,33 @@ function toggleInfo(did, sindex) {
 }
 
 function setupFilters() {
-  $('select[name^="filter"]').change(function() {
-    var provVal = $('select[name="filter-provider"]').val();
-    if (provVal == "-") {
-      return;
+  // build up url from filter parameters
+  function build_filter_url() {
+      var url = '/map/geojson/';
+      var provVal = $('select[name="filter-provider"]').val();
+      if (provVal != "-") {
+        url += provVal + "/";
+      }
+      var inputVal = $('input[name="variable-filter"]').val(); 
+      alert('hoo baz');
+      if (inputVal != '') {
+        url += '?variable=' + encodeURIComponent(inputVal);
+      }
+      console.log("Loading...");
+      /* Overlay a spinner to let the user know that the data is being loaded */
+      addSpinner();
+      d3.json(url, addData);
     }
-    var url = '/map/geojson/';
-    url += provVal + "/";
-    console.log("Loading...");
-    /* Overlay a spinner to let the user know that the data is being loaded */
-    addSpinner();
-    d3.json(url, addData);
+
+  $('select[name^="filter"]').change(function() {
+      build_filter_url();
   })
+
+  var varInput = $('input[name="variable-filter"]');
+  varInput.change(function () {
+      build_filter_url()
+  });
+
 }
 
 
