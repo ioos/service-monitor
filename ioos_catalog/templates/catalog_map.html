@@ -108,6 +108,7 @@
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}"></script>
 <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/leaflet.textpath.js') }}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
 <script type="text/javascript">
 
@@ -271,6 +272,23 @@ function highlight_layer_hover(layer) {
                    'fillOpacity': 0.6});
    } else {
        layer.setStyle({'color': '#8C2E19'})
+       /* removes directional markers upon zooming, otherwise they would
+          appear as artifacts upon zoom */
+       layer.setText(null);
+       // create directional markers
+       layer.setText('  ►  ', {repeat: true,
+                               attributes: {fill: 'red',
+                                            'font-size': '24',
+                                            /* Important, removes interception
+                                               of click events with
+                                               the svg text elements, instead
+                                               propagating down to svg elements
+                                               underneath, i.e. the trajectory
+                                               LineString */
+                                            'pointer-events': 'none',
+                                            /* y offset to make the arrows more
+                                               centered */
+                                            'dy': 6}});
    }
 }
 
@@ -293,6 +311,8 @@ function reset_highlight(layer) {
     }
     if (layer.feature.geometry.type === 'Point') {
         map.removeLayer(hoverLayer);
+    } else if (layer.feature.geometry.type === 'LineString') {
+        layer.setText(null);
     }
 }
 
