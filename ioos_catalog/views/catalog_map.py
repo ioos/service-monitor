@@ -10,6 +10,7 @@ from collections import defaultdict
 from itertools import chain
 import re
 import shapely.geometry
+import dateutil.parser
 
 from ioos_catalog import app, db, support_jsonp, requires_auth
 from ioos_catalog.tasks.reindex_services import region_map
@@ -52,6 +53,32 @@ def geoj(filter_provider):
     if asset_type is not None:
         query_params['services.service_type'] = asset_type
 
+    def try_parse_date(dt_str):
+        """Try to parse a date string"""
+        if dt_str is None:
+            return dt_str
+        else:
+            try:
+                return dateutil.parser.parse(dt_str)
+            # if we get a bad string, return nothing
+            except ValueError:
+                return None
+
+
+    # start and end times
+    start_date = try_parse_date(request.args.get('start_date'))
+    end_date = try_parse_date(request.args.get('end_date'))
+
+    def get_date_query(start, end):
+        # return filter clauses for date query
+        filt = {}
+        if start is not None:
+            filt['services.time_max'] = {'$gte': start}
+        if end is not None:
+            filt['services.time_min'] = {'$lte': end}
+        return filt
+
+    query_params.update(get_date_query(start_date, end_date))
     datasets = list(db.Dataset.find(query_params))
 
     features = []

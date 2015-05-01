@@ -9,6 +9,9 @@
 <!--TODO: change to non-cdn assets later.  Use bower? -->
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css" />
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css" />
+<link rel="stylesheet" href="{{ url_for('.static', filename='css/jquery.datetimepicker.css') }}"
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/css/bootstrap-datetimepicker.min.css">
+
 {% endblock %}
 
 {% block basepage %}
@@ -99,7 +102,50 @@
       <label for="variable-filter">
           Filter by variable text (separate multiple terms with commas)
       </label>
+
       <input type="text" name="variable-filter">
+      <div class="container">
+        <div class='row'>
+          <div class='col-md-3'>
+            <div class="form-group">
+              <label for='start-time'>Start Time</label>
+              <div class='input-group date' id='start-time'>
+                <input type='text' name='start-time' class="form-control" />
+                <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-md-3'>
+            <div class="form-group">
+              <label for='end-time'>End Time</label>
+              <div class='input-group date' id='end-time'>
+                <input type='text' name='end-time' class="form-control" />
+                <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-md-3'>
+            <button type="submit" id='map-search' class="btn btn-default">Search</button>
+          </div>
+        </div>
+      </div>
+      <!--
+      <label for="date_timepicker_start">Start date/time (UTC)</label>
+      <input type="text" name="date_timepicker_start"
+             id="date_timepicker_start">
+      <label for="date_timepicker_end">End date/time (UTC)</label>
+      <input type="text" name="date_timepicker_end"
+             id="date_timepicker_end">
+      -->
+
     </div>
 
     <h4 id="search_contents"></h4>
@@ -113,9 +159,12 @@
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='js/jquery.datetimepicker.js') }}"></script>
 <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/leaflet.textpath.js') }}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/js/bootstrap-datetimepicker.min.js"></script>
 <script type="text/javascript">
 
 function toggleInfo(did, sindex) {
@@ -179,44 +228,48 @@ function setupFilters() {
       }
       // if the asset type filter is set, use it
       var assetVal = $('select[name="asset-type"]').val();
-      /* the asset value doesn't seem to be defaulting to "Any" (value '-')
-         despite the selected attribute */
       if (assetVal !== '-' && assetVal !== null) {
           qsArgs['asset_type'] = assetVal;
       }
-      var inputVal = $('input[name="variable-filter"]').val(); 
+      var inputVal = $('input[name="variable-filter"]').val();
       if (inputVal != '') {
         qsArgs['variable'] = inputVal
       }
-      // generate any query string params if present
-      if (!$.isEmptyObject(qsArgs)) {
-          url += '?' + $.param(qsArgs) 
-          console.log(url);
-      /* If the object was empty, there is a chance the site will be as well.
-         we don't want to select all datasets, so return instead if this is the
-         case */
-      } else if (url === baseUrl + 'null/') {
-             return
-      }
+
+      if (url === baseUrl + 'null/') {
+         return
+      } else {
+
+      var startDate = $("#start-time").data().date || null;
+      if (startDate !== null) qsArgs['start_date'] = startDate
+
+      var endDate = $("#end-time").data().date || null;
+      if (endDate !== null) qsArgs['end_date'] = endDate;
+
+      url += '?' + $.param(qsArgs)
+
       console.log("Loading...");
       /* Overlay a spinner to let the user know that
          the data is being loaded */
       addSpinner();
       d3.json(url, addData);
+    }
   }
 
-  $('select[name^="filter"]').change(function() {
-      build_filter_url();
+  var mapSearch = $("#map-search");
+  mapSearch.click(function () { build_filter_url() })
+  var mapFilt = $('select[name^="filter"]');
+  var disableGrp = $('[name="asset-type"], [name="variable-filter"], #start-time *, #end-time *, #map-search');
+  mapFilt.change(function() {
+     /* check if a provider is set.  If it is not,
+        disable the search button */
+    var filtVal = mapFilt.val()
+    if (filtVal === '-') {
+        disableGrp.prop('disabled', true);
+    } else {
+        disableGrp.prop('disabled', false);
+    }
   });
-
-  var varInput = $('input[name="variable-filter"]');
-  varInput.change(function () {
-      build_filter_url();
-  });
-
-  $('select[name="asset-type"]').change(function () {
-      build_filter_url();
-  })
 
 }
 
@@ -469,7 +522,7 @@ function addData(error, geojson) {
       map.removeLayer(hoverLayer);
   }
 
- 
+
   //zoom to currently selected dataset
   var datasetBounds = L.geoJson(geojson).getBounds();
   //guard against providers which currently no datasets,
@@ -494,11 +547,11 @@ function addData(error, geojson) {
 
   var filtPoint;
 
-  if (geojson.features.length > 0) { 
+  if (geojson.features.length > 0) {
      $('#search_contents').text("Search returned " + geojson.features.length +
                                 " results");
   } else {
-     $('#search_contents').text("Search returned no results"); 
+     $('#search_contents').text("Search returned no results");
   }
 
   for (var i = 0; i < geojson.features.length; ++i) {
@@ -613,7 +666,46 @@ $(function() {
       alert('Catalog map is presently incompatible with Internet Explorer.');
       window.location = '/';
   }
+
+  var d_opts = {format: "YYYY-MM-DDTHH:SSZ",
+                defaultDate: null}
+  $('#start-time').datetimepicker(d_opts);
+  $('#end-time').datetimepicker(d_opts);
+  $("#start-time").on("dp.change", function (e) {
+      try {
+        $('#end-time').data("DateTimePicker").minDate(e.date);
+      } catch (x) {
+        delete $('#end-time').data("DateTimePicker").minDate;
+      }
+  });
+  $("#end-time").on("dp.change", function (e) {
+      try {
+        $('#start-time').data("DateTimePicker").maxDate(e.date);
+      } catch (x) {
+        delete $('#start-time').data("DateTimePicker").maxDate;
+      }
+  });
+
   $('select').val(defaultVal, true).trigger('change');
+  //bind timepicker
+
+   jQuery('#date_timepicker_start').datetimepicker({
+  format:'Y-m-d H:i',
+  onShow:function( ct ){
+   this.setOptions({
+    maxDate:jQuery('#date_timepicker_end').val()?jQuery('#date_timepicker_end').val():false
+   })
+  },
+ });
+ jQuery('#date_timepicker_end').datetimepicker({
+  format:'Y-m-d H:i',
+  onShow:function( ct ){
+   this.setOptions({
+    minDate:jQuery('#date_timepicker_start').val()?jQuery('#date_timepicker_start').val():false
+
+   })
+  },
+ });
 });
 
 </script>
