@@ -85,9 +85,15 @@
       <label for="filter-provider">Data Provider</label>
       <select name="filter-provider" class="form-control">
         <option value="-">Select a region</option>
-        <!-- <option value="null">All</option> -->
         {% for region in regions %}
         <option value={{ region }}>{{region}}</option>
+        {% endfor %}
+      </select>
+      <label for="asset-type">Asset Type</label>
+      <select name="asset-type" class="form-control">
+        <option value="-" selected>Any</option>
+        {% for asset_type in asset_types %}
+        <option value={{ asset_type }}>{{asset_type}}</option>
         {% endfor %}
       </select>
       <label for="variable-filter">
@@ -163,28 +169,40 @@ function setupFilters() {
   function build_filter_url() {
       var baseUrl = '/map/geojson/';
       var url = baseUrl;
+      var qsArgs = {};
       var provVal = $('select[name="filter-provider"]').val();
       if (provVal != "-") {
         url += provVal + "/";
       } else {
         url += "null/";
       }
+      // if the asset type filter is set, use it
+      var assetVal = $('select[name="asset-type"]').val();
+      /* the asset value doesn't seem to be defaulting to "Any" (value '-')
+         despite the selected attribute */
+      if (assetVal !== '-' && assetVal !== null) {
+          qsArgs['asset_type'] = assetVal;
+      }
       var inputVal = $('input[name="variable-filter"]').val(); 
       if (inputVal != '') {
-        url += '?variable=' + encodeURIComponent(inputVal);
+        qsArgs['variable'] = inputVal
       }
-
-      // if no filters at all selected, don't return everything
-      if (url === baseUrl + 'null/') {
-         return
-      } else {
-        console.log("Loading...");
-        /* Overlay a spinner to let the user know that
-           the data is being loaded */
-        addSpinner();
-        d3.json(url, addData);
+      // generate any query string params if present
+      if (!$.isEmptyObject(qsArgs)) {
+          url += '?' + $.param(qsArgs) 
+          console.log(url);
+      /* If the object was empty, there is a chance the site will be as well.
+         we don't want to select all datasets, so return instead if this is the
+         case */
+      } else if (url === baseUrl + 'null/') {
+             return
       }
-    }
+      console.log("Loading...");
+      /* Overlay a spinner to let the user know that
+         the data is being loaded */
+      addSpinner();
+      d3.json(url, addData);
+  }
 
   $('select[name^="filter"]').change(function() {
       build_filter_url();
@@ -192,8 +210,12 @@ function setupFilters() {
 
   var varInput = $('input[name="variable-filter"]');
   varInput.change(function () {
-      build_filter_url()
+      build_filter_url();
   });
+
+  $('select[name="asset-type"]').change(function () {
+      build_filter_url();
+  })
 
 }
 
