@@ -348,6 +348,9 @@ class SosHarvest(Harvester):
         # handle network:all by increasing max timeout
         net_len = len(self.sos.offerings)
         net_timeout = 120 if net_len <= 36 else 5 * net_len
+
+        # allow searching child offerings for by name for network offerings
+        name_lookup = {o.name: o for o in self.sos.offerings}
         for offering in self.sos.offerings:
             # TODO: We assume an offering should only have one procedure here
             # which will be the case in sos 2.0, but may not be the case right now
@@ -361,23 +364,30 @@ class SosHarvest(Harvester):
                 if uid[-3:].lower() == 'all':
                     continue # Skip the all
                 net = self._describe_sensor(uid, timeout=net_timeout)
+
                 network_ds = IoosDescribeSensor(net)
                 # Iterate over stations in the network and process them individually
+
                 for proc in network_ds.procedures:
+
                     if proc is not None and proc.split(":")[2] == "station":
                         if not proc in processed:
-                            self.process_station(proc)
+                            # offering associated with this procedure
+                            proc_off = name_lookup.get(proc)
+                            self.process_station(proc, proc_off)
                         processed.append(proc)
             else:
                 # Station Offering, or malformed urn - try it anyway as if it is a station
                 if not uid in processed:
-                    self.process_station(uid)
+                    self.process_station(uid, offering)
                 processed.append(uid)
 
 
 
-    def process_station(self, uid):
-        """ Makes a DescribeSensor request based on a 'uid' parameter being a station procedure """
+    def process_station(self, uid, offering):
+        """ Makes a DescribeSensor request based on a 'uid' parameter being a
+            station procedure.  Also pass along an offering with
+            getCapabilities information for items such as temporal extent"""
 
         GML_NS   = "http://www.opengis.net/gml"
         XLINK_NS = "http://www.w3.org/1999/xlink"
@@ -477,6 +487,8 @@ class SosHarvest(Harvester):
                 'data_provider'     : self.service.get('data_provider'),
                 'metadata_type'     : u'sensorml',
                 'metadata_value'    : u'',
+                'time_min': getattr(offering, 'begin_position', None),
+                'time_max': getattr(offering, 'end_position', None),
                 'messages'          : map(unicode, messages),
                 'keywords'          : map(unicode, sorted(station_ds.keywords)),
                 'variables'         : map(unicode, sorted(station_ds.variables)),
