@@ -306,10 +306,20 @@ class SosHarvest(Harvester):
             if e.code == 'InvalidParameterValue':
                 # TODO: use SOS getCaps to determine valid formats
                 # some only work with plain SensorML as the format
-                kwargs['outputFormat'] = 'text/xml;subtype="sensorML/1.0.1"'
-                return self._handle_ows_exception(**kwargs)
+
+                # see if O&M will work instead
+                try:
+                    kwargs['outputFormat'] = 'text/xml;subtype="om/1.0.0/profiles/ioos_sos/1.0"'
+                    return self.sos.describe_sensor(**kwargs)
+
+                # see if plain sensorml wll work
+                except ows.ExceptionReport as e:
+                    # if this fails, just raise the exception without handling
+                    # here
+                    kwargs['outputFormat'] = 'text/xml;subtype="sensorML/1.0.1"'
+                    return self.sos.describe_sensor(**kwargs)
             elif e.msg == 'No data found for this station':
-                return None
+                raise e
 
     def _describe_sensor(self, uid, timeout=120,
                          outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"'):
@@ -384,7 +394,8 @@ class SosHarvest(Harvester):
             desc_sens = self._describe_sensor(uid, timeout=1200)
             # FIXME: add some kind of notice saying the station failed
             if desc_sens is None:
-                return None
+                app.logger.warn("Could not get a valid describeSensor response")
+                return
             metadata_value = etree.fromstring(desc_sens)
             sensor_ml = SensorML(metadata_value)
             try:
