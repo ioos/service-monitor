@@ -124,9 +124,20 @@ class Harvest(BaseDocument):
         except ows.ExceptionReport as e:
             if 'NULL dataset' in e.message:
                 app.logger.exception("Failed to harvest SOS due to NULL Dataset Feature Type Error")
-            self.set_status("Harvest Failed: Invalid SOS Response or Invalid URL")
+                self.set_status("Harvest Failed: Invalid SOS Response or Invalid URL")
+                self.new_message("Harvest Failed: Please check the URL\nThis generally happens when the URL is malformed or the dataset no longer exists.", False)
+            elif e.code == 'InvalidParameterValue':
+                app.logger.exception("Failed to harvest SOS due to invalid parameter value")
+                self.set_status("Harvest Failed: Invalid parameter value. {}".format(e.msg))
+                self.new_message("Invalid parameter.  If outputFormat, may indicate difficulty finding the proper outputFormat between IOOS and non-IOOS SensorML implementations")
+            elif e.msg == 'No data found for this station':
+                app.logger.exception("No data found for station")
+                self.set_status(e.msg)
+                self.new_message("Harvest Failed: No data found", False)
+            else:
+                app.logger.exception("Miscellaneous OWSLib exception")
+                self.set_status(e.msg)
             self.harvest_successful = False
-            self.new_message("Harvest Failed: Please check the URL\nThis generally happens when the URL is malformed or the dataset no longer exists.", False)
             return
 
         except Exception as e:
