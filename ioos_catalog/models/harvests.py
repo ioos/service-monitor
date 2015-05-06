@@ -129,13 +129,14 @@ class Harvest(BaseDocument):
             elif e.code == 'InvalidParameterValue':
                 app.logger.exception("Failed to harvest SOS due to invalid parameter value")
                 self.set_status("Harvest Failed: Invalid parameter value. {}".format(e.msg))
-                self.new_message("Invalid parameter.  If outputFormat, may indicate difficulty finding the proper outputFormat between IOOS and non-IOOS SensorML implementations")
+                self.new_message("Invalid parameter.  If outputFormat, may indicate difficulty finding the proper outputFormat between IOOS and non-IOOS SensorML implementations", False)
             elif e.msg == 'No data found for this station':
                 app.logger.exception("No data found for station")
                 self.set_status(e.msg)
                 self.new_message("Harvest Failed: No data found", False)
             else:
                 app.logger.exception("Miscellaneous OWSLib exception")
+                self.new_message("Other OWSLib exception", False)
                 self.set_status(e.msg)
             self.harvest_successful = False
             return
