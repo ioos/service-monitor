@@ -89,21 +89,26 @@ def reindex_services(filter_regions=None, filter_service_types=None):
             c.getrecords2([uuid_filter], esn='full', maxrecords=999999)
 
             for name, record in c.records.iteritems():
-
                 try:
                     # @TODO: unfortunately CSW does not provide us with contact info, so
                     # we must request it manually
                     contact_email = ""
                     metadata_url = None
 
-                    for r in record.references:
-                        if r['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document':
-                            metadata_url = unicode(r['url'])
-                            break
-                        else:
-                            erddap_match = erddap_all_re.search(r['url'])
-                            if erddap_match:
-                                # test if there is an ISO metadata endpoint
+                    for ref in record.references:
+                        try:
+                            # TODO: Use a more robust mechanism for detecting
+                            # ERDDAP instances aside from relying on the url
+                            erddap_match = erddap_re.search(ref['url'])
+                            # We are only interested in the 'services'
+                            if (ref["scheme"] in services.values()):
+                                metadata_url = next((r['url'] for r in
+                                               record.references
+                                               if r['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document'),
+                                               None)
+                                # strip extension if erddap endpoint
+                                url = unicode(ref['url'])
+                            elif erddap_match:
                                 test_url = (erddap_match.group(1) +
                                                 '.iso19115')
                                 req = requests.get(test_url)
@@ -111,69 +116,50 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                 # store it.
                                 if req.status_code == 200:
                                     metadata_url = unicode(test_url)
-                                    break
+                            # next record if not one of the previously mentioned
+                            else:
+                                continue
+                            # end metadata find block
+                            s = db.Service.find_one({'data_provider':
+                                                        unicode(region),
+                                                        'url': url})
+                            if s is None:
+                                s               = db.Service()
+                                s.url           = url
+                                s.data_provider = unicode(region)
+                                s.manual        = False
+                                s.active        = True
 
-                        # Don't query for contact info right now.  It takes WAY too long.
-                        #r = requests.get(iso_ref[0])
-                        #r.raise_for_status()
-                        #node = ET.fromstring(r.content)
-                        #safe = nspath_eval("gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString", ns.get_namespaces())
-                        #contact_node = node.find(".//" + safe)
-                        #if contact_node is not None and contact_node.text != "":
-                        #    contact_email = contact_node.text
-                        #    if " or " in contact_email:
-                        #        contact_email = ",".join(contact_email.split(" or "))
+                                new_services.append(s)
+                            else:
+                                # will run twice if erddap services have
+                                # both .html and .graph, but resultant
+                                # data should be the same
+                                update_services.append(s)
 
-                    for ref in record.references:
+                            s.service_id   = unicode(name)
+                            s.name         = unicode(record.title)
+                            s.service_type = unicode('DAP' if erddap_match
+                                                        else next((k for k,v in services.items() if v == ref["scheme"])))
+                            s.interval     = 3600 # 1 hour
+                            s.tld          = unicode(urlparse(url).netloc)
+                            s.updated      = datetime.utcnow()
+                            s.contact      = unicode(contact_email)
+                            s.metadata_url = metadata_url
 
-                        try:
-                            # TODO: Use a more robust mechanism for detecting
-                            # ERDDAP instances aside from relying on the url
-                            erddap_match = erddap_re.search(ref['url'])
-                            # We are only interested in the 'services'
-                            if (ref["scheme"] in services.values() or
-                               erddap_match):
-                                # strip extension if erddap endpoint
-                                url = unicode(erddap_match.group(1)
-                                              if erddap_match else ref['url'])
-                                s = db.Service.find_one({'data_provider':
-                                                         unicode(region),
-                                                         'url': url})
-                                if s is None:
-                                    s               = db.Service()
-                                    s.url           = url
-                                    s.data_provider = unicode(region)
-                                    s.manual        = False
-                                    s.active        = True
+                            # grab opendap form url if present
+                            if s.service_type == 'DAP':
+                                possible_refs = [r['url'] for r in record.references if r['scheme'] == opendap_form_schema]
+                                if len(possible_refs):
+                                    # this is bad, it can grab any associated
+                                    # record from the dataset
+                                    s.extra_url = unicode(possible_refs[0])
 
-                                    new_services.append(s)
-                                else:
-                                    # will run twice if erddap services have
-                                    # both .html and .graph, but resultant
-                                    # data should be the same
-                                    update_services.append(s)
+                            # if we see the service, this is "Active", unless we've set manual (then we don't touch)
+                            if not s.manual:
+                                s.active = True
 
-                                s.service_id   = unicode(name)
-                                s.name         = unicode(record.title)
-                                s.service_type = unicode('DAP' if erddap_match
-                                                          else next((k for k,v in services.items() if v == ref["scheme"])))
-                                s.interval     = 3600 # 1 hour
-                                s.tld          = unicode(urlparse(url).netloc)
-                                s.updated      = datetime.utcnow()
-                                s.contact      = unicode(contact_email)
-                                s.metadata_url = metadata_url
-
-                                # grab opendap form url if present
-                                if s.service_type == 'DAP':
-                                    possible_refs = [r['url'] for r in record.references if r['scheme'] == opendap_form_schema]
-                                    if len(possible_refs):
-                                        s.extra_url = unicode(possible_refs[0])
-
-                                # if we see the service, this is "Active", unless we've set manual (then we don't touch)
-                                if not s.manual:
-                                    s.active = True
-
-                                s.save()
+                            s.save()
 
                         except Exception as e:
                             app.logger.warn("Could not save service: %s", e)
