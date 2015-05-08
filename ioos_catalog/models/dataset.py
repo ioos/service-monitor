@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from bson.objectid import ObjectId
+from datetime import datetime
 
 from ioos_catalog import db,app
 from ioos_catalog.models.base_document import BaseDocument
@@ -39,6 +40,8 @@ class Dataset(BaseDocument):
                 'keywords'          : [unicode],  # Search keywords
                 'variables'         : [unicode],  # Environmental properties measured by this dataset
                 'asset_type'        : unicode,    # See the IOOS vocablary for assets: http://mmisw.org/orr/#http://mmisw.org/ont/ioos/platform
+                'time_min': datetime, # start time of this service
+                'time_max': datetime, # end time of this service
                 'geojson'           : dict,       # GeoJSON of the datasets location (point / line / polygon) as a dict
                 'messages'          : [unicode],    # messages regarding the harvesting of this
                 'created'           : datetime,
