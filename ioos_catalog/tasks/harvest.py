@@ -664,12 +664,7 @@ class DapHarvest(Harvester):
             and finally to Paegan's representation if nothing else is found"""
         #TODO: Add check for adherence to CF conventions, others (ugrid)
         nc_obj = cd.nc
-        # Paegan data type
-        p_data_type = cd._datasettype.upper()
-        #Paegan is better at determining curvilinear grids here
-        if p_data_type == 'CGRID':
-            geom_type = p_data_type
-        elif hasattr(nc_obj, 'featureType'):
+        if hasattr(nc_obj, 'featureType'):
             geom_type = nc_obj.featureType
         elif hasattr(nc_obj, 'cdm_data_type'):
             geom_type = nc_obj.cdm_data_type
