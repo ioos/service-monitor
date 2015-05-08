@@ -732,16 +732,10 @@ class DapHarvest(Harvester):
             # time respectively. See Section 2.3.1 of the NUG
             res = time_var[0], time_var[-1]
         else:
-            # TODO: use more efficient algorithm for finding max here
-            try:
-                if hasattr(time_var, 'calendar'):
-                    times = num2date(var[:], var.units, var.calendar)
-                else:
-                    times = num2date(var[:], var.units)
-                return np.min(times), np.max(times)
-            # need to add test
-            except ValueError:
-                return None, None
+            # FIXME: handle multidimensional time variables.  Perhaps
+            # take the first and last element of time variable in the first
+            # dimension and then take the min and max of the resulting values
+            return None, None
 
         # if not > 1d, return the min and max elements found
         min_elem, max_elem = np.min(res), np.max(res)
