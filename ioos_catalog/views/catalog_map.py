@@ -40,9 +40,11 @@ def geoj(filter_provider):
         # escape any special chars, and strip leading and trailing whitespace
         # from variable name
         vars_str = '|'.join([re.escape(f_var.strip()) for f_var in f_vars])
+
         # this will be slow, but thorough since it is not anchored,
         # similar to SQL LIKE -- cannot use index
-        vars_regex = re.compile(r".*(?:{}).*".format(vars_str))
+        vars_regex = re.compile(r".*(?:{}).*".format(vars_str),
+                                re.IGNORECASE) # make case insensitive
         query_params['services.variables'] = vars_regex
 
 
