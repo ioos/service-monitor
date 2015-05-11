@@ -41,21 +41,22 @@ from ioos_catalog.tasks.debug import debug_wrapper, breakpoint
 from functools import wraps
 from datetime import datetime
 
+LARGER_SERVICES = [
+    ObjectId('53d34aed8c0db37e0b538fda'),
+    ObjectId('53d49c8d8c0db37ff1370308')
+]
+
 def queue_harvest_tasks():
     """
     Generate a number of harvest tasks.
 
     Meant to be called via cron. Only queues services that are active.
     """
-    larger_services = [
-        ObjectId('53d34aed8c0db37e0b538fda'),
-        ObjectId('53d49c8d8c0db37ff1370308')
-    ]
 
     with app.app_context():
         for s in db.Service.find({'active':True}, {'_id':True}):
             service_id = s._id
-            if service_id in larger_services:
+            if service_id in LARGER_SERVICES:
                 continue
             # count all the datasets associated with this particular service
             datalen = db.datasets.find({'services.service_id':
@@ -73,6 +74,29 @@ def queue_harvest_tasks():
 
     # record dataset/service metrics after harvest
     add_counts()
+
+def queue_provider(provider):
+    with app.app_context():
+        for s in db.Service.find({'data_provider':provider, 'active':True}):
+            service_id = s._id
+            if service_id in LARGER_SERVICES:
+                continue
+            # count all the datasets associated with this particular service
+            datalen = db.datasets.find({'services.service_id':
+                                         service_id}).count()
+            # handle timeouts for services with large numbers of datasets
+            if datalen <= 36:
+                timeout_secs = 180
+            else:
+                # for large numbers of requests, 5 seconds should be enough
+                # for each request, on average
+                timeout_secs = datalen * 60
+            queue.enqueue_call(harvest, args=(service_id,),
+                               timeout=timeout_secs)
+
+    # record dataset/service metrics after harvest
+    add_counts()
+
 
 def queue_large_service_harvest_tasks():
     larger_services = [
