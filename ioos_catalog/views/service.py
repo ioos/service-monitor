@@ -240,7 +240,7 @@ def stop_monitoring_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    s.active = False()
+    s.active = False
     s.save()
 
     flash("Stopped monitoring the '%s' service" % s.name)
@@ -264,7 +264,7 @@ def stop_harvesting_service(service_id):
     s = db.Service.find_one({'_id':service_id})
     assert s is not None
 
-    s.active = False()
+    s.active = False
     s.save()
 
     flash("Stopped harvesting the '%s' service" % s.name)
