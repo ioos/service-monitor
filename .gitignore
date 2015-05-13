@@ -7,3 +7,4 @@ build/*
 .DS_Store
 .*.swo
 db/*
+config.local.yml
