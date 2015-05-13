@@ -10,8 +10,12 @@ __version__ = "3.2.2"
 # Create application object
 app = Flask(__name__)
 
+
+from flask_environments import Environments
+env = Environments(app)
+env.from_yaml('config.yml')
+
 app.config.from_object('ioos_catalog.defaults')
-app.config.from_envvar('APPLICATION_SETTINGS', silent=True)
 
 import sys
 
@@ -44,6 +48,7 @@ queue = Queue('default', connection=redis_connection)
 # Create the database connection
 from flask.ext.mongokit import MongoKit
 db = MongoKit(app)
+# For captcha
 from flask.ext.sqlalchemy import SQLAlchemy
 sqlalchemy_db = SQLAlchemy(app)
 
