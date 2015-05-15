@@ -10,7 +10,6 @@ COMMON: &common
   PORT: 3000
   WEB_PASSWORD: password
   SECRET_KEY: xxxxxxxx
-  SERVER_NAME: localhost:3000
   # Mongo configuration
   MONGODB_HOST: localhost
   MONGODB_PORT: 27017

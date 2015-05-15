@@ -17,8 +17,8 @@ import csv
 
 @app.route('/api/metrics', methods=['GET'])
 def get_metrics():
-    start = request.args.get('start', 0)
-    stop = request.args.get('stop', 100)
+    start = int(request.args.get('start', 0))
+    stop = int(request.args.get('stop', 100))
     results = []
     try:
         for doc in db.MetricCount.find({}).sort("date",pymongo.DESCENDING)[start:stop]:
@@ -31,8 +31,8 @@ def get_metrics():
 
 @app.route('/csv/metrics/datasets_by_ra', methods=['GET'])
 def get_csv_metrics_by_ra():
-    start = request.args.get('start', 0)
-    stop = request.args.get('stop', 100)
+    start = int(request.args.get('start', 0))
+    stop = int(request.args.get('stop', 100))
     results = []
     results.append(['date', 'provider', 'active_services', 'inactive_services', 'total_services'])
     try:
@@ -47,7 +47,6 @@ def get_csv_metrics_by_ra():
                 results.append(row)
             #row.append(doc.date.isoformat(), 
     except Exception as e:
-        raise
         return "Error: %s" % e.message, 400, {'Content-Type':'text/plain'}
     buf = StringIO()
     csvwriter = csv.writer(buf)
@@ -59,8 +58,8 @@ def get_csv_metrics_by_ra():
 
 @app.route('/csv/metrics/services_by_type', methods=['GET'])
 def get_csv_metrics_by_type():
-    start = request.args.get('start', 0)
-    stop = request.args.get('stop', 100)
+    start = int(request.args.get('start', 0))
+    stop = int(request.args.get('stop', 100))
     results = []
     results.append(['date', 'service_type', 'active_count', 'inactive_count', 'count'])
     try:
