@@ -63,8 +63,7 @@ provider_info = {
         'banner': '/static/img/ioos.png',
         'description': 'IOOS Glider Data Assembly Center',
         'links': [
-            {'title': 'Glider DAC', 'url': 'http://gliders.ioos.us/'},
-            {'title': 'Glider DAC TDS Catalog', 'url': 'http://tds.gliders.ioos.us/thredds/catalog.html'},
+            {'title': 'Glider DAC', 'url': 'http://gliders.ioos.us/'}
         ]
     },
     'GLOS': {
