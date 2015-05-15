@@ -14,6 +14,8 @@ app = Flask(__name__)
 from flask_environments import Environments
 env = Environments(app)
 env.from_yaml('config.yml')
+if os.path.exists('config.local.yml'):
+    env.from_yaml('config.local.yml')
 
 app.config.from_object('ioos_catalog.defaults')
 
