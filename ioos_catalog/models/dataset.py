@@ -130,8 +130,8 @@ class Dataset(BaseDocument):
     @classmethod
     def total_unique_datasets(cls):
         '''
-        Returns the total unique datasets
+        Returns the total unique active datasets
         '''
-        counts = db.datasets.distinct('uid')
+        counts = db.Dataset.find({'active':True}).distinct('uid')
         return len(counts)
 
