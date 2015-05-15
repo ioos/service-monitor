@@ -10,4 +10,4 @@ from ioos_catalog.views import gliders
 from ioos_catalog.views import by_the_numbers
 from ioos_catalog.views import featured_maps
 from ioos_catalog.views import landing
-
+from ioos_catalog.views import metrics
