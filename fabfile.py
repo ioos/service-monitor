@@ -5,6 +5,7 @@ from copy import copy
 import time
 import urlparse
 import shutil
+import yaml
 
 """
     Call this with fab -c .fab TASK to pick up deploy variables
@@ -116,10 +117,7 @@ def create_index():
 
 def db_snapshot():
     admin()
-
-    MONGO_URI = env.get('mongo_db')
-    url = urlparse.urlparse(MONGO_URI)
-    MONGODB_DATABASE = url.path[1:]
+    MONGODB_DATABASE = PRODUCTION['MONGODB_DATABASE']
 
     backup_name = time.strftime('%Y-%m-%d')
 
@@ -137,3 +135,12 @@ def db_snapshot():
         local('tar xfvz %s.tar.gz' % backup_name)
         local('mongorestore -d catalog-%s %s' % (backup_name, os.path.join(backup_name, MONGODB_DATABASE)))
 
+def reload():
+    with open('config.yml') as f:
+        __config_dict__ = yaml.load(f)
+    if os.path.exists('config.local.yml'):
+        with open('config.local.yml') as f:
+            __config_dict__.update(yaml.load(f))
+    globals().update(__config_dict__)
+
+reload() # Initialize the globals on the first load of this module
