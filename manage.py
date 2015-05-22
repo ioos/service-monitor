@@ -38,8 +38,10 @@ def empty_failed():
     fqueue.empty()
 
 @manager.command
-def queue_reindex():
-    queue.enqueue(reindex_services)
+def queue_reindex(filter_regions=None):
+    if filter_regions:
+        filter_regions = filter_regions.split(',')
+    queue.enqueue(reindex_services, filter_regions)
 
 @manager.command
 def queue_daily_status():
