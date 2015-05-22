@@ -116,6 +116,7 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                 # store it.
                                 if req.status_code == 200:
                                     metadata_url = unicode(test_url)
+                                url = unicode(ref['url'])
                             # next record if not one of the previously mentioned
                             else:
                                 continue
