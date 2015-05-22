@@ -8,6 +8,8 @@ import xml.etree.ElementTree as ET
 from owslib import fes, csw
 from owslib.util import nspath_eval
 from owslib.namespaces import Namespaces
+from owslib.iso import MD_Metadata
+from lxml import etree
 
 from ioos_catalog import app,db
 import requests
@@ -116,7 +118,16 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                 # store it.
                                 if req.status_code == 200:
                                     metadata_url = unicode(test_url)
-                                url = unicode(ref['url'])
+                                else:
+                                    app.logger.error('Invalid service URL %s', ref['url'])
+                                    continue
+
+                                url = get_erddap_url_from_iso(req.content)
+                                if url is None:
+                                    app.logger.error(ref['url'])
+                                    app.logger.error("Failed to parse Erddap ISO for %s", test_url)
+                                    continue # Either not a valid ISO or there's not a valid endpoint
+
                             # next record if not one of the previously mentioned
                             else:
                                 continue
@@ -207,4 +218,22 @@ def cleanup_datasets():
                     d['active'] = False
                     d.save()
                     break
+
+def get_erddap_url_from_iso(xml_doc):
+    griddap_key = 'ERDDAPgriddapDatasetQueryAndAccess'
+    opendap_key = 'OPeNDAPDatasetQueryAndAccess'
+    tabledap_key = 'ERDDAPtabledapDatasetQueryAndAccess'
+    try:
+        tree = etree.fromstring(xml_doc)
+        metadata = MD_Metadata(tree)
+        for ident in metadata.identificationinfo:
+            if ident.identtype != 'service':
+                continue
+            operations = {k['name'] : k for k in ident.operations}
+            for key in [opendap_key, griddap_key, tabledap_key]:
+                if key in operations:
+                    return operations[key]['connectpoint'][0].url
+    except Exception as e:
+        app.logger.exception('Failed to parse ERDDAP ISO record for griddap')
+        return None
 
