@@ -43,7 +43,7 @@ def prune_services(dataset):
     for service_dict in dataset.services:
         service_id = service_dict['service_id']
 
-        valid_service = db.Service.find_one({'_id' : service_id})
+        valid_service = db.Service.find_one({'_id' : service_id, 'active':True})
         # The first thing to do is remove this from the list as viable services
         if valid_service is None:
             app.logger.critical("DANGLING DATASET %s", dataset._id)
