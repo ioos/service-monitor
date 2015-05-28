@@ -42,8 +42,8 @@ class Harvest(BaseDocument):
         # Get the service
         service = db.Service.find_one( { '_id' : ObjectId(service_id) } )
         if service is None:
-            app.log.error("Attempted harvest on invalid service_id: %s" % service_id)
-            app.log.error("Deleting harvest record")
+            app.logger.error("Attempted harvest on invalid service_id: %s" % service_id)
+            app.logger.error("Deleting harvest record")
             self.delete()
             return
 
