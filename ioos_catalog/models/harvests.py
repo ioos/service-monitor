@@ -44,7 +44,8 @@ class Harvest(BaseDocument):
         if service is None:
             app.logger.error("Attempted harvest on invalid service_id: %s" % service_id)
             app.logger.error("Deleting harvest record")
-            self.delete()
+            if hasattr(self, '_id'):
+                self.delete()
             return
 
         if ignore_active:
