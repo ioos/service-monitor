@@ -950,6 +950,8 @@ class DapHarvest(Harvester):
 
                     # one less order of magnitude eg 390000 -> 10000
                     slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)
+                    if slice_factor < 1:
+                        slice_factor = 1
 
                     # TODO: don't split x/y as separate arrays.  Refactor to
                     # use single numpy array instead with both lon/lat
