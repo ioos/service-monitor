@@ -44,6 +44,7 @@ from datetime import datetime
 from pandas import Timestamp
 from dateutil.parser import parse
 from netCDF4 import num2date
+from random import shuffle
 
 LARGER_SERVICES = [
     ObjectId('53d34aed8c0db37e0b538fda'),
@@ -58,7 +59,13 @@ def queue_harvest_tasks():
     """
 
     with app.app_context():
-        for s in db.Service.find({'active':True}, {'_id':True}):
+        # Some hosts don't like successive repeated connections, so by
+        # shuffling our list of services we reduce the liklihood that we'll
+        # harvest from the same host enough times to cause a service problem.
+        # This should reduce timeouts and unresponsive datasets
+        services = list(db.Service.find({'active':True}, {'_id':True}))
+        shuffle(services)
+        for s in services:
             service_id = s._id
             if service_id in LARGER_SERVICES:
                 continue
