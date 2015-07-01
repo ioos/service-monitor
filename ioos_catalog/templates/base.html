@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>IOOS Catalog{% if g.title is defined %} - {{ g.title }}{%endif%}</title>
+    <link rel="shortcut icon" href="{{ url_for('.static', filename='img/favicon.ico') }}">
     <script type="text/javascript" src="{{ url_for('.static', filename='js/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('.static', filename='js/bootstrap.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('.static', filename='js/chosen.jquery.min.js') }}"></script>
