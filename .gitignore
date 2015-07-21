@@ -8,3 +8,4 @@ build/*
 .*.swo
 db/*
 config.local.yml
+wiki/

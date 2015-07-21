@@ -54,7 +54,7 @@ def get_csv_metrics_by_ra():
         csvwriter.writerow(row)
     buf.seek(0)
     buf = buf.read()
-    return buf, 200, {'Content-Type':'text/csv'}
+    return buf, 200, {'Content-Type':'text/csv', 'Content-Dispsition': 'attachment; filename=IOOS-Data-Metrics.csv'}
 
 @app.route('/csv/metrics/services_by_type', methods=['GET'])
 def get_csv_metrics_by_type():
@@ -82,4 +82,4 @@ def get_csv_metrics_by_type():
         csvwriter.writerow(row)
     buf.seek(0)
     buf = buf.read()
-    return buf, 200, {'Content-Type':'text/csv'}
+    return buf, 200, {'Content-Type':'text/csv', 'Content-Dispsition': 'attachment; filename=IOOS-Data-Metrics.csv'}
