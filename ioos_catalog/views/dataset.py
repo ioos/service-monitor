@@ -3,9 +3,12 @@ import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
-from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
+from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g, make_response
 from wtforms import TextField, IntegerField, SelectField
-from bson import json_util
+from urllib import urlencode
+from collections import OrderedDict
+from bson import json_util, ObjectId
+from copy import copy
 
 from ioos_catalog import app, db, requires_auth
 from ioos_catalog.models.stat import Stat
@@ -97,3 +100,82 @@ def removeall():
     for d in dataset:
         d.delete()
     return redirect(url_for('datasets'))
+
+def build_links(item_count, current_page, page_limit, query={}):
+    '''
+    https://github.com/davidcelis/api-pagination
+    http://tools.ietf.org/html/rfc5988
+    '''
+    base_url = request.url.split('?')[0]
+    query = query or {}
+    links = []
+    last_page_count = item_count / page_limit
+    if current_page < last_page_count:
+        links.append(build_link(base_url, query, current_page+2, 'next'))
+    links.append(build_link(base_url, query, 1, 'first'))
+    if current_page > 0:
+        links.append(build_link(base_url, query, current_page, 'prev'))
+    links.append(build_link(base_url, query, last_page_count-1, 'last'))
+    return links
+
+def build_link(base_url, query, page, rel):
+    query['page'] = page
+    return '<%s>; rel="%s"' % (build_url(base_url, query), rel)
+
+
+def build_url(url, query):
+    if query:
+        url += '?' + urlencode(query)
+    return url
+
+@app.route('/api/dataset', methods=['GET'])
+def get_datasets():
+    page_limit = 20
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+    search_term = request.args.get('search', None)
+    provider = request.args.get('data_provider', None)
+    query = {}
+    page_query = {}
+    if search_term:
+        query['$text'] = {'$search' : search_term, '$language' : 'en'}
+        page_query['search'] = search_term
+    if provider:
+        query['services.data_provider'] = provider
+        page_query['data_provider'] = provider
+
+    cursor = db.Dataset.find(query, {"services.metadata_value":0})
+
+    if page < 1:
+        page = 1
+    page = page - 1
+    start = (cursor.count() / page_limit) * page
+    datasets = list(cursor[start:start+page_limit])
+    response = {
+        'datasets' : datasets,
+        'length' : len(datasets)
+    }
+
+    links = build_links(cursor.count(), page, page_limit, page_query)
+    response = make_response(json.dumps(response, default=json_util.default))
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['Link'] = ', '.join(links)
+    return response
+
+
+@app.route('/api/dataset/<string:dataset_id>', methods=['GET'])
+def get_dataset(dataset_id):
+    try:
+        dataset_id = ObjectId(dataset_id)
+    except:
+        return jsonify(error="ValueError", message="Invalid ObjectId"), 400
+
+    dataset = db.Dataset.find_one({"_id":dataset_id})
+    if dataset is None:
+        return jsonify(error="NotFound", message="No dataset for this id"), 404
+    response = make_response(json.dumps(dataset, default=json_util.default))
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
+
