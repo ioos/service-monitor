@@ -14,6 +14,7 @@ from ioos_catalog import app, db, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
+from ioos_catalog.util import build_links
 
 
 class DatasetFilterForm(Form):
@@ -101,62 +102,43 @@ def removeall():
         d.delete()
     return redirect(url_for('datasets'))
 
-def build_links(item_count, current_page, page_limit, query={}):
-    '''
-    https://github.com/davidcelis/api-pagination
-    http://tools.ietf.org/html/rfc5988
-    '''
-    base_url = request.url.split('?')[0]
-    query = query or {}
-    links = []
-    last_page_count = item_count / page_limit
-    if current_page < last_page_count:
-        links.append(build_link(base_url, query, current_page+2, 'next'))
-    links.append(build_link(base_url, query, 1, 'first'))
-    if current_page > 0:
-        links.append(build_link(base_url, query, current_page, 'prev'))
-    links.append(build_link(base_url, query, last_page_count-1, 'last'))
-    return links
-
-def build_link(base_url, query, page, rel):
-    query['page'] = page
-    return '<%s>; rel="%s"' % (build_url(base_url, query), rel)
-
-
-def build_url(url, query):
-    if query:
-        url += '?' + urlencode(query)
-    return url
-
-@app.route('/api/dataset', methods=['GET'])
-def get_datasets():
+def get_page_info():
     page_limit = 20
     try:
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
-    search_term = request.args.get('search', None)
-    provider = request.args.get('data_provider', None)
+
+    if page < 1:
+        page = 1
+    page = page - 1
+
+    return page_limit, page
+
+def get_search_terms():
     query = {}
     page_query = {}
+    search_term = request.args.get('search', None)
+    provider = request.args.get('data_provider', None)
     if search_term:
         query['$text'] = {'$search' : search_term, '$language' : 'en'}
         page_query['search'] = search_term
     if provider:
         query['services.data_provider'] = provider
         page_query['data_provider'] = provider
+    return query, page_query
 
+@app.route('/api/dataset', methods=['GET'])
+def get_datasets():
+    # Build the mongo query
+    query, page_query = get_search_terms()
     cursor = db.Dataset.find(query, {"services.metadata_value":0})
 
-    if page < 1:
-        page = 1
-    page = page - 1
-    start = (cursor.count() / page_limit) * page
-    datasets = list(cursor[start:start+page_limit])
-    response = {
-        'datasets' : datasets,
-        'length' : len(datasets)
-    }
+    # Fetch the appropriate records
+    page_limit, page = get_page_info()
+    start = page_limit * page
+
+    response = list(cursor[start:start+page_limit])
 
     links = build_links(cursor.count(), page, page_limit, page_query)
     response = make_response(json.dumps(response, default=json_util.default))
