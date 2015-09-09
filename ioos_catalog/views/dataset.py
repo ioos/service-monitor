@@ -3,14 +3,18 @@ import urlparse
 from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
-from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
+from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g, make_response
 from wtforms import TextField, IntegerField, SelectField
-from bson import json_util
+from urllib import urlencode
+from collections import OrderedDict
+from bson import json_util, ObjectId
+from copy import copy
 
 from ioos_catalog import app, db, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
+from ioos_catalog.util import build_links
 
 
 class DatasetFilterForm(Form):
@@ -97,3 +101,63 @@ def removeall():
     for d in dataset:
         d.delete()
     return redirect(url_for('datasets'))
+
+def get_page_info():
+    page_limit = 20
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    if page < 1:
+        page = 1
+    page = page - 1
+
+    return page_limit, page
+
+def get_search_terms():
+    query = {}
+    page_query = {}
+    search_term = request.args.get('search', None)
+    provider = request.args.get('data_provider', None)
+    if search_term:
+        query['$text'] = {'$search' : search_term, '$language' : 'en'}
+        page_query['search'] = search_term
+    if provider:
+        query['services.data_provider'] = provider
+        page_query['data_provider'] = provider
+    return query, page_query
+
+@app.route('/api/dataset', methods=['GET'])
+def get_datasets():
+    # Build the mongo query
+    query, page_query = get_search_terms()
+    cursor = db.Dataset.find(query, {"services.metadata_value":0})
+
+    # Fetch the appropriate records
+    page_limit, page = get_page_info()
+    start = page_limit * page
+
+    response = list(cursor[start:start+page_limit])
+
+    links = build_links(cursor.count(), page, page_limit, page_query)
+    response = make_response(json.dumps(response, default=json_util.default))
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['Link'] = ', '.join(links)
+    return response
+
+
+@app.route('/api/dataset/<string:dataset_id>', methods=['GET'])
+def get_dataset(dataset_id):
+    try:
+        dataset_id = ObjectId(dataset_id)
+    except:
+        return jsonify(error="ValueError", message="Invalid ObjectId"), 400
+
+    dataset = db.Dataset.find_one({"_id":dataset_id})
+    if dataset is None:
+        return jsonify(error="NotFound", message="No dataset for this id"), 404
+    response = make_response(json.dumps(dataset, default=json_util.default))
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
+

@@ -4,14 +4,16 @@ from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from flask.ext.wtf import Form
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, g
+from flask import make_response
 from wtforms import TextField, IntegerField, SelectField, BooleanField
-from bson import json_util
+from bson import json_util, ObjectId
 
 from ioos_catalog import app, db, queue, support_jsonp, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
 from ioos_catalog.tasks.reindex_services import reindex_services
 from ioos_catalog.tasks.harvest import harvest
+from ioos_catalog.util import build_links
 
 class ServiceForm(Form):
     name               = TextField(u'Name')
@@ -317,3 +319,53 @@ def daily(year, month, day):
     g.title = "Daily Report (%s)" % end_time.strftime("%Y-%m-%d")
     return render_template("daily_service_report_page.html", services=services, failed_services=failed_services, start_time=start_time, end_time=end_time)
 
+def get_search_terms():
+    query = {}
+    page_query = {}
+    search_term = request.args.get('search', None)
+    provider = request.args.get('data_provider', None)
+    service_type = request.args.get('service_type', None)
+    if search_term:
+        query['$text'] = {'$search' : search_term, '$language' : 'en'}
+        page_query['search'] = search_term
+    if provider:
+        query['data_provider'] = provider
+        page_query['data_provider'] = provider
+    if service_type:
+        query['service_type'] = service_type
+        page_query['service_type'] = service_type
+    return query, page_query
+
+
+@app.route('/api/service', methods=['GET'])
+def get_services():
+    from ioos_catalog.views.dataset import get_page_info
+    page_limit, page = get_page_info()
+    query, page_query = get_search_terms()
+
+    cursor = db.Service.find(query)
+
+    start = page_limit * page
+    links = build_links(cursor.count(), page, page_limit, page_query)
+
+    response = list(cursor[start:start+page_limit])
+    app.logger.info("slice: (%s, %s)", start, start+page_limit)
+    response = make_response(json.dumps(response, default=json_util.default))
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['Link'] = ', '.join(links)
+    response.headers['X-Total'] = cursor.count()
+    response.headers['X-Per-Page'] = page_limit
+    return response
+
+@app.route('/api/service/<string:service_id>', methods=['GET'])
+def get_service(service_id):
+    try:
+        service_id = ObjectId(service_id)
+    except:
+        return jsonify(error="ValueError", message="Invalid ObjectId"), 400
+    
+    service = db.Service.find_one({"_id":service_id})
+    if service is None:
+        return jsonify(error="NotFound", message="No service for this id"), 404
+    response = make_response(json.dumps(service, default=json_util.default))
+    return response

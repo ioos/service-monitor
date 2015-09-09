@@ -60,4 +60,10 @@ Run Redis
 foreman start
 ```
 
+# IOOS Website Mission Statement
+
+IOOS.gov is where we tell the IOOS and OCGL story, through visually compelling
+imagery and storytelling. We inspire visitors by providing easy access to
+engaging, accessible, and dynamic OCGL data, news, and blue technology for
+stakeholders in industry, education, government and for curious citizens.
 
