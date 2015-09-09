@@ -103,6 +103,11 @@ def removeall():
     return redirect(url_for('datasets'))
 
 def get_page_info():
+    '''
+    Determines the current page based on the request arguments and returns the page limit and the current page
+    :return: A tuple of the page limit and the current page
+    :rtype: tuple
+    '''
     page_limit = 20
     try:
         page = int(request.args.get('page', 1))
@@ -116,20 +121,40 @@ def get_page_info():
     return page_limit, page
 
 def get_search_terms():
+    '''
+    Returns a tuple of query and page_query dictionaries.
+    The query object is used with the Mongo find method, the page_query dictionary is used to generate URLs.
+    :return: A tuple of query and page_query dictionaries.
+    :rtype: tuple
+    '''
     query = {}
     page_query = {}
     search_term = request.args.get('search', None)
     provider = request.args.get('data_provider', None)
+    active = request.args.get('active', 'true')
     if search_term:
         query['$text'] = {'$search' : search_term, '$language' : 'en'}
         page_query['search'] = search_term
     if provider:
         query['services.data_provider'] = provider
         page_query['data_provider'] = provider
+    if active == 'true':
+        query['active'] = True
+    elif active == 'false':
+        query['active'] = False
+        page_query['active'] = 'false'
+    elif active in ('all', 'any'):
+        page_query['active'] = 'all'
+
     return query, page_query
 
 @app.route('/api/dataset', methods=['GET'])
 def get_datasets():
+    '''
+    GET /api/dataset{?page,search,data_provider,active}
+
+    Returns a list of datasets for the query specified.
+    '''
     # Build the mongo query
     query, page_query = get_search_terms()
     cursor = db.Dataset.find(query, {"services.metadata_value":0})
@@ -149,6 +174,11 @@ def get_datasets():
 
 @app.route('/api/dataset/<string:dataset_id>', methods=['GET'])
 def get_dataset(dataset_id):
+    '''
+    GET /api/dataset/{dataset_id}
+
+    Retruns a single JSON object for the dataset on record
+    '''
     try:
         dataset_id = ObjectId(dataset_id)
     except:

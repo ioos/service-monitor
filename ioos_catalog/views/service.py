@@ -320,11 +320,17 @@ def daily(year, month, day):
     return render_template("daily_service_report_page.html", services=services, failed_services=failed_services, start_time=start_time, end_time=end_time)
 
 def get_search_terms():
+    '''
+    Returns a tuple containing the query and page_query dictionaries.
+    :return: A tuple containing the query and page_query dictionaries
+    :rtype: tuple
+    '''
     query = {}
     page_query = {}
     search_term = request.args.get('search', None)
     provider = request.args.get('data_provider', None)
     service_type = request.args.get('service_type', None)
+    active = request.args.get('active', 'true')
     if search_term:
         query['$text'] = {'$search' : search_term, '$language' : 'en'}
         page_query['search'] = search_term
@@ -334,11 +340,24 @@ def get_search_terms():
     if service_type:
         query['service_type'] = service_type
         page_query['service_type'] = service_type
+    if active == 'true':
+        query['active'] = True
+    elif active == 'false':
+        query['active'] = False
+        page_query['active'] = 'false'
+    elif active in ('all', 'any'):
+        page_query['active'] = 'all'
+
     return query, page_query
 
 
 @app.route('/api/service', methods=['GET'])
 def get_services():
+    '''
+    GET /api/service{?page,search,data_provider,service_type,active}
+
+    Returns a JSON list of services for the query specified.
+    '''
     from ioos_catalog.views.dataset import get_page_info
     page_limit, page = get_page_info()
     query, page_query = get_search_terms()
@@ -359,6 +378,11 @@ def get_services():
 
 @app.route('/api/service/<string:service_id>', methods=['GET'])
 def get_service(service_id):
+    '''
+    GET /api/service/{service_id}
+
+    Returns a JSON object of a service record
+    '''
     try:
         service_id = ObjectId(service_id)
     except:
