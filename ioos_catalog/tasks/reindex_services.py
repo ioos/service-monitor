@@ -27,6 +27,7 @@ region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
                  'MODELING_TESTBED' : '8BF00750-66C7-49FF-8894-4D4F96FD86C0',
                  'NANOOS'           : '254CCFC0-E408-4E13-BD62-87567E7586BB',
                  'NERACOOS'         : 'E41F4FCD-0297-415D-AC53-967B970C3A3E',
+                 'OceanSITES'       : 'D479A77C-414E-404A-AF9B-C0BA9975E90D',
                  'PacIOOS'          : '68FF11D8-D66B-45EE-B33A-21919BB26421',
                  'SCCOOS'           : 'B70B3E3C-3851-4BA9-8E9B-C9F195DCEAC7',
                  'SECOORA'          : 'B3EA8869-B726-4E39-898A-299E53ABBC98',
@@ -137,7 +138,7 @@ def reindex_services(filter_regions=None, filter_service_types=None):
                                                         'url': url})
                             if s is None:
                                 s               = db.Service()
-                                s.url           = url
+                                s.url           = unicode(url)
                                 s.data_provider = unicode(region)
                                 s.manual        = False
                                 s.active        = True

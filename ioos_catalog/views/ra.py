@@ -162,6 +162,14 @@ provider_info = {
             {'title': 'NOAA Tides and Currents', 'url': 'tidesandcurrents.noaa.gov'}
         ]
     },
+    'OceanSITES': {
+        'fullname': 'OceanSITES',
+        'provider_type': 'national',
+        'banner': '/static/img/np/oceansites.gif',
+        'links': [
+            {'title': 'OceanSITES', 'url': 'oceansites.org'}
+        ]
+    },
     'USACE': {
         'fullname': 'US Army Corps of Engineers',
         'provider_type': 'national',
