@@ -235,6 +235,7 @@ svg path.dataset.active {
 
 .navbar-custom .navbar-img-brand img {
   height: 47px;
+  padding-right: 20px;
 }
 
 .navbar-custom .navbar-brand {
