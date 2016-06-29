@@ -1,5 +1,5 @@
-The IOOS Catalog
-=======
+The IOOS Service Monitor
+========================
 
 A web based catalog of IOOS services and datasets, available at http://catalog.ioos.us
 
@@ -11,7 +11,7 @@ Development
 ### Get a local copy
 
 ```
-git clone https://github.com/ioos/catalog/
+git clone https://github.com/ioos/service-monitor/
 ```
 
 ### Get MongoDB
