@@ -239,7 +239,7 @@ def show_ra(provider):
     return render_template("show_ra.html",
                            pi=pi,
                            provider=provider,
-                           providers=region_map.keys(),
+                           providers=region_map,
                            provider_service_count=provider_service_count,
                            tlds=tlds,
                            provider_dataset_count=provider_dataset_count)

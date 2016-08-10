@@ -11,6 +11,7 @@ gunicorn==0.16.1
 rq==0.6.0
 rq-dashboard==0.3.4
 
+ckanapi==3.6
 paegan>=1.1.1
 pyoos==0.7.0
 OWSLib==0.11.2

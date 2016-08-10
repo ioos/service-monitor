@@ -22,7 +22,7 @@ def catalog_map(filter_provider):
     # for the location to be processed by javascript
 
     g.title = "Catalog Map"
-    regions = sorted(region_map.iterkeys())
+    regions = sorted(region_map)
     # does not filter out types by region
     asset_types = sorted(db.services.distinct('service_type'))
 
