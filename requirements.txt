@@ -2,28 +2,23 @@
 python-dateutil==2.4.0
 Flask==0.10.1
 Flask-WTF==0.9.0
+pymongo==2.8
 Flask-MongoKit==0.6
 Flask-Mail==0.9.0
 Flask-Script==2.0.3
 gunicorn==0.16.1
 
-# Need UTC times which will be 0.3.12 (not relased on PyPi yet)
-#rq==0.3.12
-git+https://github.com/nvie/rq.git@09d461c2c0523784e893b94eba65b287248d0ec0
-
-rq-dashboard==0.3.1
+rq==0.6.0
+rq-dashboard==0.3.4
 
 paegan>=1.1.1
-#pyoos>=0.6.1
-# This is temporary, we will use a specific version once we release it
-git+https://github.com/ioos/pyoos.git@f6addf03b67987e1b050755d0c76fae20e33415c
-# unreleased parsing fixes in OWSLib
-git+https://github.com/geopython/OWSLib.git
+pyoos==0.7.0
+OWSLib==0.11.2
 git+https://github.com/ioos/wicken.git
 geojson
 git+https://github.com/ioos/petulant-bear.git
 compliance-checker==1.1.1
 Flask-Captcha==0.1.8
 six==1.9.0
-pandas==0.16.1
+pandas==0.17.1
 Flask-Environments==0.1

@@ -1,0 +1,24 @@
+version: '2'
+
+services:
+  service_monitor:
+    build: .
+    container_name: service_monitor
+    #env_file: envfile
+    ports:
+      - "3000:3000"
+
+  mongo_oldcat:
+    image: mongo:3.2
+    container_name: mongo_oldcat
+    volumes:
+      - "service_monitor_data:/data/db"
+
+  redis:
+    image: redis:3.0.7-alpine
+    container_name: redis_oldcat
+
+volumes:
+  service_monitor_data:
+    external:
+      name: service_monitor_data
