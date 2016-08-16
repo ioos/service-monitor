@@ -9,3 +9,4 @@ build/*
 db/*
 config.local.yml
 wiki/
+__pycache__

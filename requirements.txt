@@ -18,7 +18,7 @@ git+https://github.com/ioos/wicken.git
 geojson
 git+https://github.com/ioos/petulant-bear.git
 compliance-checker==1.1.1
-Flask-Captcha==0.1.8
+git+https://github.com/rickmer/flask-captcha#egg=Flask-Captcha
 six==1.9.0
 pandas==0.17.1
 Flask-Environments==0.1

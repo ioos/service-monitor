@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+
+from pymongo import MongoClient
+import os
+import sys
+import time
+
+
+conn_string = os.environ.get('MONGO_URL', 'mongodb://mongo')
+print "Looking for mongo connection at", conn_string
+i = 0
+while i < 10:
+    i += 1
+    try:
+        db = MongoClient(conn_string)
+        db.server_info()
+        break
+    except:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        time.sleep(2)
+

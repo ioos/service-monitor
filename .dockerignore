@@ -1,3 +1,15 @@
 db/
 Dockerfile
 docker-compose.yml
+*.swp
+*.pyc
+.env
+.fab
+logs/*
+build/*
+.DS_Store
+.*.swo
+db/*
+config.local.yml
+wiki/
+__pycache__

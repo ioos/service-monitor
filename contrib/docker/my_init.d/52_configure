@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -eu
+
+: ${DEBUG:="false"}
+: ${LOG_FILE:="true"}
+: ${WEB_PASSWORD:="i00s"}
+: ${SECRET_KEY:=}
+: ${MONGODB_HOST:="mongo"}
+: ${MONGODB_PORT:="27017"}
+: ${MONGODB_DATABASE:="service-monitor"}
+: ${REDIS_HOST:="redis"}
+: ${REDIS_PORT:="6379"}
+: ${REDIS_DB:="1"}
+: ${MAIL_SERVER:=}
+: ${MAIL_PORT:=}
+: ${MAIL_USERNAME:=}
+: ${MAIL_PASSWORD:=}
+: ${MAIL_DEFAULT_SENDER:=}
+: ${MAILER_DEBUG:="true"}
+: ${MAIL_DEFAULT_TO:="null"}
+: ${MAIL_DEFAULT_LIST:="null"}
+: ${MAIL_COMMENTS_TO:="null"}
+
+if [[ ${WEB_PASSWORD} == "i00s" ]]; then
+    echo "----------------------!!WARNING!!----------------------"
+    echo " Using default password is HIGHLY discouraged"
+    echo "----------------------!!WARNING!!----------------------"
+fi
+if [[ -z ${SECRET_KEY} ]]; then
+    echo "Generating SECRET KEY"
+    SECRET_KEY=$(openssl rand -base64 32)
+fi
+
+cat > /service-monitor/config.local.yml << EOF
+COMMON: &common
+  DEBUG: ${DEBUG}
+  TESTING: false
+  LOG_FILE: ${LOG_FILE}
+  WEB_PASSWORD: ${WEB_PASSWORD}
+  SECRET_KEY: ${SECRET_KEY}
+  MONGODB_HOST: ${MONGODB_HOST}
+  MONGODB_PORT: ${MONGODB_PORT}
+  MONGODB_DATABASE: ${MONGODB_DATABASE}
+  REDIS_HOST: ${REDIS_HOST}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_DB: ${REDIS_DB}
+  MAIL_SERVER: ${MAIL_SERVER}
+  MAIL_PORT: ${MAIL_PORT}
+  MAIL_USE_TLS: true
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  MAIL_DEFAULT_SENDER: ${MAIL_DEFAULT_SENDER}
+
+  MAILER_DBEUG: ${MAILER_DEBUG}
+  MAIL_DEFAULT_TO: ${MAIL_DEFAULT_TO}
+  MAIL_DEFAULT_LIST: ${MAIL_DEFAULT_LIST}
+  MAIL_COMMENTS_TO: ${MAIL_COMMENTS_TO}
+
+PRODUCTION: &production
+  <<: *common
+
+DEVELOPMENT: &development
+  <<: *common
+EOF
+
+
