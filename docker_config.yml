@@ -1,0 +1,54 @@
+COMMON: &common
+  # Logging and Debug
+  DEBUG: False
+  TESTING: False
+  LOG_FILE: True
+  JSONIFY_PRETTYPRINT_REGULAR: False
+  # Host configuration, only used by the app.py not used by gunicorn or WSGI
+  # service
+  HOST: localhost
+  PORT: 3000
+  WEB_PASSWORD: password
+  SECRET_KEY: xxxxxxxx
+  # Mongo configuration
+  MONGODB_HOST: mongo_oldcat
+  MONGODB_PORT: 27017
+  MONGODB_DATABASE: catalog-2016-08-08
+  # Redis configuration
+  REDIS_HOST: redis_oldcat
+  REDIS_PORT: 6379
+  REDIS_DB: 4
+  # Mail configurations
+  MAIL_SERVER: email-smtp.us-east-1.amazonaws.com
+  MAIL_PORT: 587
+  MAIL_USE_TLS: True
+  MAIL_USERNAME: amazon-ses-username
+  MAIL_PASSWORD: amazon-ses-password
+  MAIL_DEFAULT_SENDER: ioos-monitor@asascience.com
+
+  # If False, mails are sent to the 'contact' defined for the service, else
+  # mails are sent to MAIL_DEFAULT_TO
+  MAILER_DEBUG: True
+  MAIL_DEFAULT_TO: null
+  # Email to receive daily reports and to be CCd in status reports.  Only used
+  # if MAILER_DEBUG is False.
+  MAIL_DEFAULT_LIST: null
+
+  # For services with no contact, use this.  Also use this if MAILER_DEBUG is
+  # True
+  MAIL_COMMENTS_TO: null
+
+  # Captcha Settings
+  CAPTCHA_PREGEN_PATH: 'db/images'
+  SQLALCHEMY_DATABASE_URI: 'sqlite:///../db/captcha.db'
+
+
+PRODUCTION: &production
+  <<: *common
+  MONGODB_DATABASE: monitoring_production
+
+DEVELOPMENT: &development
+  <<: *common
+  MONGODB_DATABASE: catalog-2016-08-08
+  JSONIFY_PRETTYPRING_REGULAR: True
+  DEBUG: True
