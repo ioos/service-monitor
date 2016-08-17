@@ -89,7 +89,11 @@ def reindex_services(filter_regions=None, filter_service_types=None):
             uuid_filter = fes.PropertyIsEqualTo(propertyname='sys.siteuuid', literal="{%s}" % uuid)
 
             # Make CSW request
-            c.getrecords2([uuid_filter], esn='full', maxrecords=999999)
+            try:
+                c.getrecords2([uuid_filter], esn='full', maxrecords=999999)
+            except:
+                app.logger.exception("Failed to connect to geoportal, skipping %s", region)
+                continue
 
             for name, record in c.records.iteritems():
                 try:
