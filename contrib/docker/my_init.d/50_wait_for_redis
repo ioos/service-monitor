@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+: ${REDIS_HOST:=redis}
+: ${REDIS_PORT:=6379}
+
+wait_for_redis(){
+    echo "Waiting for redis"
+    until $(redis-cli -h $REDIS_HOST -p $REDIS_PORT ping > /dev/null 2>&1); do 
+        printf '.'
+        sleep 5
+    done
+    printf '\n'
+}
+
+wait_for_redis
