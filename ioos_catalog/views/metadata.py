@@ -136,7 +136,7 @@ def view_metadatas(filter_provider):
                            metadatas=metadatas,
                            services=services,
                            #datasets=datasets,
-                           providers=region_map.keys(),
+                           providers=region_map,
                            filters=service_filters,
                            columns=list(cols))
 
@@ -146,7 +146,8 @@ def metadatas():
     Presents a form for the user to view/download.
     """
     f                 = MetadataForm()
-    f.data_provider.choices = zip(sorted(region_map.iterkeys()), sorted(region_map.iterkeys()))
+    # BWA: why is this repeated twice
+    f.data_provider.choices = zip(sorted(region_map), sorted(region_map))
     f.asset_type.choices = []
 
     return render_template("metadata_form.html",

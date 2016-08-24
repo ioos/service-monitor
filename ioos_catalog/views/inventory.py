@@ -23,7 +23,7 @@ def inject_ra_providers():
 @app.route('/inventory/', methods=['GET'])
 def inventory():
     # provider list
-    providers = sorted(region_map.keys())
+    providers = sorted(region_map)
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider_flat()
