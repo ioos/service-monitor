@@ -13,7 +13,7 @@ import shapely.geometry
 import dateutil.parser
 
 from ioos_catalog import app, db, support_jsonp, requires_auth
-from ioos_catalog.tasks.reindex_services import region_map
+from ioos_catalog.tasks.reindex_services import get_region_map
 
 @app.route('/map/', defaults={'filter_provider': 'SECOORA'}, methods=['GET'])
 @app.route('/map/<path:filter_provider>', methods=['GET'])
@@ -22,7 +22,8 @@ def catalog_map(filter_provider):
     # for the location to be processed by javascript
 
     g.title = "Catalog Map"
-    regions = sorted(region_map)
+    region_map = get_region_map()
+    regions = [region['title'] for region in region_map]
     # does not filter out types by region
     asset_types = sorted(db.services.distinct('service_type'))
 

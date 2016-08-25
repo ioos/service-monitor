@@ -37,11 +37,10 @@ def empty_failed():
     fqueue = Queue('failed', connection=redis_connection)
     fqueue.empty()
 
-@manager.command
-def queue_reindex(filter_regions=None):
-    if filter_regions:
-        filter_regions = filter_regions.split(',')
-    queue.enqueue(reindex_services, filter_regions)
+@manager.option('--provider', help='Provider to filter')
+def queue_reindex(provider=None):
+    print provider
+    queue.enqueue(reindex_services, provider)
 
 @manager.command
 def queue_daily_status():
