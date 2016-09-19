@@ -72,5 +72,4 @@ DEVELOPMENT: &development
 EOF
 
 cd /service-monitor
-mkdir db
 python manage.py captcha_init
