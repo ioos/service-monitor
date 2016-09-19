@@ -29,8 +29,10 @@ RUN curl 'ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.tar.gz' -o netcdf-4
     && cd .. \
     && rm -rf netcdf-4*
 
-RUN mkdir /service-monitor
-RUN mkdir /service-monitor/logs
+RUN mkdir /service-monitor && \
+    mkdir /service-monitor/logs && \
+    mkdir /service-monitor/db
+
 COPY app.py config.yml console manage.py requirements.txt web worker /service-monitor/
 COPY ./contrib/scripts/install_python.sh ./contrib/scripts/install_captcha.sh /
 RUN /install_python.sh && \
