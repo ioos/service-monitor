@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 
 from flask import render_template, make_response, redirect, jsonify, url_for
 from ioos_catalog import app, db, prettydate
-from ioos_catalog.tasks.reindex_services import region_map
+from ioos_catalog.tasks.reindex_services import get_region_map
 from ioos_catalog.views.ra import provider_info as p_info
 
 # @TODO: really belongs in app __init__ but need to move region_map
@@ -23,7 +23,8 @@ def inject_ra_providers():
 @app.route('/inventory/', methods=['GET'])
 def inventory():
     # provider list
-    providers = sorted(region_map.keys())
+    region_map = get_region_map()
+    providers = sorted([region['title'] for region in region_map])
 
     # service counts by provider
     counts_by_provider = db.Service.count_types_by_provider_flat()

@@ -41,6 +41,7 @@ COMMON: &common
   # Captcha Settings
   CAPTCHA_PREGEN_PATH: 'db/images'
   SQLALCHEMY_DATABASE_URI: 'sqlite:///../db/captcha.db'
+  CKAN_CATALOG: https://data.ioos.us/
 
 
 PRODUCTION: &production

@@ -17,6 +17,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -y && \
     libudunits2-dev \
     libyaml-dev \
     redis-tools \
+    liblapack3 \
     libfreetype6-dev
 
 RUN curl 'ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.tar.gz' -o netcdf-4.4.1.tar.gz \
@@ -28,15 +29,33 @@ RUN curl 'ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.tar.gz' -o netcdf-4
     && cd .. \
     && rm -rf netcdf-4*
 
-RUN mkdir /service-monitor
-COPY ioos_catalog /service-monitor/ioos_catalog
-RUN mkdir /service-monitor/logs
+RUN mkdir /service-monitor && \
+    mkdir /service-monitor/logs && \
+    mkdir /service-monitor/db
+
 COPY app.py config.yml console manage.py requirements.txt web worker /service-monitor/
-RUN rm -rf /var/lib/apt/lists/*
-RUN pip install -U pip
-RUN pip install numpy && \
-    pip install gunicorn
-RUN pip install -r /service-monitor/requirements.txt
+COPY ./contrib/scripts/install_python.sh ./contrib/scripts/install_captcha.sh /
+
+RUN /install_python.sh && \
+    /install_captcha.sh && \
+    rm -rf /install_captcha.sh && \
+    rm -rf /install_python.sh && \
+    pip install numpy && \
+    pip install scipy && \
+    pip install gunicorn && \
+    pip install -r /service-monitor/requirements.txt
+
+RUN useradd -m ioos
+
+COPY ioos_catalog /service-monitor/ioos_catalog
+
+RUN chown -R ioos:ioos /service-monitor
 WORKDIR /service-monitor
+
 COPY ./contrib/docker/my_init.d /etc/my_init.d
-CMD /sbin/my_init -- gunicorn -w 2 -b 0.0.0.0:3000 app:app
+COPY ./contrib/scripts/manage.sh ./contrib/scripts/run_worker.sh /service-monitor/
+COPY ./contrib/crontab /etc/crontab
+
+RUN rm -rf /var/lib/apt/lists/*
+
+CMD ["/sbin/my_init", "--", "/sbin/setuser", "ioos", "gunicorn", "-w", "2", "-b", "0.0.0.0:3000", "app:app"]

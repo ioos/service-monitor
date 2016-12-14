@@ -21,6 +21,7 @@ set -eu
 : ${MAIL_DEFAULT_TO:="null"}
 : ${MAIL_DEFAULT_LIST:="null"}
 : ${MAIL_COMMENTS_TO:="null"}
+: ${CKAN_CATALOG:="https://data.ioos.us/"}
 
 if [[ ${WEB_PASSWORD} == "i00s" ]]; then
     echo "----------------------!!WARNING!!----------------------"
@@ -34,6 +35,8 @@ fi
 
 cat > /service-monitor/config.local.yml << EOF
 COMMON: &common
+  HOST: 0.0.0.0
+  PORT: 3000
   DEBUG: ${DEBUG}
   TESTING: false
   LOG_FILE: ${LOG_FILE}
@@ -56,6 +59,10 @@ COMMON: &common
   MAIL_DEFAULT_TO: ${MAIL_DEFAULT_TO}
   MAIL_DEFAULT_LIST: ${MAIL_DEFAULT_LIST}
   MAIL_COMMENTS_TO: ${MAIL_COMMENTS_TO}
+  CAPTCHA_PREGEN_PATH: 'db/images'
+  SQLALCHEMY_DATABASE_URI: 'sqlite:///../db/captcha.db'
+  CKAN_CATALOG: ${CKAN_CATALOG}
+
 
 PRODUCTION: &production
   <<: *common
@@ -64,4 +71,5 @@ DEVELOPMENT: &development
   <<: *common
 EOF
 
-
+cd /service-monitor
+/sbin/setuser ioos python manage.py captcha_init

@@ -9,7 +9,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, R
 from wtforms import TextField, IntegerField, SelectField
 
 from ioos_catalog import app, db
-from ioos_catalog.tasks.reindex_services import region_map
+from ioos_catalog.tasks.reindex_services import get_region_map
 
 class MetadataForm(Form):
     start_date    = TextField(u'Start Date', description="Coming soon")
@@ -131,22 +131,24 @@ def view_metadatas(filter_provider):
     # get mappings of services/datasets
     services = {s._id:s for s in db.Service.find({'_id':{'$in':list(sids)}})}
     #datasets = {d._id:d.name for d in db.Dataset.find({'_id':{'$in':list(dids)}})}
+    regions = [region['title'] for region in get_region_map()]
 
     return render_template("metadatas.html",
                            metadatas=metadatas,
                            services=services,
-                           #datasets=datasets,
-                           providers=region_map.keys(),
+                           providers=regions,
                            filters=service_filters,
                            columns=list(cols))
+
 
 @app.route('/metadata/')
 def metadatas():
     """
     Presents a form for the user to view/download.
     """
-    f                 = MetadataForm()
-    f.data_provider.choices = zip(sorted(region_map.iterkeys()), sorted(region_map.iterkeys()))
+    f = MetadataForm()
+    regions = [region['title'] for region in get_region_map()]
+    f.data_provider.choices = zip(sorted(regions), sorted(regions))
     f.asset_type.choices = []
 
     return render_template("metadata_form.html",

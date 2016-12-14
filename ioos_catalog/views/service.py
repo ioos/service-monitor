@@ -144,23 +144,6 @@ def show_service(service_id):
 
 
     harvest = db.Harvest.find_one({'service_id':service._id})
-    if harvest:
-        harvest_data = {}
-        harvest_data['harvest_time']       = harvest.harvest_date
-        harvest_data['harvest_status']     = harvest.harvest_status
-        harvest_data['harvest_successful'] = harvest.harvest_successful
-        if harvest.harvest_messages:
-            harvest_data['harvest_message'] = harvest.harvest_messages[0]
-        else:
-            harvest_data['harvest_message'] = {'date' : datetime.utcnow(), 'message' : u'No messages'}
-
-    else: # Just in case no harvest has been attempted
-        harvest_data = {
-            'harvest_time' : datetime.utcnow(),
-            'harvest_status' : 'No harvest attempted',
-            'harvest_message' : {'date' : datetime.utcnow(), 'message' : u'No messages'}
-        }
-
 
 
     return render_template('show_service.html',

@@ -1,207 +1,209 @@
-from datetime import datetime
+#!/usr/bin/env python
+'''
+ioos_catalog/tasks/reindex_services.py
+'''
 from urlparse import urlparse
-import re
-
-import requests
-import xml.etree.ElementTree as ET
-
-from owslib import fes, csw
-from owslib.util import nspath_eval
-from owslib.namespaces import Namespaces
+from collections import namedtuple
+from hashlib import sha1
 from owslib.iso import MD_Metadata
 from lxml import etree
+from ioos_catalog import app, db
+from datetime import datetime, timedelta
 
-from ioos_catalog import app,db
+import ckanapi
 import requests
+import re
 
-region_map =    {'AOOS'             : '1706F520-2647-4A33-B7BF-592FAFDE4B45',
-                 'ATN_DAC'          : '07875897-E6A6-4EDB-B111-F5D6BE841ED6',
-                 'CARICOOS'         : '117F1684-A5E3-400E-98D8-A270BDBA1603',
-                 'CDIP'             : '4EA30508-7E2B-474E-BFD2-9B482E8DE9B6',
-                 'CeNCOOS'          : '4BA5624D-A61F-4C7E-BAEE-7F8BDDB8D9C4',
-                 'GCOOS'            : '003747E7-4818-43CD-937D-44D5B8E2F4E9',
-                 'Glider_DAC'       : '2546E50F-F0C7-4365-9D45-694DD22E5F26',
-                 'GLOS'             : 'B664427E-6953-4517-A874-78DDBBD3893E',
-                 'HFradar_DAC'      : 'A4A65346-6B65-4ED2-A2DC-5D529074EE6D',
-                 'MARACOOS'         : 'C664F631-6E53-4108-B8DD-EFADF558E408',
-                 'MODELING_TESTBED' : '8BF00750-66C7-49FF-8894-4D4F96FD86C0',
-                 'NANOOS'           : '254CCFC0-E408-4E13-BD62-87567E7586BB',
-                 'NERACOOS'         : 'E41F4FCD-0297-415D-AC53-967B970C3A3E',
-                 'OceanSITES'       : 'D479A77C-414E-404A-AF9B-C0BA9975E90D',
-                 'PacIOOS'          : '68FF11D8-D66B-45EE-B33A-21919BB26421',
-                 'SCCOOS'           : 'B70B3E3C-3851-4BA9-8E9B-C9F195DCEAC7',
-                 'SECOORA'          : 'B3EA8869-B726-4E39-898A-299E53ABBC98',
-                 'NOAA-CO-OPS'      : '72E748DF-23B1-4E80-A2C4-81E70783094A',
-                 'USACE'            : '73019DFF-2E01-4800-91CD-0B3F812256A7',
-                 'NAVY'             : '3B94DAAE-B7E9-4789-993B-0045AD9149D9',
-                 'NOAA-NDBC'        : '828981B0-0039-4360-9788-E788FA6B0875',
-                 'USGS-CMGP'        : 'C6F11F00-C2BD-4AC6-8E2C-013E16F4932E',
-                 'Other'            : '7EDF86E1-573C-4B3C-A979-AD499A11FD22'}
+PROTOCOLS = {
+    u"OGC:SOS": u"SOS",
+    u"OGC:WCS": u"WCS",
+    u"OGC:WMS": u"WMS",
+    u"OPeNDAP:OPeNDAP": u"DAP"
+}
 
-services =      {'SOS'              : 'urn:x-esri:specification:ServiceType:sos:url',
-                 'WMS'              : 'urn:x-esri:specification:ServiceType:wms:url',
-                 'WCS'              : 'urn:x-esri:specification:ServiceType:wcs:url',
-                 'DAP'              : 'urn:x-esri:specification:ServiceType:odp:url' }
+URLPair = namedtuple('URLPair', ['url', 'metadata_url'])
 
-opendap_form_schema = 'urn:x-esri:specification:ServiceType:distribution:url'       # used to pull additional data from DAP types
+# Compiled regexes
+re_string = r'(^.*erddap/(?:grid|table)dap.*)\.(?:html|graph)(:?\?.*)?$'
+erddap_re = re.compile(re_string)
+erddap_all_re = re.compile(r'(^.*erddap/(?:(?:grid|table|)dap|wms).*)'
+                           r'\.(?:html|graph)(:?\?.*)?$')
 
-endpoint = 'http://www.ngdc.noaa.gov/geoportal/csw' # NGDC Geoportal
 
-def reindex_services(filter_regions=None, filter_service_types=None):
-    c = csw.CatalogueServiceWeb(endpoint, timeout=120)
+def fetch_records(organization_id):
+    '''
+    Repeatedly fetches records from the CKAN API until all are fetched for a
+    given organization
 
-    ns = Namespaces()
+    :param str organization_id: CKAN Org ID
+    '''
 
-    filter_regions = filter_regions or region_map.keys()
-    filter_service_types = filter_service_types or services.keys()
+    records = []
+    offset = 0
+    ckan_endpoint = ckanapi.RemoteCKAN(app.config['CKAN_CATALOG'])
+    initial_set = ckan_endpoint.action.package_search(q='organization:{}'.format(organization_id), rows=100)
+    count = initial_set['count']
+    records.extend(initial_set['results'])
+    offset += len(initial_set['results'])
+    while len(records) < count:
+        record_set = ckan_endpoint.action.package_search(q='organization:{}'.format(organization_id), rows=100, start=offset)
+        records.extend(record_set['results'])
+        offset += len(record_set['results'])
+    return records
+
+
+def get_region_map():
+    ckan_endpoint = ckanapi.RemoteCKAN(app.config['CKAN_CATALOG'])
+    region_map = ckan_endpoint.action.organization_list(all_fields=True)
+    return region_map
+
+
+def reindex_services(provider=None):
+    '''
+    Downloads all records from CKAN and creates service records for the
+    appropriate resources defined in those records.
+    '''
+    region_map = get_region_map()
+    if provider is not None:
+        region_map = [org for org in region_map if org['name'] == provider]
 
     with app.app_context():
 
-        new_services    = []
-        update_services = []
+        for organization in region_map:
+            index_organization(organization)
 
-        # get a set of all non-manual, active services for possible deactivation later
-        current_services = set((s._id for s in db.Service.find({'manual':False, 'active':True, 'data_provider':{'$in':filter_regions}}, {'_id':True})))
-
-        # FIXME: find a more robust mechanism for detecting ERDDAP instances
-        # this would fail if behind a url rewriting/proxying mechanism which
-        # remove the 'erddap' portion from the URL.  May want to have GeoPortal
-        # use a separate 'scheme' dedicated to ERDDAP for CSW record
-        # 'references'
-
-        # workaround for matching ERDDAP endpoints
-        # match griddap or tabledap endpoints with html or graph
-        # discarding any query string parameters (i.e. some datasets on PacIOOS)
-        re_string = r'(^.*erddap/(?:grid|table)dap.*)\.(?:html|graph)(:?\?.*)?$'
-        erddap_re = re.compile(re_string)
-        erddap_all_re = re.compile(r'(^.*erddap/(?:(?:grid|table|)dap|wms).*)'
-                                   r'\.(?:html|graph)(:?\?.*)?$')
-
-        for region,uuid in region_map.iteritems():
-
-            if region not in filter_regions:
-                app.logger.info("Skipping region %s due to filter", region)
-                continue
-
-            app.logger.info("Requesting region %s", region)
-
-            # Setup uuid filter
-            uuid_filter = fes.PropertyIsEqualTo(propertyname='sys.siteuuid', literal="{%s}" % uuid)
-
-            # Make CSW request
-            try:
-                c.getrecords2([uuid_filter], esn='full', maxrecords=999999)
-            except:
-                app.logger.exception("Failed to connect to geoportal, skipping %s", region)
-                continue
-
-            for name, record in c.records.iteritems():
-                try:
-                    # @TODO: unfortunately CSW does not provide us with contact info, so
-                    # we must request it manually
-                    contact_email = ""
-                    metadata_url = None
-
-                    for ref in record.references:
-                        try:
-                            # TODO: Use a more robust mechanism for detecting
-                            # ERDDAP instances aside from relying on the url
-                            erddap_match = erddap_re.search(ref['url'])
-                            # We are only interested in the 'services'
-                            if (ref["scheme"] in services.values()):
-                                metadata_url = next((r['url'] for r in
-                                               record.references
-                                               if r['scheme'] == 'urn:x-esri:specification:ServiceType:ArcIMS:Metadata:Document'),
-                                               None)
-                                # strip extension if erddap endpoint
-                                url = unicode(ref['url'])
-                            elif erddap_match:
-                                test_url = (erddap_match.group(1) +
-                                                '.iso19115')
-                                req = requests.get(test_url)
-                                # if we have a valid ERDDAP metadata endpoint,
-                                # store it.
-                                if req.status_code == 200:
-                                    metadata_url = unicode(test_url)
-                                else:
-                                    app.logger.error('Invalid service URL %s', ref['url'])
-                                    continue
-
-                                url = get_erddap_url_from_iso(req.content)
-                                if url is None:
-                                    app.logger.error(ref['url'])
-                                    app.logger.error("Failed to parse Erddap ISO for %s", test_url)
-                                    continue # Either not a valid ISO or there's not a valid endpoint
-
-                            # next record if not one of the previously mentioned
-                            else:
-                                continue
-                            # end metadata find block
-                            s = db.Service.find_one({'data_provider':
-                                                        unicode(region),
-                                                        'url': url})
-                            if s is None:
-                                s               = db.Service()
-                                s.url           = unicode(url)
-                                s.data_provider = unicode(region)
-                                s.manual        = False
-                                s.active        = True
-
-                                new_services.append(s)
-                            else:
-                                # will run twice if erddap services have
-                                # both .html and .graph, but resultant
-                                # data should be the same
-                                update_services.append(s)
-
-                            s.service_id   = unicode(name)
-                            s.name         = unicode(record.title)
-                            s.service_type = unicode('DAP' if erddap_match
-                                                        else next((k for k,v in services.items() if v == ref["scheme"])))
-                            s.interval     = 3600 # 1 hour
-                            s.tld          = unicode(urlparse(url).netloc)
-                            s.updated      = datetime.utcnow()
-                            s.contact      = unicode(contact_email)
-                            s.metadata_url = metadata_url
-
-                            # grab opendap form url if present
-                            if s.service_type == 'DAP':
-                                possible_refs = [r['url'] for r in record.references if r['scheme'] == opendap_form_schema]
-                                if len(possible_refs):
-                                    # this is bad, it can grab any associated
-                                    # record from the dataset
-                                    s.extra_url = unicode(possible_refs[0])
-
-                            # if we see the service, this is "Active", unless we've set manual (then we don't touch)
-                            if not s.manual:
-                                s.active = True
-
-                            s.save()
-
-                        except Exception as e:
-                            app.logger.warn("Could not save service: %s", e)
-
-                except Exception as e:
-                    app.logger.warn("Could not save region info: %s", e)
-
-        # DEACTIVATE KNOWN SERVICES
-        updated_ids = set((s._id for s in update_services))
-        deactivate = list(current_services.difference(updated_ids))
-
-        # bulk update (using pymongo syntax)
-        db.services.update({'_id':{'$in':deactivate}},
-                           {'$set':{'active':False,
-                                    'updated':datetime.utcnow()}},
+        # Deactivate any service older than 7 days
+        old = datetime.utcnow() - timedelta(days=7)
+        db.services.update({"updated": {"$lt": old}},
+                           {"$set": {"active": False, "updated": datetime.utcnow()}},
                            multi=True,
                            upsert=False)
 
-        return "New services: %s, updated services: %s, deactivated services: %s" % (len(new_services), len(update_services), len(deactivate))
+        return
+
+
+def index_organization(organization):
+    '''
+    Downloads all the records for a given organization and creates records for
+    the services.
+
+    :param dict organization: Organization record from CKAN
+    '''
+    records = fetch_records(organization['name'])
+    app.logger.info("Requesting region %s", organization['name'])
+
+    for record in records:
+        try:
+            for service in record['resources']:
+                try:
+
+                    index_service(record, organization, service)
+                except Exception as e:
+                    app.logger.warn("Could not save service: %s", e)
+
+        except Exception as e:
+            app.logger.warn("Could not save region info: %s", e)
+
+
+def get_urls(service):
+    '''
+    Returns a namedtuple of url and metadata url for the service if it's a valid
+    service. Returns None otherwise.
+
+    :param dict service: Dictionary containing service information
+    '''
+    # ERDDAP instances aside from relying on the url
+    erddap_match = erddap_re.search(service['url'])
+    # We are only interested in the 'services'
+    if service["resource_locator_protocol"] in PROTOCOLS:
+        metadata_url = service['url']
+        # strip extension if erddap endpoint
+        url = unicode(service['url'])
+    elif erddap_match:
+        test_url = erddap_match.group(1) + '.iso19115'
+        req = requests.get(test_url)
+        # if we have a valid ERDDAP metadata endpoint,
+        # store it.
+        if req.status_code == 200:
+            metadata_url = unicode(test_url)
+        else:
+            app.logger.error('Invalid service URL %s', service['url'])
+            return
+
+        url = get_erddap_url_from_iso(req.content)
+        if url is None:
+            app.logger.error(service['url'])
+            app.logger.error("Failed to parse Erddap ISO for %s", test_url)
+            return
+
+    else:
+        # This doesn't contain any valid services, so, continue.
+        return
+    return URLPair(url, metadata_url)
+
+
+def index_service(record, organization, service):
+    '''
+    Indexes a service record into the MongoDB with the provided CKAN metadata
+    record.  Returns True if a new service was created.
+
+    :param dict record: Record from CKAN
+    :param dict organization: Organization with all fields from CKAN
+    :param dict service: A dictionary describing a resource within a record from CKAN
+    :rtype: bool
+    :return: True if a new service record was created
+    '''
+    urls = get_urls(service)
+    extras = {x['key']: x['value'] for x in record['extras']}
+    service_created = False
+    if urls is None:
+        return
+
+    erddap_match = erddap_re.search(service['url'])
+
+    s = db.Service.find_one({
+        'data_provider': unicode(organization['title']),
+        'url': urls.url
+    })
+
+    if s is None:
+        s = db.Service()
+        s.url = unicode(urls.url)
+        s.data_provider = unicode(organization['title'])
+        s.manual = False
+        s.active = True
+
+        service_created = True
+
+    # Set service_id = GUID in the extras key, value array
+    s.service_id = unicode(sha1(urls.url).hexdigest())
+    s.name = unicode(record['title'])
+    if erddap_match:
+        s.service_type = u'DAP'
+    else:
+        s.service_type = PROTOCOLS[service['resource_locator_protocol']]
+    s.interval = 3600  # 1 hour
+    s.tld = unicode(urlparse(urls.url).netloc)
+    s.updated = datetime.utcnow()
+    s.contact = extras.get('contact-email', '')
+    s.metadata_url = urls.metadata_url
+
+    # if we see the service, this is "Active", unless we've set manual (then we don't touch)
+    if not s.manual:
+        s.active = True
+
+    s.save()
+    return service_created
+
 
 def cleanup_datasets():
+    '''
+    Cleans up services
+    '''
     with app.app_context():
-        datasets = db.Dataset.find({'active':True})
+        datasets = db.Dataset.find({'active': True})
         for d in datasets:
-            services = d['services'] # a list of services
+            services = d['services']  # a list of services
             service_ids = [s['service_id'] for s in services]
             if not service_ids:
                 app.logger.info('Deactivating %s', d['uid'])
@@ -214,17 +216,21 @@ def cleanup_datasets():
             # if we don't find at least one service that is active, set
             # dataset.active to False
             for service_id in service_ids:
-                related_services = db.Service.find({'_id':service_id})
+                related_services = db.Service.find({'_id': service_id})
                 for service in related_services:
                     if service['active']:
                         break
-                else: # reached the end of the loop
+                else:  # reached the end of the loop
                     app.logger.info('Deactivating %s', d['uid'])
                     d['active'] = False
                     d.save()
                     break
 
+
 def get_erddap_url_from_iso(xml_doc):
+    '''
+    Gets a valid URL from a given ERDDAP endpoint
+    '''
     griddap_key = 'ERDDAPgriddapDatasetQueryAndAccess'
     opendap_key = 'OPeNDAPDatasetQueryAndAccess'
     tabledap_key = 'ERDDAPtabledapDatasetQueryAndAccess'
@@ -234,11 +240,10 @@ def get_erddap_url_from_iso(xml_doc):
         for ident in metadata.identificationinfo:
             if ident.identtype != 'service':
                 continue
-            operations = {k['name'] : k for k in ident.operations}
+            operations = {k['name']: k for k in ident.operations}
             for key in [opendap_key, griddap_key, tabledap_key]:
                 if key in operations:
                     return operations[key]['connectpoint'][0].url
-    except Exception as e:
+    except:
         app.logger.exception('Failed to parse ERDDAP ISO record for griddap')
         return None
-
