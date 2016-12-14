@@ -72,4 +72,4 @@ DEVELOPMENT: &development
 EOF
 
 cd /service-monitor
-python manage.py captcha_init
+/sbin/setuser ioos python manage.py captcha_init

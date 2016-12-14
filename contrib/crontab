@@ -1,0 +1,17 @@
+# pings are hourly
+#@hourly $HOME/manage.sh queue_pings
+
+# harvests start nightly at 7:10am UTC (2:10am EST)
+10 7 * * * ioos /service-monitor/manage.sh queue_harvests
+
+# Harvest the larger services at 9:10am UTC (4:10am EST)
+10 9 * * * ioos /service-monitor/manage.sh queue_large_service_harvests
+
+# harvests start nightly at 8:10am UTC (3:10am EST)
+10 8 * * * ioos /service-monitor/manage.sh cleanup_datasets
+
+# Prune and purge absolutely dangling datasets at 8:40am UTC (3:40am EST)
+40 8 * * * ioos /service-monitor/manage.sh remove_dangle
+
+# reindex daily daily at 6:30am UTC (1:30am EST)
+30 6 * * * ioos /service-monitor/manage.sh queue_reindex
