@@ -109,32 +109,6 @@ def queue_provider(provider):
     add_counts()
 
 
-def queue_large_service_harvest_tasks():
-    larger_services = [
-        ObjectId('53d34aed8c0db37e0b538fda'),
-        ObjectId('53d49c8d8c0db37ff1370308')
-    ]
-    with app.app_context():
-        for s in db.Service.find({'_id':{'$in':larger_services}}):
-            service_id = s._id
-            # count all the datasets associated with this particular service
-            datalen = db.datasets.find({'services.service_id':
-                                         service_id}).count()
-            # handle timeouts for services with large numbers of datasets
-            if datalen <= 36:
-                timeout_secs = 180
-            else:
-                # for large numbers of requests, 5 seconds should be enough
-                # for each request, on average
-                timeout_secs = datalen * 60
-            queue.enqueue_call(harvest, args=(service_id,),
-                               timeout=timeout_secs)
-
-    # record dataset/service metrics after harvest
-    add_counts()
-
-
-# TODO: Roll into respective model methods instead
 def add_counts():
     """Returns a timestamped aggregated count"""
     collection = db.metric_counts

@@ -4,9 +4,6 @@
 # harvests start nightly at 7:10am UTC (2:10am EST)
 10 7 * * * ioos /service-monitor/manage.sh queue_harvests
 
-# Harvest the larger services at 9:10am UTC (4:10am EST)
-10 9 * * * ioos /service-monitor/manage.sh queue_large_service_harvests
-
 # harvests start nightly at 8:10am UTC (3:10am EST)
 10 8 * * * ioos /service-monitor/manage.sh cleanup_datasets
 

@@ -21,10 +21,6 @@ def queue_harvests():
     queue_harvest_tasks()
 
 @manager.command
-def queue_large_service_harvests():
-    queue_large_service_harvest_tasks()
-
-@manager.command
 def queue_provider_harvest(provider):
     queue_provider(provider)
 
