@@ -5,7 +5,7 @@
 
 {% block css %}
 <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}">
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" >
+<link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" >
 <!--TODO: change to non-cdn assets later.  Use bower? -->
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css" />
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css" />
@@ -158,7 +158,7 @@
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}"></script>
-<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/leaflet.textpath.js') }}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
@@ -277,7 +277,7 @@ setupFilters();
 var map = L.map('map', { zoomControl: false} ).setView([44, -100], 4);
 new L.Control.Zoom({ position: 'topright' }).addTo(map);
 
-var baseUrl='http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
+var baseUrl='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.jpg';
 //attribution text from http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer
 var baseAttrib = 'Sources: Esri, GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org, and other contributors';
 var base = new L.TileLayer(baseUrl, { minZoom: 1
