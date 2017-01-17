@@ -5,7 +5,7 @@
 
 {% block css %}
 <link rel=stylesheet type=text/css href="{{ url_for('.static', filename='css/map-style.css') }}">
-<link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" >
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" >
 <!--TODO: change to non-cdn assets later.  Use bower? -->
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css" />
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css" />
@@ -158,7 +158,7 @@
 
 <script type="text/javascript" src="{{ url_for('.static', filename='js/d3.v3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/queue.v1.min.js') }}"></script>
-<script src="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
 <script type="text/javascript" src="{{ url_for('.static', filename='js/leaflet.textpath.js') }}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
