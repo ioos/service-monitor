@@ -5,7 +5,7 @@ from rq import Queue
 from ioos_catalog import app, db, queue, redis_connection
 
 from ioos_catalog.tasks.stat import queue_ping_tasks
-from ioos_catalog.tasks.harvest import queue_harvest_tasks, queue_large_service_harvest_tasks, queue_provider
+from ioos_catalog.tasks.harvest import queue_harvest_tasks, queue_provider
 from ioos_catalog.tasks.reindex_services import reindex_services, cleanup_datasets as cleanup
 from ioos_catalog.tasks.send_email import send_daily_report_email
 from ioos_catalog.tasks.captcha import initialize_captcha_db
