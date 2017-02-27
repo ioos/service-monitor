@@ -1,27 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+'''
+ioos_catalog/tasks/harvest.py
+'''
 from bson import ObjectId
 from datetime import datetime
 from lxml import etree
-import itertools
-import re
-import requests
-import math
-from urllib2 import HTTPError
-# py2/3 compat
-from six.moves.urllib.request import urlopen
 
 from owslib import ows
 from owslib.sos import SensorObservationService
 from owslib.swe.sensor.sml import SensorML
-from owslib.util import testXMLAttribute, testXMLValue
+from owslib.util import testXMLAttribute
 from owslib.crs import Crs
 
 from pyoos.parsers.ioos.describe_sensor import IoosDescribeSensor
 from paegan.cdm.dataset import CommonDataset, _possiblet, _possiblez, _possiblex, _possibley
-from petulantbear.netcdf2ncml import *
-from petulantbear.netcdf_etree import parse_nc_dataset_as_etree
+from petulantbear import netcdf2ncml
+#from petulantbear.netcdf2ncml import *
 from petulantbear.netcdf_etree import namespaces as pb_namespaces
 from netCDF4 import Dataset
-import numpy as np
 
 from compliance_checker.runner import ComplianceCheckerCheckSuite
 from compliance_checker.ioos import IOOSSOSGCCheck, IOOSSOSDSCheck, IOOSNCCheck
@@ -31,25 +28,30 @@ from wicken.netcdf_dogma import NetCDFDogma
 
 from shapely.geometry import mapping, box, Point, asLineString
 
-import geojson
-import json
-
 from ioos_catalog import app, db, queue
-from ioos_catalog.tasks.send_email import send_service_down_email
-from ioos_catalog.tasks.debug import debug_wrapper, breakpoint
-#from ioos_catalog.models import MetricCount
+from ioos_catalog.tasks.debug import debug_wrapper
 from functools import wraps
-from datetime import datetime
-# mainly for conversion from np.datetime64 -> datetime.datetime
-from pandas import Timestamp
 from dateutil.parser import parse
 from netCDF4 import num2date
 from random import shuffle
+
+# py2/3 compat
+from six.moves.urllib.request import urlopen
+
+import itertools
+import re
+import math
+import numpy as np
+
+import geojson
+import json
+
 
 LARGER_SERVICES = [
     ObjectId('53d34aed8c0db37e0b538fda'),
     ObjectId('53d49c8d8c0db37ff1370308')
 ]
+
 
 def queue_harvest_tasks():
     """
@@ -63,7 +65,7 @@ def queue_harvest_tasks():
         # shuffling our list of services we reduce the liklihood that we'll
         # harvest from the same host enough times to cause a service problem.
         # This should reduce timeouts and unresponsive datasets
-        services = list(db.Service.find({'active':True}, {'_id':True}))
+        services = list(db.Service.find({'active': True}, {'_id': True}))
         shuffle(services)
         for s in services:
             service_id = s._id
@@ -71,7 +73,7 @@ def queue_harvest_tasks():
                 continue
             # count all the datasets associated with this particular service
             datalen = db.datasets.find({'services.service_id':
-                                         service_id}).count()
+                                        service_id}).count()
             # handle timeouts for services with large numbers of datasets
             if datalen <= 36:
                 timeout_secs = 180
@@ -82,19 +84,23 @@ def queue_harvest_tasks():
             queue.enqueue_call(harvest, args=(service_id,),
                                timeout=timeout_secs)
 
-
     # record dataset/service metrics after harvest
     add_counts()
 
+
 def queue_provider(provider):
     with app.app_context():
-        for s in db.Service.find({'data_provider':provider, 'active':True}):
+        app.logger.info("Loaded app context")
+        for s in db.Service.find({'data_provider': provider, 'active': True}):
+            app.logger.info("Founded a service")
+            app.logger.info(s['name'])
             service_id = s._id
             if service_id in LARGER_SERVICES:
+                app.logger.info("Skipping large service")
                 continue
             # count all the datasets associated with this particular service
             datalen = db.datasets.find({'services.service_id':
-                                         service_id}).count()
+                                        service_id}).count()
             # handle timeouts for services with large numbers of datasets
             if datalen <= 36:
                 timeout_secs = 180
@@ -102,6 +108,7 @@ def queue_provider(provider):
                 # for large numbers of requests, 5 seconds should be enough
                 # for each request, on average
                 timeout_secs = datalen * 60
+            app.logger.info("Queueing job")
             queue.enqueue_call(harvest, args=(service_id,),
                                timeout=timeout_secs)
 
@@ -113,25 +120,24 @@ def add_counts():
     """Returns a timestamped aggregated count"""
     collection = db.metric_counts
     services_pipeline_ra = [{'$group': {'_id': '$data_provider',
-                          "count": {"$sum": 1},
-                          "active_count": {"$sum": {"$cond": ["$active", 1, 0]}}}},
-                          {"$project": {"_id": 1, "count": 1, "active_count": 1,
-                           "inactive_count": {"$subtract":
-                                                ["$count", "$active_count"]}}}]
+                                        "count": {"$sum": 1},
+                                        "active_count": {"$sum": {"$cond": ["$active", 1, 0]}}}},
+                            {"$project": {"_id": 1, "count": 1, "active_count": 1,
+                                          "inactive_count": {"$subtract":
+                                                             ["$count", "$active_count"]}}}]
     services_arr = db.services.aggregate(services_pipeline_ra)['result']
 
     services_by_ra = collection.MetricCount({'date': datetime.utcnow(),
-                                            'stats_type': u'services_by_ra',
-                                            'count': services_arr})
+                                             'stats_type': u'services_by_ra',
+                                             'count': services_arr})
     services_by_ra.save()
 
-
     services_pipeline_type = [{'$group': {'_id': '$service_type',
-                          "count": {"$sum": 1},
-                          "active_count": {"$sum": {"$cond": ["$active", 1, 0]}}}},
-                          {"$project": {"_id": 1, "count": 1, "active_count": 1,
-                           "inactive_count": {"$subtract":
-                                                ["$count", "$active_count"]}}}]
+                                          "count": {"$sum": 1},
+                                          "active_count": {"$sum": {"$cond": ["$active", 1, 0]}}}},
+                              {"$project": {"_id": 1, "count": 1, "active_count": 1,
+                                            "inactive_count": {"$subtract":
+                                                               ["$count", "$active_count"]}}}]
 
     services_arr_type = db.services.aggregate(services_pipeline_type)['result']
 
@@ -147,26 +153,26 @@ def add_counts():
     # provider
     datasets_pipeline = [{"$unwind": "$services"},
                          {"$project":
-                            {"data_provider": '$services.data_provider',
-                             "active": "$active"}},
-                         {"$group": { "_id": {"_id": "$_id",
-                                              "data_provider": "$data_provider",
-                                              "active": "$active"}}},
+                          {"data_provider": '$services.data_provider',
+                           "active": "$active"}},
+                         {"$group": {"_id": {"_id": "$_id",
+                                             "data_provider": "$data_provider",
+                                             "active": "$active"}}},
                          {"$project": {"_id": "$_id._id",
                                        "data_provider": "$_id.data_provider",
                                        "active": "$_id.active"}},
                          {"$group": {"_id": "$data_provider",
                                      "total_services": {"$sum": 1},
-                                     "active_services": { "$sum":
-                                            {"$cond": ["$active", 1, 0]}} }},
+                                     "active_services": {"$sum":
+                                                         {"$cond": ["$active", 1, 0]}}}},
                          {"$project": {"_id": 1, "total_services": 1,
                                        "active_services": 1,
                                        "inactive_services": {"$subtract":
                                                              ["$total_services",
                                                               "$active_services"
-                                                             ]}
-                                        }
-                         }]
+                                                              ]}
+                                       }
+                          }]
 
     datasets_arr = db.datasets.aggregate(datasets_pipeline)['result']
 
@@ -175,6 +181,7 @@ def add_counts():
                                              'count': datasets_arr})
     datasets_by_ra.save()
 
+
 def context_decorator(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -182,12 +189,13 @@ def context_decorator(f):
             return f(*args, **kwargs)
     return wrapper
 
+
 @debug_wrapper
 @context_decorator
 def harvest(service_id, ignore_active=False):
 
     # Get the harvest or make a new one
-    harvest = db.Harvest.find_one( { 'service_id' : ObjectId(service_id) } )
+    harvest = db.Harvest.find_one({'service_id': ObjectId(service_id)})
     if harvest is None:
         harvest = db.Harvest()
         harvest.service_id = ObjectId(service_id)
@@ -195,7 +203,6 @@ def harvest(service_id, ignore_active=False):
     harvest.harvest(ignore_active=ignore_active)
     harvest.save()
     return harvest.harvest_status
-
 
 
 def unicode_or_none(thing):
@@ -241,8 +248,8 @@ def get_common_name(data_type):
     return unicode(mapping_dict.get(data_type, data_type))
 
 
-
 class Harvester(object):
+
     def __init__(self, service):
         self.service = service
 
@@ -261,33 +268,33 @@ class Harvester(object):
             if getattr(r, 'children', None):
                 cl = map(res2dict, r.children)
 
-            return {'name'     : unicode(r.name),
-                    'score'    : float(r.value[0]),
-                    'maxscore' : float(r.value[1]),
-                    'weight'   : int(r.weight),
-                    'children' : cl}
+            return {'name': unicode(r.name),
+                    'score': float(r.value[0]),
+                    'maxscore': float(r.value[1]),
+                    'weight': int(r.weight),
+                    'children': cl}
 
         metadata = db.Metadata.find_one({'ref_id': ref_id})
         if metadata is None:
-            metadata             = db.Metadata()
-            metadata.ref_id      = ref_id
-            metadata.ref_type    = unicode(ref_type)
+            metadata = db.Metadata()
+            metadata.ref_id = ref_id
+            metadata.ref_type = unicode(ref_type)
 
-        if isinstance(scores, tuple): # New API of compliance-checker
+        if isinstance(scores, tuple):  # New API of compliance-checker
             scores = scores[0]
         cc_results = map(res2dict, scores)
 
         # @TODO: srsly need to decouple from cchecker
-        score     = sum(((float(r.value[0])/r.value[1]) * r.weight for r in scores))
+        score = sum(((float(r.value[0]) / r.value[1]) * r.weight for r in scores))
         max_score = sum((r.weight for r in scores))
 
-        score_doc = {'score'     : float(score),
-                     'max_score' : float(max_score),
-                     'pct'       : float(score) / max_score}
+        score_doc = {'score': float(score),
+                     'max_score': float(max_score),
+                     'pct': float(score) / max_score}
 
-        update_doc = {'cc_score'   : score_doc,
-                      'cc_results' : cc_results,
-                      'metamap'    : metamap}
+        update_doc = {'cc_score': score_doc,
+                      'cc_results': cc_results,
+                      'metamap': metamap}
 
         for mr in metadata.metadata:
             if mr['service_id'] == service_id and mr['checker'] == checker_name:
@@ -295,7 +302,7 @@ class Harvester(object):
                 break
         else:
             metarecord = {'service_id': service_id,
-                          'checker'   : unicode(checker_name)}
+                          'checker': unicode(checker_name)}
             metarecord.update(update_doc)
             metadata.metadata.append(metarecord)
 
@@ -304,7 +311,9 @@ class Harvester(object):
 
         return metadata
 
+
 class SosHarvest(Harvester):
+
     def __init__(self, service):
         Harvester.__init__(self, service)
 
@@ -318,7 +327,8 @@ class SosHarvest(Harvester):
 
                 # see if O&M will work instead
                 try:
-                    kwargs['outputFormat'] = 'text/xml;subtype="om/1.0.0/profiles/ioos_sos/1.0"'
+                    kwargs[
+                        'outputFormat'] = 'text/xml;subtype="om/1.0.0/profiles/ioos_sos/1.0"'
                     return self.sos.describe_sensor(**kwargs)
 
                 # see if plain sensorml wll work
@@ -336,28 +346,26 @@ class SosHarvest(Harvester):
         Issues a DescribeSensor request with fallback behavior for oddly-acting SOS servers.
         """
         kwargs = {
-                    'outputFormat': outputFormat,
-                    'procedure': uid,
-                    'timeout': timeout
-                 }
+            'outputFormat': outputFormat,
+            'procedure': uid,
+            'timeout': timeout
+        }
 
         return self._handle_ows_exception(**kwargs)
-
 
     def harvest(self):
         self.sos = SensorObservationService(self.service.get('url'))
 
-        scores   = self.ccheck_service()
-        metamap  = self.metamap_service()
+        scores = self.ccheck_service()
+        metamap = self.metamap_service()
         try:
             self.save_ccheck_service('ioos', scores, metamap)
         finally:
-        #except Exception as e:
-            #app.logger.warn("could not save compliancecheck/metamap information: %s", e)
             pass
 
         # List storing the stations that have already been processed in this SOS server.
-        # This is kept and checked later to avoid servers that have the same stations in many offerings.
+        # This is kept and checked later to avoid servers that have the same
+        # stations in many offerings.
         processed = []
 
         # handle network:all by increasing max timeout
@@ -375,37 +383,36 @@ class SosHarvest(Harvester):
 
             # template:   urn:ioos:type:authority:id
             # sample:     ioos:station:wmo:21414
-            if len(sp_uid) > 2 and sp_uid[2] == "network": # Network Offering
+            if len(sp_uid) > 2 and sp_uid[2] == "network":  # Network Offering
                 if uid[-3:].lower() == 'all':
-                    continue # Skip the all
+                    continue  # Skip the all
                 net = self._describe_sensor(uid, timeout=net_timeout)
 
                 network_ds = IoosDescribeSensor(net)
-                # Iterate over stations in the network and process them individually
+                # Iterate over stations in the network and process them
+                # individually
 
                 for proc in network_ds.procedures:
 
                     if proc is not None and proc.split(":")[2] == "station":
-                        if not proc in processed:
+                        if proc not in processed:
                             # offering associated with this procedure
                             proc_off = name_lookup.get(proc)
                             self.process_station(proc, proc_off)
                         processed.append(proc)
             else:
-                # Station Offering, or malformed urn - try it anyway as if it is a station
-                if not uid in processed:
+                # Station Offering, or malformed urn - try it anyway as if it
+                # is a station
+                if uid not in processed:
                     self.process_station(uid, offering)
                 processed.append(uid)
-
-
 
     def process_station(self, uid, offering):
         """ Makes a DescribeSensor request based on a 'uid' parameter being a
             station procedure.  Also pass along an offering with
             getCapabilities information for items such as temporal extent"""
 
-        GML_NS   = "http://www.opengis.net/gml"
-        XLINK_NS = "http://www.w3.org/1999/xlink"
+        GML_NS = "http://www.opengis.net/gml"
 
         with app.app_context():
 
@@ -413,7 +420,8 @@ class SosHarvest(Harvester):
             desc_sens = self._describe_sensor(uid, timeout=1200)
             # FIXME: add some kind of notice saying the station failed
             if desc_sens is None:
-                app.logger.warn("Could not get a valid describeSensor response")
+                app.logger.warn(
+                    "Could not get a valid describeSensor response")
                 return
             metadata_value = etree.fromstring(desc_sens)
             sensor_ml = SensorML(metadata_value)
@@ -422,20 +430,22 @@ class SosHarvest(Harvester):
             # if this doesn't conform to IOOS SensorML sub, fall back to
             # manually picking apart the SensorML
             except ows.ExceptionReport:
-                station_ds = process_sensorml(sensor_ml.members[0])
+                station_ds = netcdf2ncml.process_sensorml(sensor_ml.members[0])
 
             unique_id = station_ds.id
             if unique_id is None:
-                app.logger.warn("Could not get a 'stationID' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/stationID'")
+                app.logger.warn(
+                    "Could not get a 'stationID' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/stationID'")
                 return
 
-            dataset = db.Dataset.find_one( { 'uid' : unicode(unique_id) } )
+            dataset = db.Dataset.find_one({'uid': unicode(unique_id)})
             if dataset is None:
                 dataset = db.Dataset()
                 dataset.uid = unicode(unique_id)
                 dataset['active'] = True
 
-            # Find service reference in Dataset.services and remove (to replace it)
+            # Find service reference in Dataset.services and remove (to replace
+            # it)
             tmp = dataset.services[:]
             for d in tmp:
                 if d['service_id'] == self.service.get('_id'):
@@ -447,18 +457,21 @@ class SosHarvest(Harvester):
             # NAME
             name = unicode_or_none(station_ds.shortName)
             if name is None:
-                messages.append(u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
+                messages.append(
+                    u"Could not get a 'shortName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/shortName'")
 
             # DESCRIPTION
             description = unicode_or_none(station_ds.longName)
             if description is None:
-                messages.append(u"Could not get a 'longName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/longName'")
+                messages.append(
+                    u"Could not get a 'longName' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/longName'")
 
             # PLATFORM TYPE
             asset_type = unicode_or_none(getattr(station_ds,
                                                  'platformType', None))
             if asset_type is None:
-                messages.append(u"Could not get a 'platformType' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/platformType'")
+                messages.append(
+                    u"Could not get a 'platformType' from the SensorML identifiers.  Looking for a definition of 'http://mmisw.org/ont/ioos/definition/platformType'")
 
             # LOCATION is in GML
             gj = None
@@ -478,39 +491,44 @@ class SosHarvest(Harvester):
                     if srs_name:
                         crs = Crs(srs_name)
                         if crs.axisorder == "yx":
-                            gj = json.loads(geojson.dumps(geojson.Point([positions[1], positions[0]])))
+                            gj = json.loads(geojson.dumps(
+                                geojson.Point([positions[1], positions[0]])))
                         else:
-                            gj = json.loads(geojson.dumps(geojson.Point([positions[0], positions[1]])))
+                            gj = json.loads(geojson.dumps(
+                                geojson.Point([positions[0], positions[1]])))
                         break
                 else:
                     if positions:
-                        messages.append(u"Position(s) found but could not parse SRS: %s, %s" % (positions, srs_name))
+                        messages.append(
+                            u"Position(s) found but could not parse SRS: %s, %s" % (positions, srs_name))
 
             else:
-                messages.append(u"Found an unrecognized child of the sml:location element and did not attempt to process it: %s" % loc)
+                messages.append(
+                    u"Found an unrecognized child of the sml:location element and did not attempt to process it: %s" % loc)
 
             meta_str = unicode(etree.tostring(metadata_value)).strip()
             if len(meta_str) > 4000000:
-                messages.append(u'Metadata document was too large to store (len: %s)' % len(meta_str))
+                messages.append(
+                    u'Metadata document was too large to store (len: %s)' % len(meta_str))
                 meta_str = u''
 
             service = {
                 # Reset service
-                'name'              : name,
-                'description'       : description,
-                'service_type'      : self.service.get('service_type'),
-                'service_id'        : ObjectId(self.service.get('_id')),
-                'data_provider'     : self.service.get('data_provider'),
-                'metadata_type'     : u'sensorml',
-                'metadata_value'    : u'',
+                'name': name,
+                'description': description,
+                'service_type': self.service.get('service_type'),
+                'service_id': ObjectId(self.service.get('_id')),
+                'data_provider': self.service.get('data_provider'),
+                'metadata_type': u'sensorml',
+                'metadata_value': u'',
                 'time_min': getattr(offering, 'begin_position', None),
                 'time_max': getattr(offering, 'end_position', None),
-                'messages'          : map(unicode, messages),
-                'keywords'          : map(unicode, sorted(station_ds.keywords)),
-                'variables'         : map(unicode, sorted(station_ds.variables)),
-                'asset_type'        : get_common_name(asset_type),
-                'geojson'           : gj,
-                'updated'           : datetime.utcnow()
+                'messages': map(unicode, messages),
+                'keywords': map(unicode, sorted(station_ds.keywords)),
+                'variables': map(unicode, sorted(station_ds.variables)),
+                'asset_type': get_common_name(asset_type),
+                'geojson': gj,
+                'updated': datetime.utcnow()
             }
 
             dataset.services.append(service)
@@ -524,7 +542,8 @@ class SosHarvest(Harvester):
             try:
                 self.save_ccheck_station('ioos', dataset._id, scores, metamap)
             except Exception as e:
-                app.logger.warn("could not save compliancecheck/metamap information: %s", e)
+                app.logger.warn(
+                    "could not save compliancecheck/metamap information: %s", e)
 
             return "Harvest Successful"
 
@@ -540,7 +559,8 @@ class SosHarvest(Harvester):
                 groups = cs.run(self.sos, 'ioos')
                 scores = groups['ioos']
             except Exception as e:
-                app.logger.warn("Caught exception doing Compliance Checker on SOS service: %s", e)
+                app.logger.warn(
+                    "Caught exception doing Compliance Checker on SOS service: %s", e)
 
             return scores
 
@@ -550,7 +570,8 @@ class SosHarvest(Harvester):
         with app.app_context():
             # gets a metamap document of this service using wicken
             beliefs = IOOSSOSGCCheck.beliefs()
-            doc = MultipleXmlDogma('sos-gc', beliefs, self.sos._capabilities, namespaces=get_namespaces())
+            doc = MultipleXmlDogma(
+                'sos-gc', beliefs, self.sos._capabilities, namespaces=get_namespaces())
 
             # now make a map out of this
             # @TODO wicken should make this easier
@@ -558,7 +579,7 @@ class SosHarvest(Harvester):
             for k in beliefs:
                 try:
                     metamap[k] = getattr(doc, doc._fixup_belief(k)[0])
-                except Exception as e:
+                except Exception:
                     pass
 
             return metamap
@@ -582,7 +603,8 @@ class SosHarvest(Harvester):
                 groups = cs.run(sensor_ml, 'ioos')
                 scores = groups['ioos']
             except Exception as e:
-                app.logger.warn("Caught exception doing Compliance Checker on SOS station: %s", e)
+                app.logger.warn(
+                    "Caught exception doing Compliance Checker on SOS station: %s", e)
 
             return scores
 
@@ -590,7 +612,8 @@ class SosHarvest(Harvester):
         with app.app_context():
             # gets a metamap document of this service using wicken
             beliefs = IOOSSOSDSCheck.beliefs()
-            doc = MultipleXmlDogma('sos-ds', beliefs, sensor_ml._root, namespaces=get_namespaces())
+            doc = MultipleXmlDogma(
+                'sos-ds', beliefs, sensor_ml._root, namespaces=get_namespaces())
 
             # now make a map out of this
             # @TODO wicken should make this easier
@@ -614,57 +637,64 @@ class SosHarvest(Harvester):
                                              scores,
                                              metamap)
 
+
 class WmsHarvest(Harvester):
+
     def __init__(self, service):
         Harvester.__init__(self, service)
+
     def harvest(self):
         pass
 
+
 class WcsHarvest(Harvester):
+
     def __init__(self, service):
         Harvester.__init__(self, service)
+
     def harvest(self):
         pass
+
 
 class DapHarvest(Harvester):
 
-    METADATA_VAR_NAMES   = [u'crs',
-                            u'projection']
+    METADATA_VAR_NAMES = [u'crs',
+                          u'projection']
 
     # CF standard names for Axis
-    STD_AXIS_NAMES       = [u'latitude',
-                            u'longitude',
-                            u'time',
-                            u'forecast_reference_time',
-                            u'forecast_period',
-                            u'ocean_sigma',
-                            u'ocean_s_coordinate_g1',
-                            u'ocean_s_coordinate_g2',
-                            u'ocean_s_coordinate',
-                            u'ocean_double_sigma',
-                            u'ocean_sigma_over_z',
-                            u'projection_y_coordinate',
-                            u'projection_x_coordinate']
+    STD_AXIS_NAMES = [u'latitude',
+                      u'longitude',
+                      u'time',
+                      u'forecast_reference_time',
+                      u'forecast_period',
+                      u'ocean_sigma',
+                      u'ocean_s_coordinate_g1',
+                      u'ocean_s_coordinate_g2',
+                      u'ocean_s_coordinate',
+                      u'ocean_double_sigma',
+                      u'ocean_sigma_over_z',
+                      u'projection_y_coordinate',
+                      u'projection_x_coordinate']
 
     # Some datasets don't define standard_names on axis variables.  This is used to weed them out based on the
     # actual variable name
-    COMMON_AXIS_NAMES    = [u'x',
-                            u'y',
-                            u'lat',
-                            u'latitude',
-                            u'lon',
-                            u'longitude',
-                            u'time',
-                            u'time_run',
-                            u'time_offset',
-                            u'ntimes',
-                            u'lat_u',
-                            u'lon_u',
-                            u'lat_v',
-                            u'lon_v  ',
-                            u'lat_rho',
-                            u'lon_rho',
-                            u'lat_psi']
+    COMMON_AXIS_NAMES = [u'x',
+                         u'y',
+                         u'lat',
+                         u'latitude',
+                         u'lon',
+                         u'longitude',
+                         u'time',
+                         u'time_run',
+                         u'time_offset',
+                         u'ntimes',
+                         u'lat_u',
+                         u'lon_u',
+                         u'lat_v',
+                         u'lon_v  ',
+                         u'lat_rho',
+                         u'lon_rho',
+                         u'lat_psi']
 
     def __init__(self, service):
         Harvester.__init__(self, service)
@@ -677,13 +707,12 @@ class DapHarvest(Harvester):
             except AttributeError:
                 pass
 
-
     @classmethod
     def get_asset_type(cls, cd):
         """Takes a Paegan object and returns the CF feature type
             if defined, falling back to `cdm_data_type`,
             and finally to Paegan's representation if nothing else is found"""
-        #TODO: Add check for adherence to CF conventions, others (ugrid)
+        # TODO: Add check for adherence to CF conventions, others (ugrid)
         nc_obj = cd.nc
         if hasattr(nc_obj, 'featureType'):
             geom_type = nc_obj.featureType
@@ -692,7 +721,6 @@ class DapHarvest(Harvester):
         else:
             geom_type = cd._datasettype.upper()
         return unicode(geom_type)
-
 
     @classmethod
     def get_axis_variables(cls, dataset):
@@ -727,7 +755,6 @@ class DapHarvest(Harvester):
         url_res.close()
         return gj
 
-
     @classmethod
     def get_time_from_dim(cls, time_var):
         """Get min/max from a NetCDF time variable and convert to datetime"""
@@ -752,13 +779,11 @@ class DapHarvest(Harvester):
         min_elem, max_elem = np.min(res), np.max(res)
         if hasattr(time_var, 'calendar'):
             num2date([min_elem, max_elem], time_var.units,
-                      time_var.calendar)
+                     time_var.calendar)
             return num2date([min_elem, max_elem], time_var.units,
                             time_var.calendar)
         else:
             return num2date([min_elem, max_elem], time_var.units)
-
-
 
     def get_min_max_time(self, cd):
         """
@@ -781,9 +806,6 @@ class DapHarvest(Harvester):
                         return None, None
         return None, None
 
-
-
-
     def harvest(self):
         """
         Identify the type of CF dataset this is:
@@ -805,9 +827,9 @@ class DapHarvest(Harvester):
         # start/end times of dataset.
         tmin, tmax = self.get_min_max_time(cd)
         # if nothing was returned, try to get from global atts
-        if (tmin == None and tmax == None and
-            'time_coverage_start' in cd.metadata and
-            'time_coverage_end' in cd.metadata):
+        if (tmin is None and tmax is None and
+                'time_coverage_start' in cd.metadata and
+                'time_coverage_end' in cd.metadata):
             try:
                 tmin, tmax = (parse(cd.metadata[t]) for t in
                                    ('time_coverage_start', 'time_coverage_end'))
@@ -817,7 +839,7 @@ class DapHarvest(Harvester):
         unique_id = self.service.get('url')
 
         with app.app_context():
-            dataset = db.Dataset.find_one( { 'uid' : unicode(unique_id) } )
+            dataset = db.Dataset.find_one({'uid': unicode(unique_id)})
             if dataset is None:
                 dataset = db.Dataset()
                 dataset.uid = unicode(unique_id)
@@ -837,29 +859,35 @@ class DapHarvest(Harvester):
         try:
             name = unicode_or_none(cd.nc.getncattr('title'))
         except AttributeError:
-            messages.append(u"Could not get dataset name.  No global attribute named 'title'.")
+            messages.append(
+                u"Could not get dataset name.  No global attribute named 'title'.")
 
         # DESCRIPTION
         description = None
         try:
             description = unicode_or_none(cd.nc.getncattr('summary'))
         except AttributeError:
-            messages.append(u"Could not get dataset description.  No global attribute named 'summary'.")
+            messages.append(
+                u"Could not get dataset description.  No global attribute named 'summary'.")
 
         # KEYWORDS
         keywords = []
         try:
-            keywords = sorted(map(lambda x: unicode(x.strip()), cd.nc.getncattr('keywords').split(",")))
+            keywords = sorted(map(lambda x: unicode(x.strip()),
+                                  cd.nc.getncattr('keywords').split(",")))
         except AttributeError:
-            messages.append(u"Could not get dataset keywords.  No global attribute named 'keywords' or was not comma seperated list.")
+            messages.append(
+                u"Could not get dataset keywords.  No global attribute named 'keywords' or was not comma seperated list.")
 
         # VARIABLES
-        prefix    = ""
+        prefix = ""
         # Add additonal prefix mappings as they become available.
         try:
-            standard_name_vocabulary = unicode(cd.nc.getncattr("standard_name_vocabulary"))
+            standard_name_vocabulary = unicode(
+                cd.nc.getncattr("standard_name_vocabulary"))
 
-            cf_regex = [re.compile("CF-"), re.compile('http://www.cgd.ucar.edu/cms/eaton/cf-metadata/standard_name.html')]
+            cf_regex = [re.compile(
+                "CF-"), re.compile('http://www.cgd.ucar.edu/cms/eaton/cf-metadata/standard_name.html')]
 
             for reg in cf_regex:
                 if reg.match(standard_name_vocabulary) is not None:
@@ -869,10 +897,13 @@ class DapHarvest(Harvester):
             pass
 
         # Get variables with a standard_name
-        std_variables = [cd.get_varname_from_stdname(x)[0] for x in self.get_standard_variables(cd.nc) if x not in self.STD_AXIS_NAMES and len(cd.nc.variables[cd.get_varname_from_stdname(x)[0]].shape) > 0]
+        std_variables = [cd.get_varname_from_stdname(x)[0] for x in self.get_standard_variables(
+            cd.nc) if x not in self.STD_AXIS_NAMES and len(cd.nc.variables[cd.get_varname_from_stdname(x)[0]].shape) > 0]
 
-        # Get variables that are not axis variables or metadata variables and are not already in the 'std_variables' variable
-        non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet, self.METADATA_VAR_NAMES, self.COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
+        # Get variables that are not axis variables or metadata variables and
+        # are not already in the 'std_variables' variable
+        non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet,
+                                                                                             self.METADATA_VAR_NAMES, self.COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
 
         axis_names = DapHarvest.get_axis_variables(cd.nc)
         """
@@ -893,7 +924,8 @@ class DapHarvest(Harvester):
         # LOCATION (from Paegan)
         # Try POLYGON and fall back to BBOX
 
-        # paegan does not support ugrid, so try to detect this condition and skip
+        # paegan does not support ugrid, so try to detect this condition and
+        # skip
         is_ugrid = False
         is_trajectory = False
         for vname, v in cd.nc.variables.iteritems():
@@ -908,7 +940,8 @@ class DapHarvest(Harvester):
         gj = None
 
         if is_ugrid:
-            messages.append(u"The underlying 'Paegan' data access library does not support UGRID and cannot parse geometry.")
+            messages.append(
+                u"The underlying 'Paegan' data access library does not support UGRID and cannot parse geometry.")
         elif is_trajectory:
             coord_names = {}
             # try to get info for x, y, z, t axes
@@ -922,7 +955,8 @@ class DapHarvest(Harvester):
                 except (AssertionError, AttributeError, ValueError, KeyError):
                     pass
             else:
-                messages.append(u"Trajectory discovered but could not detect coordinate variables using the underlying 'Paegan' data access library.")
+                messages.append(
+                    u"Trajectory discovered but could not detect coordinate variables using the underlying 'Paegan' data access library.")
 
             if 'xname' in coord_names:
                 try:
@@ -972,7 +1006,8 @@ class DapHarvest(Harvester):
                 except (AssertionError, AttributeError,
                         ValueError, KeyError, IndexError) as e:
                     app.logger.warn("Trajectory error occured: %s", e)
-                    messages.append(u"Trajectory discovered but could not create a geometry.")
+                    messages.append(
+                        u"Trajectory discovered but could not create a geometry.")
 
         else:
             for v in itertools.chain(std_variables, non_std_variables):
@@ -983,7 +1018,8 @@ class DapHarvest(Harvester):
                         KeyError, IndexError):
                     try:
                         # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
-                        # Asterik magic to expland the tuple into positional arguments
+                        # Asterik magic to expland the tuple into positional
+                        # arguments
                         app.logger.exception("Error calculating bounding box")
 
                         # handles "points" aka single position NCELLs
@@ -996,47 +1032,51 @@ class DapHarvest(Harvester):
 
                 if gj is not None:
                     # We computed something, break out of loop.
-                    messages.append(u"Variable %s was used to calculate geometry." % v)
+                    messages.append(
+                        u"Variable %s was used to calculate geometry." % v)
                     break
 
-            if gj is None: # Try the globals
+            if gj is None:  # Try the globals
                 gj = self.global_bounding_box(cd.nc)
-                messages.append(u"Bounding Box calculated using global attributes")
+                messages.append(
+                    u"Bounding Box calculated using global attributes")
             if gj is None:
-                messages.append(u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
-                messages.append(u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
-                messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(itertools.chain(std_variables, non_std_variables)))
-
-
-
-
+                messages.append(
+                    u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
+                messages.append(
+                    u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
+                messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(
+                    itertools.chain(std_variables, non_std_variables)))
 
         # TODO: compute bounding box using global attributes
 
-
         final_var_names = []
         if prefix == "":
-            messages.append(u"Could not find a standard name vocabulary.  No global attribute named 'standard_name_vocabulary'.  Variable list may be incorrect or contain non-measured quantities.")
+            messages.append(u"Could not find a standard name vocabulary.  No "
+                            "global attribute named 'standard_name_vocabulary"
+                            "'.  Variable list may be incorrect or contain "
+                            "non-measured quantities.")
             final_var_names = non_std_variables + std_variables
         else:
-            final_var_names = non_std_variables + list(map(unicode, ["%s%s" % (prefix, cd.nc.variables[x].getncattr("standard_name")) for x in std_variables]))
+            final_var_names = non_std_variables + list(map(unicode, ["%s%s" % (
+                prefix, cd.nc.variables[x].getncattr("standard_name")) for x in std_variables]))
 
         service = {
-            'name':           name,
-            'description':    description,
-            'service_type':   self.service.get('service_type'),
-            'service_id':     ObjectId(self.service.get('_id')),
-            'data_provider':  self.service.get('data_provider'),
-            'metadata_type':  u'ncml',
-            'metadata_value': unicode(dataset2ncml(cd.nc, url=self.service.get('url'))),
+            'name': name,
+            'description': description,
+            'service_type': self.service.get('service_type'),
+            'service_id': ObjectId(self.service.get('_id')),
+            'data_provider': self.service.get('data_provider'),
+            'metadata_type': u'ncml',
+            'metadata_value': unicode(netcdf2ncml.dataset2ncml(cd.nc, url=self.service.get('url'))),
             'time_min': tmin,
             'time_max': tmax,
-            'messages':       map(unicode, messages),
-            'keywords':       keywords,
-            'variables':      map(unicode, final_var_names),
-            'asset_type':     get_common_name(DapHarvest.get_asset_type(cd)),
-            'geojson':        gj,
-            'updated':        datetime.utcnow()
+            'messages': map(unicode, messages),
+            'keywords': keywords,
+            'variables': map(unicode, final_var_names),
+            'asset_type': get_common_name(DapHarvest.get_asset_type(cd)),
+            'geojson': gj,
+            'updated': datetime.utcnow()
         }
 
         with app.app_context():
@@ -1049,10 +1089,10 @@ class DapHarvest(Harvester):
         metamap = self.metamap_dataset(ncdataset)
 
         try:
-            metadata_rec = self.save_ccheck_dataset('ioos', dataset._id, scores, metamap)
+            self.save_ccheck_dataset('ioos', dataset._id, scores, metamap)
         except Exception as e:
-            metadata_rec = None
-            app.logger.error("could not save compliancecheck/metamap information", exc_info=True)
+            app.logger.error(
+                "could not save compliancecheck/metamap information", exc_info=True)
 
         return "Harvested"
 
@@ -1064,7 +1104,8 @@ class DapHarvest(Harvester):
                 groups = cs.run(ncdataset, 'ioos')
                 scores = groups['ioos']
             except Exception as e:
-                app.logger.warn("Caught exception doing Compliance Checker on Dataset: %s", e)
+                app.logger.warn(
+                    "Caught exception doing Compliance Checker on Dataset: %s", e)
 
             return scores
 
@@ -1073,24 +1114,26 @@ class DapHarvest(Harvester):
 
             # gets a metamap document of this service using wicken
             beliefs = IOOSNCCheck.beliefs()
-            ncnamespaces = {'nc':pb_namespaces['ncml']}
+            ncnamespaces = {'nc': pb_namespaces['ncml']}
 
-            doc = NetCDFDogma('nc', beliefs, ncdataset, namespaces=ncnamespaces)
+            doc = NetCDFDogma('nc', beliefs, ncdataset,
+                              namespaces=ncnamespaces)
 
             # now make a map out of this
             # @TODO wicken should make this easier
 
-            m_names, m_units = ['Variable Names*','Variable Units*']
+            m_names, m_units = ['Variable Names*', 'Variable Units*']
             metamap = {}
             for k in beliefs:
                 try:
                     metamap[k] = getattr(doc, doc._fixup_belief(k)[0])
-                except Exception as e:
+                except Exception:
                     app.logger.exception("Problem setting belief (%s)", k)
 
-            metamap[m_names] = [] # Override the Wicken return to preserve the order
-            metamap[m_units] = [] # Override the Wicken return to preserve the order
-
+            # Override the Wicken return to preserve the order
+            metamap[m_names] = []
+            # Override the Wicken return to preserve the order
+            metamap[m_units] = []
 
             # Wicken doesn't preserve the order between the names and the units,
             # so what you wind up with is two lists that can't be related, but we
@@ -1098,12 +1141,14 @@ class DapHarvest(Harvester):
 
             for k in ncdataset.variables.iterkeys():
                 var_name = k
-                standard_name = getattr(ncdataset.variables[k], 'standard_name', '')
+                standard_name = getattr(
+                    ncdataset.variables[k], 'standard_name', '')
                 units = getattr(ncdataset.variables[k], 'units', '')
 
                 # Only map metadata where we have all three
                 if var_name and standard_name and units:
-                    metamap[m_names].append('%s (%s)' % (var_name, standard_name))
+                    metamap[m_names].append('%s (%s)' %
+                                            (var_name, standard_name))
                     metamap[m_units].append(units)
 
             return metamap
@@ -1125,8 +1170,8 @@ class DapHarvest(Harvester):
         Determine whether the bounds are a single point or bounding box area
         """
         # first check if coordinates are within valid bounds
-        if (all(abs(x) <= 180  for x in bbox[::2]) and
-            all(abs(y) <= 90 for y in bbox[1::2])):
+        if (all(abs(x) <= 180 for x in bbox[::2]) and
+                all(abs(y) <= 90 for y in bbox[1::2])):
             if len(bbox) == 4 and bbox[0:2] == bbox[2:4]:
                 return mapping(Point(bbox[0:2]))
             else:
@@ -1136,7 +1181,6 @@ class DapHarvest(Harvester):
             # If the point/bbox lies outside of valid bounds, don't generate
             # geojson
             return None
-
 
     def global_bounding_box(self, ncdataset):
         ncattrs = ncdataset.ncattrs()
@@ -1153,7 +1197,7 @@ class DapHarvest(Harvester):
         for attr_name in attrs_list:
             if attr_name not in ncattrs:
                 break
-        else: # All of them were found
+        else:  # All of them were found
             # Sometimes the attributes are strings, which will cause the
             # box calculation to fail.  Just to be sure, cast to float
             try:

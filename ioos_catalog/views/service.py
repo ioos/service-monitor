@@ -203,8 +203,10 @@ def ping_service(service_id):
 def harvest_service(service_id):
     s = db.Service.find_one({ '_id' : service_id })
 
-    h = harvest(service_id, ignore_active=True)
-    flash(h)
+
+    queue.enqueue_call(harvest, args=(service_id,), timeout=500)
+    #h = harvest(service_id, ignore_active=True)
+    flash("Harvest queued")
     return redirect(url_for('show_service', service_id=service_id))
 
 @app.route('/services/<ObjectId:service_id>/start_monitoring', methods=['POST'])
