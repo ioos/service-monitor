@@ -30,6 +30,7 @@ def queue_harvest_tasks():
         # harvest from the same host enough times to cause a service problem.
         # This should reduce timeouts and unresponsive datasets
         services = list(db.Service.find({'active': True}, {'_id': True}))
+        services = distinct_services(services)
         shuffle(services)
         for s in services:
             service_id = s._id
@@ -52,10 +53,29 @@ def queue_harvest_tasks():
     add_counts()
 
 
+def distinct_services(services):
+    '''
+    Returns a filtered list of services that contain unique URLs. Services with
+    duplicate URLs are removed
+
+    :param list services: List of services
+    '''
+    retval = []
+    urls = set()
+    for service in services:
+        if service.url in urls:
+            continue
+        urls.add(service.url)
+        retval.append(service)
+    return retval
+
+
 def queue_provider(provider):
     with app.app_context():
         app.logger.info("Loaded app context")
-        for s in db.Service.find({'data_provider': provider, 'active': True}):
+        services = list(db.Service.find({'data_provider': provider, 'active': True}))
+        services = distinct_services(services)
+        for s in services:
             app.logger.info("Founded a service")
             app.logger.info(s['name'])
             service_id = s._id
@@ -209,6 +229,8 @@ def add_counts():
 @context_decorator
 def harvest(service_id, ignore_active=False):
 
+    service = db.Service.find_one({'_id': ObjectId(service_id)})
+
     # Get the harvest or make a new one
     harvest = db.Harvest.find_one({'service_id': ObjectId(service_id)})
     if harvest is None:
@@ -217,6 +239,26 @@ def harvest(service_id, ignore_active=False):
 
     harvest.harvest(ignore_active=ignore_active)
     harvest.save()
+
+    app.logger.info("Finding services with URL\n%s", service.url)
+    for service in db.Service.find({"url": service.url, "_id": {"$ne": ObjectId(service_id)}}):
+        app.logger.info("Updating other service %s", service._id)
+        other_harvest = db.Harvest.find_one({'service_id': ObjectId(service._id)})
+        if other_harvest is None:
+            app.logger.info("Creating new harvest")
+            other_harvest = db.Harvest()
+            other_harvest.service_id = ObjectId(service._id)
+        elif other_harvest._id == harvest._id:
+            app.logger.info("Skipping self")
+            continue
+        other_harvest.harvest_date = harvest.harvest_date
+        other_harvest.harvest_status = harvest.harvest_status
+        other_harvest.harvest_successful = harvest.harvest_successful
+        other_harvest.harvest_messages = harvest.harvest_messages
+        app.logger.info("Set harvest data")
+        app.logger.info("Saving")
+        other_harvest.save()
+        app.logger.info("Saved: %s", other_harvest._id)
     return harvest.harvest_status
 
 
