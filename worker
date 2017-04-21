@@ -4,6 +4,9 @@ import os
 import redis
 from rq import Worker, Queue, Connection
 from ioos_catalog import redis_connection
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 listen = ['default']
 

@@ -162,6 +162,7 @@ def index_service(record, organization, service):
     erddap_match = erddap_re.search(service['url'])
 
     s = db.Service.find_one({
+        'name': unicode(record['title']),
         'data_provider': unicode(organization['title']),
         'url': urls.url
     })
@@ -172,12 +173,12 @@ def index_service(record, organization, service):
         s.data_provider = unicode(organization['title'])
         s.manual = False
         s.active = True
+        s.name = unicode(record['title'])
 
         service_created = True
 
     # Set service_id = GUID in the extras key, value array
     s.service_id = unicode(sha1(urls.url).hexdigest())
-    s.name = unicode(record['title'])
     if erddap_match:
         s.service_type = u'DAP'
     else:
@@ -192,6 +193,8 @@ def index_service(record, organization, service):
     if not s.manual:
         s.active = True
 
+    if s.service_type == u'SOS':
+        app.logger.info("Creating SOS Record")
     s.save()
     return service_created
 
