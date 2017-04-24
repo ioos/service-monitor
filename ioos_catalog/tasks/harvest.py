@@ -29,7 +29,7 @@ def queue_harvest_tasks():
         # shuffling our list of services we reduce the liklihood that we'll
         # harvest from the same host enough times to cause a service problem.
         # This should reduce timeouts and unresponsive datasets
-        services = list(db.Service.find({'active': True}, {'_id': True}))
+        services = list(db.Service.find({'active': True}))
         services = distinct_services(services)
         shuffle(services)
         for s in services:
