@@ -9,7 +9,7 @@ from bson import ObjectId
 from ioos_catalog import app, db
 from ioos_catalog.models.base_document import BaseDocument
 from ioos_catalog.harvesters.dap_harvester import DapHarvester
-from ioos_catalog.harvesters.sos_harvester import SosHarvester
+from ioos_catalog.harvesters.sos_harvester import SosHarvester, DescribeSensorError
 from ioos_catalog.harvesters.wms_harvester import WmsHarvester
 from ioos_catalog.harvesters.wcs_harvester import WcsHarvester
 from lxml.etree import XMLSyntaxError
@@ -19,6 +19,14 @@ from owslib import ows
 
 import requests
 import socket
+
+
+class HarvestStatus(object):
+    SUCCESS = 0
+    FAIL = 1
+    PARTIAL_SUCCESS = 2
+    SERVICE_UNAVAILABLE = 3
+    TIMEOUT = 4
 
 
 @db.register
@@ -36,7 +44,7 @@ class Harvest(BaseDocument):
         'service_id': ObjectId,
         'harvest_date': datetime,
         'harvest_status': unicode,
-        'harvest_successful': bool,
+        'harvest_successful': int,
         'harvest_messages': [{
             'date': datetime,
             'successful': bool,
@@ -69,7 +77,7 @@ class Harvest(BaseDocument):
             self.new_message(
                 "Service %s is not active, not harvesting" % service_id, False)
             self.set_status("Service is down")
-            self.harvest_successful = False
+            self.harvest_successful = HarvestStatus.SERVICE_UNAVAILABLE
             return
 
         # ping it first to see if alive
@@ -82,7 +90,7 @@ class Harvest(BaseDocument):
         except requests.Timeout as e:
             self.new_message("Service Ping Timeout: %s" % e.message, False)
             self.set_status("Timed Out")
-            self.harvest_successful = False
+            self.harvest_successful = HarvestStatus.SERVICE_UNAVAILABLE
             return
 
         if not operational_status:
@@ -98,7 +106,7 @@ class Harvest(BaseDocument):
             else:
                 self.new_message("Aborted harvest due to service down", False)
                 self.set_status("Service is down")
-            self.harvest_successful = False
+            self.harvest_successful = HarvestStatus.SERVICE_UNAVAILABLE
             return
 
         try:
@@ -113,14 +121,14 @@ class Harvest(BaseDocument):
                 message = WcsHarvester(service).harvest()
             self.new_message(message or 'Harvest Successful', True)
             self.set_status("Harvest Successful")
-            self.harvest_successful = True
+            self.harvest_successful = HarvestStatus.SUCCESS
             return
 
         except socket.timeout as e:
             app.logger.exception("Failed to harvest service due to timeout")
             self.new_message("Service Timeout: %s" % e.message, False)
             self.set_status("Timed Out")
-            self.harvest_successful = False
+            self.harvest_successful = HarvestStatus.TIMEOUT
             return
 
         except XMLSyntaxError as e:
@@ -130,7 +138,7 @@ class Harvest(BaseDocument):
                 self.set_status("Invalid SOS")
             else:
                 self.set_status("Harvest Failed")
-            self.harvest_successful = False
+            self.harvest_successful = HarvestStatus.FAIL
             # More descriptive
             self.new_message(
                 "Harvester failed to parse the XML response from the SOS endpoint\n\n%s" % format_exc(), False)
@@ -159,16 +167,16 @@ class Harvest(BaseDocument):
                 self.new_message("Harvest Failed: No data found", False)
             else:
                 app.logger.exception("Miscellaneous OWSLib exception")
-                self.new_message("Other OWSLib exception", False)
-                self.set_status(e.msg)
-            self.harvest_successful = False
+                self.new_message(e.msg, False)
+                self.set_status('OWSLib exception')
+            self.harvest_successful = HarvestStatus.FAIL
             return
 
-        except Exception as e:
+        except DescribeSensorError as e:
             app.logger.exception("Failed harvesting service %s", service)
-            self.new_message(format_exc(), False)
-            self.set_status("Harvest Failed")
-            self.harvest_successful = False
+            self.new_message(repr(e), False)
+            self.set_status("Some Failures")
+            self.harvest_successful = HarvestStatus.PARTIAL_SUCCESS
             return
 
     def new_message(self, message, successful):

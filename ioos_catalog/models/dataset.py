@@ -1,10 +1,10 @@
 from datetime import datetime
 
 from bson.objectid import ObjectId
-from datetime import datetime
 
-from ioos_catalog import db,app
+from ioos_catalog import db, app
 from ioos_catalog.models.base_document import BaseDocument
+
 
 @db.register
 class Dataset(BaseDocument):
@@ -22,35 +22,43 @@ class Dataset(BaseDocument):
             - A sampling location that is revisited periodically to take additional measurements
     """
 
-    __collection__   = 'datasets'
+    __collection__ = 'datasets'
     use_dot_notation = True
-    use_schemaless   = True
+    use_schemaless = True
 
     structure = {
-        'uid'           : unicode,
-        'services'      : [         # The services that this dataset is available in
+        'uid': unicode,
+        'services': [         # The services that this dataset is available in
             {
-                'name'              : unicode,
-                'description'       : unicode,
-                'service_id'        : ObjectId,   # reference to the service object
-                'service_type'      : unicode,    # service type cached here
-                'data_provider'     : unicode,    # service data_prodiver cached here
-                'metadata_type'     : unicode,    # sensorml, ncml, iso, wmsgetcaps
-                'metadata_value'    : unicode,    # value of the metadata (actual xml)
-                'keywords'          : [unicode],  # Search keywords
-                'variables'         : [unicode],  # Environmental properties measured by this dataset
-                'asset_type'        : unicode,    # See the IOOS vocablary for assets: http://mmisw.org/orr/#http://mmisw.org/ont/ioos/platform
-                'time_min': datetime, # start time of this service
-                'time_max': datetime, # end time of this service
-                'geojson'           : dict,       # GeoJSON of the datasets location (point / line / polygon) as a dict
-                'messages'          : [unicode],    # messages regarding the harvesting of this
-                'created'           : datetime,
-                'updated'           : datetime
+                'name': unicode,
+                'description': unicode,
+                'service_id': ObjectId,   # reference to the service object
+                'service_type': unicode,    # service type cached here
+                'data_provider': unicode,    # service data_prodiver cached here
+                'metadata_type': unicode,    # sensorml, ncml, iso, wmsgetcaps
+                # value of the metadata (actual xml)
+                'metadata_value': unicode,
+                'keywords': [unicode],  # Search keywords
+                # Environmental properties measured by this dataset
+                'variables': [unicode],
+                # See the IOOS vocablary for assets:
+                # http://mmisw.org/orr/#http://mmisw.org/ont/ioos/platform
+                'asset_type': unicode,
+                'time_min': datetime,  # start time of this service
+                'time_max': datetime,  # end time of this service
+                # GeoJSON of the datasets location (point / line / polygon) as
+                # a dict
+                'geojson': dict,
+                # messages regarding the harvesting of this
+                'messages': [unicode],
+                'created': datetime,
+                'updated': datetime
             }
         ],
-        'active'  : bool,
-        'created' : datetime,
-        'updated' : datetime
+        'service_url': unicode,
+        'active': bool,
+        'created': datetime,
+        'updated': datetime
     }
 
     default_values = {
@@ -60,8 +68,8 @@ class Dataset(BaseDocument):
     @classmethod
     def count_types(cls):
         # @TODO this doesn't do as expected, see count_types_by_provider instead
-        retval = db.Dataset.aggregate([{'$group':{'_id':'$services.asset_type',
-                                               'count':{'$sum':1}}}])
+        retval = db.Dataset.aggregate([{'$group': {'_id': '$services.asset_type',
+                                                   'count': {'$sum': 1}}}])
         return retval
 
     @classmethod
@@ -77,19 +85,40 @@ class Dataset(BaseDocument):
             ...
         """
         # intersect with active services only
-        service_ids = [s._id for s in db.Service.find({'active':True}, {'_id':1})]
+        service_ids = [s._id for s in db.Service.find(
+            {'active': True}, {'_id': 1})]
         counts = db.Dataset.aggregate([
-            { '$match' : {'services.service_id':{'$in':service_ids}}},
-            { '$unwind' : '$services' },
-            { '$group' : { '_id' : {'asset_type' : '$services.asset_type',
-                                    'data_provider' : '$services.data_provider'},
-                          'cnt'  : {'$sum':1}}},
-            { '$group' : { '_id' : '$_id.data_provider',
-                          'stuff' : {'$addToSet': { 'asset_type' : '$_id.asset_type', 'cnt': '$cnt'}}}}
+            {
+                '$match': {
+                    'services.service_id': {'$in': service_ids}
+                }
+            },
+            {'$unwind': '$services'},
+            {
+                '$group': {
+                    '_id': {
+                        'asset_type': '$services.asset_type',
+                        'data_provider': '$services.data_provider'
+                    },
+                    'cnt': {'$sum': 1}
+                }
+            },
+            {
+                '$group': {
+                    '_id': '$_id.data_provider',
+                    'stuff': {
+                        '$addToSet': {
+                            'asset_type': '$_id.asset_type',
+                            'cnt': '$cnt'
+                        }
+                    }
+                }
+            }
         ])
 
         # massage this a bit
-        retval = {d['_id']:{dd['asset_type']:dd['cnt'] for dd in d['stuff']} for d in counts}
+        retval = {d['_id']: {dd['asset_type']: dd['cnt']
+                             for dd in d['stuff']} for d in counts}
 
         # add _all
         for provider, dscounts in retval.iteritems():
@@ -112,7 +141,7 @@ class Dataset(BaseDocument):
                     continue
 
                 ret_val.append({'data_provider': data_provider,
-                                'asset_type' : asset_type or "(NONE)",
+                                'asset_type': asset_type or "(NONE)",
                                 'cnt': count})
 
         return ret_val
@@ -124,7 +153,7 @@ class Dataset(BaseDocument):
         '''
 
         counts = cls.count_types_by_provider()
-        vals = [ v['_all'] for v in counts.itervalues() ]
+        vals = [v['_all'] for v in counts.itervalues()]
         return sum(vals)
 
     @classmethod
@@ -132,6 +161,5 @@ class Dataset(BaseDocument):
         '''
         Returns the total unique active datasets
         '''
-        counts = db.Dataset.find({'active':True}).distinct('uid')
+        counts = db.Dataset.find({'active': True}).distinct('uid')
         return len(counts)
-

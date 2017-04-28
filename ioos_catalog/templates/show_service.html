@@ -78,7 +78,15 @@
     <dl class="dl-horizontal col-lg-4">
       {% if harvest is not none %}
         <dt>Harvest Successful</dt>
-        <dd>{{ "<span class=\"label label-success\">YES</span>" | safe if harvest.harvest_successful else "<span class=\"label label-danger\">NO</span>" | safe }}</dd>
+        <dd>
+          {% if harvest.harvest_successful == 0 %}
+            <span class="label label-success">YES</span>
+          {% elif harvest.harvest_successful == 2 %}
+            <span class="label label-warning">Partial</span>
+          {% else %}
+            <span class="label label-danger">NO</span>
+          {% endif %}
+        </dd>
         <dt>Last Harvest Attempt</dt>
         <dd><abbr title="{{ harvest.harvest_date | datetimeformat }}">{{ harvest.harvest_date | prettydate }}</abbr></dd>
         <dt>Last Harvest Status</dt>

@@ -2,7 +2,7 @@ COMMON: &common
   # Logging and Debug
   DEBUG: False
   TESTING: False
-  LOG_FILE: True
+  LOG_FILE: logs/ioos_catalog.txt
   JSONIFY_PRETTYPRINT_REGULAR: False
   # Host configuration, only used by the app.py not used by gunicorn or WSGI
   # service

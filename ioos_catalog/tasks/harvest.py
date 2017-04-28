@@ -72,15 +72,11 @@ def distinct_services(services):
 
 def queue_provider(provider):
     with app.app_context():
-        app.logger.info("Loaded app context")
         services = list(db.Service.find({'data_provider': provider, 'active': True}))
         services = distinct_services(services)
         for s in services:
-            app.logger.info("Founded a service")
-            app.logger.info(s['name'])
             service_id = s._id
             if service_id in LARGER_SERVICES:
-                app.logger.info("Skipping large service")
                 continue
             # count all the datasets associated with this particular service
             datalen = db.datasets.find({'services.service_id':
@@ -92,7 +88,6 @@ def queue_provider(provider):
                 # for large numbers of requests, 5 seconds should be enough
                 # for each request, on average
                 timeout_secs = datalen * 60
-            app.logger.info("Queueing job")
             queue.enqueue_call(harvest, args=(service_id,),
                                timeout=timeout_secs)
 
@@ -240,25 +235,18 @@ def harvest(service_id, ignore_active=False):
     harvest.harvest(ignore_active=ignore_active)
     harvest.save()
 
-    app.logger.info("Finding services with URL\n%s", service.url)
     for service in db.Service.find({"url": service.url, "_id": {"$ne": ObjectId(service_id)}}):
-        app.logger.info("Updating other service %s", service._id)
         other_harvest = db.Harvest.find_one({'service_id': ObjectId(service._id)})
         if other_harvest is None:
-            app.logger.info("Creating new harvest")
             other_harvest = db.Harvest()
             other_harvest.service_id = ObjectId(service._id)
         elif other_harvest._id == harvest._id:
-            app.logger.info("Skipping self")
             continue
         other_harvest.harvest_date = harvest.harvest_date
         other_harvest.harvest_status = harvest.harvest_status
         other_harvest.harvest_successful = harvest.harvest_successful
         other_harvest.harvest_messages = harvest.harvest_messages
-        app.logger.info("Set harvest data")
-        app.logger.info("Saving")
         other_harvest.save()
-        app.logger.info("Saved: %s", other_harvest._id)
     return harvest.harvest_status
 
 
