@@ -8,6 +8,7 @@ from flask import make_response
 from wtforms import TextField, IntegerField, SelectField, BooleanField
 from bson import json_util, ObjectId
 
+from ioos_catalog.models.harvests import HarvestStatus
 from ioos_catalog import app, db, queue, support_jsonp, requires_auth
 from ioos_catalog.models.stat import Stat
 from ioos_catalog.tasks.stat import ping_service_task
@@ -85,6 +86,7 @@ def services(filter_provider, filter_type, oformat):
 
             service_stats[s._id][
                 'last_operational_status'] = stat.harvest_successful
+            app.logger.error("UPDATE STATUS: %s", stat.harvest_successful)
             service_stats[s._id]['last_update'] = stat.harvest_date
             service_stats[s._id]['harvest_status'] = stat.harvest_status
             service_stats[s._id]['harvest_rate'] = stat.success_rate()
@@ -102,7 +104,7 @@ def services(filter_provider, filter_type, oformat):
         tld_stats[k] = {'ok': 0, 'total': 0}
         for sid in v:
             tld_stats[k]['total'] += 1
-            if sid in latest_stats and latest_stats[sid].harvest_successful:
+            if sid in latest_stats and latest_stats[sid].harvest_successful == HarvestStatus.SUCCESS:
                 tld_stats[k]['ok'] += 1
 
     # get list of unique providers in system
@@ -130,7 +132,7 @@ def show_service(service_id):
     # Organize datasets by type.  Include the UID and _id of each dataset in
     # the output so we can link to them.
     datasets = db.Dataset.aggregate([
-        {'$match': {'services.service_id': service_id}},
+        {'$match': {'services.url': service.url}},
         {'$group': {'_id': '$services.asset_type',
                     'datasets': {'$push': {'uid': '$uid', '_id': '$_id'}}}}
     ])

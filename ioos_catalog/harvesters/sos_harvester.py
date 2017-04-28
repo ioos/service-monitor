@@ -26,66 +26,170 @@ from owslib.crs import Crs
 
 from pyoos.parsers.ioos.describe_sensor import IoosDescribeSensor
 from petulantbear import netcdf2ncml
-
+from urllib import urlencode
 import geojson
 import json
+
+
+IOOS_SENSORML = 'text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"'
+IOOS_SWE = 'text/xml;subtype="om/1.0.0/profiles/ioos_sos/1.0"'
+SENSORML = 'text/xml;subtype="sensorML/1.0.1"'
+
+
+class SosHarvestError(Exception):
+    def __init__(self, message):
+        self.message = message
+        self.messages = [message]
+
+    def append(self, message):
+        self.messages.append(message)
+
+    def __repr__(self):
+        return '\n'.join(['SosHarvestError'] + self.messages)
+
+
+class DescribeSensorError(SosHarvestError):
+    pass
 
 
 class SosHarvester(Harvester):
 
     def __init__(self, service):
         Harvester.__init__(self, service)
+        self.output_format = IOOS_SENSORML
 
     def _handle_ows_exception(self, **kwargs):
-        try:
-            return self.sos.describe_sensor(**kwargs)
-        except ows.ExceptionReport as e:
-            if e.code == 'InvalidParameterValue':
-                # TODO: use SOS getCaps to determine valid formats
-                # some only work with plain SensorML as the format
-
-                # see if O&M will work instead
-                try:
-                    kwargs[
-                        'outputFormat'] = 'text/xml;subtype="om/1.0.0/profiles/ioos_sos/1.0"'
-                    return self.sos.describe_sensor(**kwargs)
-
-                # see if plain sensorml wll work
-                except ows.ExceptionReport as e:
-                    # if this fails, just raise the exception without handling
-                    # here
-                    kwargs['outputFormat'] = 'text/xml;subtype="sensorML/1.0.1"'
-                    return self.sos.describe_sensor(**kwargs)
-            elif e.msg == 'No data found for this station':
+        # Put the current output format first, this will prevent us from trying
+        # subsequent calls with different formats.
+        formats = [IOOS_SENSORML, IOOS_SWE, SENSORML]
+        formats.pop(formats.index(self.output_format))
+        formats.insert(0, self.output_format)
+        for output_format in formats:
+            try:
+                self.output_format = output_format
+                kwargs['outputFormat'] = output_format
+                return self.sos.describe_sensor(**kwargs)
+            except ows.ExceptionReport as e:
+                if e.code == 'InvalidParameterValue':
+                    continue
+                e.msg = e.msg + '\n' + self.format_url(kwargs['procedure'])
                 raise e
+        else:
+            raise SosHarvestError('No valid outputFormat found for DescribeSensor')
 
-    def _describe_sensor(self, uid, timeout=120,
-                         outputFormat='text/xml;subtype="sensorML/1.0.1/profiles/ioos_sos/1.0"'):
+    def _describe_sensor(self, uid, timeout=120):
         """
         Issues a DescribeSensor request with fallback behavior for oddly-acting SOS servers.
         """
         kwargs = {
-            'outputFormat': outputFormat,
             'procedure': uid,
             'timeout': timeout
         }
 
         return self._handle_ows_exception(**kwargs)
 
+    def format_url(self, procedure, outputFormat=None):
+        '''
+        Returns the full SOS GET URL for the offering/procedure.
+        '''
+        if outputFormat is None:
+            outputFormat = self.output_format
+        try:
+            base_url = next((m.get('url') for m in self.sos.getOperationByName('DescribeSensor').methods if m.get('type').lower() == 'get'))
+        except StopIteration:
+            base_url = self.sos.url
+
+        while base_url.endswith('?'):
+            base_url = base_url[:-1]
+
+        request = {'service': 'SOS', 'version': self.sos.version, 'request': 'DescribeSensor'}
+        if isinstance(outputFormat, str):
+            request['outputFormat'] = outputFormat
+        if isinstance(procedure, str):
+            request['procedure'] = procedure
+        data = urlencode(request)
+        url = base_url + '?' + data
+        return url
+
+    def update_service_metadata(self):
+        metamap = self.metamap_service()
+        metadata = db.Metadata.find_one({"ref_id": self.service._id})
+        if metadata is None:
+            metadata = db.Metadata()
+            metadata.ref_id = self.service._id
+            metadata.ref_type = u'service'
+
+        update = {
+            'cc_score': {
+                'score': 0.,
+                'max_score': 0.,
+                'pct': 0.
+            },
+            'cc_results': [],
+            'metamap': metamap
+        }
+        for record in metadata.metadata:
+            if record['service_id'] == self.service._id:
+                record.update(update)
+                break
+        else:
+            record = {
+                'service_id': self.service._id,
+                'checker': None
+            }
+            record.update(update)
+            metadata.metadata.append(record)
+
+        metadata.updated = datetime.utcnow()
+        metadata.save()
+        return metadata
+
+    def update_dataset_metadata(self, dataset_id, sensor_ml, describe_sensor_url=None):
+        metamap = self.metamap_station(sensor_ml)
+        if describe_sensor_url:
+            metamap['Describe Sensor URL'] = describe_sensor_url
+        metadata = db.Metadata.find_one({"ref_id": dataset_id})
+        if metadata is None:
+            metadata = db.Metadata()
+            metadata.ref_id = dataset_id
+            metadata.ref_type = u'dataset'
+
+        update = {
+            'cc_score': {
+                'score': 0.,
+                'max_score': 0.,
+                'pct': 0.
+            },
+            'cc_results': [],
+            'metamap': metamap
+        }
+        for record in metadata.metadata:
+            if record['service_id'] == self.service._id:
+                record.update(update)
+                break
+        else:
+            record = {
+                'service_id': self.service._id,
+                'checker': None
+            }
+            record.update(update)
+            metadata.metadata.append(record)
+
+        metadata.updated = datetime.utcnow()
+        metadata.save()
+        return metadata
+
     def harvest(self):
         self.sos = SensorObservationService(self.service.get('url'))
 
-        scores = self.ccheck_service()
-        metamap = self.metamap_service()
-        try:
-            self.save_ccheck_service('ioos', scores, metamap)
-        finally:
-            pass
+        self.update_service_metadata()
 
         # List storing the stations that have already been processed in this SOS server.
         # This is kept and checked later to avoid servers that have the same
         # stations in many offerings.
         processed = []
+
+        exception = None
 
         # handle network:all by increasing max timeout
         net_len = len(self.sos.offerings)
@@ -105,7 +209,14 @@ class SosHarvester(Harvester):
             if len(sp_uid) > 2 and sp_uid[2] == "network":  # Network Offering
                 if uid[-3:].lower() == 'all':
                     continue  # Skip the all
-                net = self._describe_sensor(uid, timeout=net_timeout)
+                try:
+                    net = self._describe_sensor(uid, timeout=net_timeout)
+                except Exception as e:
+                    message = '\n'.join(['DescribeSensor failed for {}'.format(uid), e.message])
+                    if exception is None:
+                        exception = DescribeSensorError(message)
+                    else:
+                        exception.append(message)
 
                 network_ds = IoosDescribeSensor(net)
                 # Iterate over stations in the network and process them
@@ -126,6 +237,9 @@ class SosHarvester(Harvester):
                     self.process_station(uid, offering)
                 processed.append(uid)
 
+            if exception is not None:
+                raise exception
+
     def process_station(self, uid, offering):
         """ Makes a DescribeSensor request based on a 'uid' parameter being a
             station procedure.  Also pass along an offering with
@@ -135,7 +249,6 @@ class SosHarvester(Harvester):
 
         with app.app_context():
 
-            app.logger.info("process_station: %s", uid)
             desc_sens = self._describe_sensor(uid, timeout=1200)
             # FIXME: add some kind of notice saying the station failed
             if desc_sens is None:
@@ -167,10 +280,10 @@ class SosHarvester(Harvester):
 
             # Find service reference in Dataset.services and remove (to replace
             # it)
-            tmp = dataset.services[:]
-            for d in tmp:
-                if d['service_id'] == self.service.get('_id'):
-                    dataset.services.remove(d)
+            dataset_services = dataset.services[:]
+            for service in dataset_services:
+                if service['url'] == self.service.get('url'):
+                    dataset.services.remove(service)
 
             # Parsing messages
             messages = []
@@ -246,6 +359,7 @@ class SosHarvester(Harvester):
                 'service_type': self.service.get('service_type'),
                 'service_id': ObjectId(self.service.get('_id')),
                 'data_provider': self.service.get('data_provider'),
+                'url': self.service.url,
                 'metadata_type': u'sensorml',
                 'metadata_value': u'',
                 'time_min': getattr(offering, 'begin_position', None),
@@ -257,17 +371,17 @@ class SosHarvester(Harvester):
                 'geojson': gj,
                 'updated': datetime.utcnow()
             }
+            dataset.service_url = self.service.url
 
             dataset.services.append(service)
             dataset.updated = datetime.utcnow()
             dataset.save()
 
             # do compliance checker / metadata now
-            scores = self.ccheck_station(sensor_ml)
-            metamap = self.metamap_station(sensor_ml)
 
             try:
-                self.save_ccheck_station('ioos', dataset._id, scores, metamap)
+                describe_sensor_url = self.format_url(uid)
+                self.update_dataset_metadata(dataset._id, sensor_ml, describe_sensor_url)
             except Exception as e:
                 app.logger.warn(
                     "could not save compliancecheck/metamap information: %s", e)

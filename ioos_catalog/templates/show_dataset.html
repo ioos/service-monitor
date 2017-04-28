@@ -80,6 +80,8 @@
                 <li>{{ vv }}</li>
                 {%- endfor %}
               </ul>
+              {%- elif k == 'Describe Sensor URL' %}
+                <a href="{{v}}">Describe Sensor URL</a>
               {%- else %}
               {{ v }}
               {%- endif %}

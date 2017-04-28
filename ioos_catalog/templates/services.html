@@ -57,7 +57,17 @@
             </tr>
             {%- for service in service_group.list %}
             {%- set ss = service_stats[service._id] %}
-            <tr class="{{ "danger" if ss['last_operational_status'] == 0 and ss['last_update'] }}">
+            {% if ss['last_operational_status'] == 1 and ss['last_update'] %}
+            <tr class="danger">
+            {% elif ss['last_operational_status'] == 2 and ss['last_update'] %}
+            <tr class="warning">
+            {% elif ss['last_operational_status'] == 3 and ss['last_update'] %}
+            <tr class="unavailable">
+            {% elif ss['last_operational_status'] == 4 and ss['last_update'] %}
+            <tr class="unavailable">
+            {% else %}
+            <tr>
+            {% endif %}
                 <td>{{ service.data_provider }}</td>
                 <td>{{ service.service_type }}</td>
                 <td><a href="{{ url_for('show_service', service_id=service._id) }}">{{ service.name | truncate(40, True) }}</a></td>

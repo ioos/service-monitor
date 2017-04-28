@@ -26,13 +26,14 @@ from rq_dashboard import RQDashboard
 RQDashboard(app)
 
 # Create logging
-if app.config.get('LOG_FILE') == True:
+if app.config.get('LOG_FILE'):
     import logging
     from logging import FileHandler
-    file_handler = FileHandler('logs/ioos_catalog.txt')
+    file_handler = FileHandler(app.config['LOG_FILE'])
     formatter = logging.Formatter('%(asctime)s - %(process)d - %(name)s - %(module)s:%(lineno)d - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.INFO)
+    config_logging_level = app.config.get('LOGGING_LEVEL', 'INFO')
+    file_handler.setLevel(getattr(logging, config_logging_level))
     app.logger.addHandler(file_handler)
     app.logger.info('Application Process Started')
 

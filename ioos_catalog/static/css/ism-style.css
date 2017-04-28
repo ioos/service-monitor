@@ -373,3 +373,10 @@ table.message-table {
   overflow-x: auto;
 }
 
+.table>thead>tr>td.unavailable,.table>tbody>tr>td.unavailable,.table>tfoot>tr>td.unavailable,.table>thead>tr>th.unavailable,.table>tbody>tr>th.unavailable,.table>tfoot>tr>th.unavailable,.table>thead>tr.unavailable>td,.table>tbody>tr.unavailable>td,.table>tfoot>tr.unavailable>td,.table>thead>tr.unavailable>th,.table>tbody>tr.unavailable>th,.table>tfoot>tr.unavailable>th {
+    background-color: #e8e8e8;
+}
+
+.table-hover>tbody>tr>td.unavailable:hover,.table-hover>tbody>tr>th.unavailable:hover,.table-hover>tbody>tr.unavailable:hover>td,.table-hover>tbody>tr.unavailable:hover>th {
+    background-color: #dcdcdc;
+}
