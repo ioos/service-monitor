@@ -100,6 +100,11 @@ class DapHarvester(Harvester):
 
     def __init__(self, service):
         Harvester.__init__(self, service)
+        self.std_variables = None
+        self.non_std_variables = None
+        self.cd = None
+        self.axis_names = None
+        self.messages = []
 
     @classmethod
     def get_standard_variables(cls, dataset):
@@ -209,6 +214,15 @@ class DapHarvester(Harvester):
                         return None, None
         return None, None
 
+    def load_dataset(self):
+        self.cd = CommonDataset.open(self.service.get('url'))
+        self.std_variables = None
+        self.non_std_variables = None
+        self.get_standards(self.cd)
+        self.axis_names = DapHarvester.get_axis_variables(self.cd.nc)
+        self.messages = []
+        return self.cd
+
     def harvest(self):
         """
         Identify the type of CF dataset this is:
@@ -219,7 +233,7 @@ class DapHarvester(Harvester):
         """
 
         try:
-            cd = CommonDataset.open(self.service.get('url'))
+            cd = self.load_dataset()
         except Exception as e:
             app.logger.error("Could not open DAP dataset from '%s'\n"
                              "Exception %s: %s" % (self.service.get('url'),
@@ -254,15 +268,12 @@ class DapHarvester(Harvester):
             if d['service_id'] == self.service.get('_id'):
                 dataset.services.remove(d)
 
-        # Parsing messages
-        messages = []
-
         # NAME
         name = None
         try:
             name = unicode_or_none(cd.nc.getncattr('title'))
         except AttributeError:
-            messages.append(
+            self.messages.append(
                 u"Could not get dataset name.  No global attribute named 'title'.")
 
         # DESCRIPTION
@@ -270,7 +281,7 @@ class DapHarvester(Harvester):
         try:
             description = unicode_or_none(cd.nc.getncattr('summary'))
         except AttributeError:
-            messages.append(
+            self.messages.append(
                 u"Could not get dataset description.  No global attribute named 'summary'.")
 
         # KEYWORDS
@@ -279,7 +290,7 @@ class DapHarvester(Harvester):
             keywords = sorted(map(lambda x: unicode(x.strip()),
                                   cd.nc.getncattr('keywords').split(",")))
         except AttributeError:
-            messages.append(
+            self.messages.append(
                 u"Could not get dataset keywords.  No global attribute named 'keywords' or was not comma seperated list.")
 
         # VARIABLES
@@ -298,31 +309,6 @@ class DapHarvester(Harvester):
                     break
         except AttributeError:
             pass
-
-        # Get variables with a standard_name
-        std_variables = [cd.get_varname_from_stdname(x)[0] for x in self.get_standard_variables(
-            cd.nc) if x not in self.STD_AXIS_NAMES and len(cd.nc.variables[cd.get_varname_from_stdname(x)[0]].shape) > 0]
-
-        # Get variables that are not axis variables or metadata variables and
-        # are not already in the 'std_variables' variable
-        non_std_variables = list(set([x for x in cd.nc.variables if x not in itertools.chain(_possibley, _possiblex, _possiblez, _possiblet,
-                                                                                             self.METADATA_VAR_NAMES, self.COMMON_AXIS_NAMES) and len(cd.nc.variables[x].shape) > 0 and x not in std_variables]))
-
-        axis_names = DapHarvester.get_axis_variables(cd.nc)
-        """
-        var_to_get_geo_from = None
-        if len(std_names) > 0:
-            var_to_get_geo_from = cd.get_varname_from_stdname(std_names[-1])[0]
-            messages.append(u"Variable '%s' with standard name '%s' was used to calculate geometry." % (var_to_get_geo_from, std_names[-1]))
-        else:
-            # No idea which variable to generate geometry from... try to factor variables with a shape > 1.
-            try:
-                var_to_get_geo_from = [x for x in variables if len(cd.nc.variables[x].shape) > 1][-1]
-            except IndexError:
-                messages.append(u"Could not find any non-axis variables to compute geometry from.")
-            else:
-                messages.append(u"No 'standard_name' attributes were found on non-axis variables.  Variable '%s' was used to calculate geometry." % var_to_get_geo_from)
-        """
 
         # LOCATION (from Paegan)
         # Try POLYGON and fall back to BBOX
@@ -343,80 +329,14 @@ class DapHarvester(Harvester):
         gj = None
 
         if is_ugrid:
-            messages.append(
+            self.messages.append(
                 u"The underlying 'Paegan' data access library does not support UGRID and cannot parse geometry.")
         elif is_trajectory:
-            coord_names = {}
-            # try to get info for x, y, z, t axes
-            for v in itertools.chain(std_variables, non_std_variables):
-                try:
-                    coord_names = cd.get_coord_names(v, **axis_names)
-
-                    if coord_names['xname'] is not None and \
-                       coord_names['yname'] is not None:
-                        break
-                except (AssertionError, AttributeError, ValueError, KeyError):
-                    pass
-            else:
-                messages.append(
-                    u"Trajectory discovered but could not detect coordinate variables using the underlying 'Paegan' data access library.")
-
-            if 'xname' in coord_names:
-                try:
-                    xvar = cd.nc.variables[coord_names['xname']]
-                    yvar = cd.nc.variables[coord_names['yname']]
-
-                    # one less order of magnitude eg 390000 -> 10000
-                    slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)
-                    if slice_factor < 1:
-                        slice_factor = 1
-
-                    # TODO: don't split x/y as separate arrays.  Refactor to
-                    # use single numpy array instead with both lon/lat
-
-                    # tabledap datasets must be treated differently than
-                    # standard DAP endpoints.  Retrieve geojson instead of
-                    # trying to access as a DAP endpoint
-                    if 'erddap/tabledap' in unique_id:
-                        # take off 's.' from erddap
-                        gj = self.erddap_geojson_url(coord_names)
-                        # type defaults to MultiPoint, change to LineString
-                        coords = np.array(gj['coordinates'][::slice_factor] +
-                                          gj['coordinates'][-1:])
-                        xs = coords[:, 0]
-                        ys = coords[:, 1]
-                    else:
-                        xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
-                        ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
-                    # both coords must be valid to have a valid vertex
-                    # get rid of any nans and unreasonable lon/lats
-                    valid_idx = ((~np.isnan(xs)) & (np.absolute(xs) <= 180) &
-                                 (~np.isnan(ys)) & (np.absolute(ys) <= 90))
-
-                    xs = xs[valid_idx]
-                    ys = ys[valid_idx]
-                    # Shapely seems to require float64 values or incorrect
-                    # values will propagate for the generated lineString
-                    # if the array is not numpy's float64 dtype
-                    lineCoords = np.array([xs, ys]).T.astype('float64')
-
-                    gj = mapping(asLineString(lineCoords))
-
-                    messages.append(u"Variable %s was used to calculate "
-                                    u"trajectory geometry, and is a "
-                                    u"naive sampling." % v)
-
-                except (AssertionError, AttributeError,
-                        ValueError, KeyError, IndexError) as e:
-                    app.logger.warn("Trajectory error occured: %s", e)
-                    messages.append(
-                        u"Trajectory discovered but could not create a geometry.")
-
+            gj = self.parse_trajectory()
         else:
-            for v in itertools.chain(std_variables, non_std_variables):
+            for v in itertools.chain(self.std_variables, self.non_std_variables):
                 try:
-                    gj = mapping(cd.getboundingpolygon(var=v, **axis_names
-                                                       ).simplify(0.5))
+                    gj = mapping(cd.getboundingpolygon(var=v, **self.axis_names).simplify(0.5))
                 except (AttributeError, AssertionError, ValueError,
                         KeyError, IndexError):
                     try:
@@ -426,7 +346,7 @@ class DapHarvester(Harvester):
                         app.logger.exception("Error calculating bounding box")
 
                         # handles "points" aka single position NCELLs
-                        bbox = cd.getbbox(var=v, **axis_names)
+                        bbox = cd.getbbox(var=v, **self.axis_names)
                         gj = self.get_bbox_or_point(bbox)
 
                     except (AttributeError, AssertionError, ValueError,
@@ -435,21 +355,21 @@ class DapHarvester(Harvester):
 
                 if gj is not None:
                     # We computed something, break out of loop.
-                    messages.append(
+                    self.messages.append(
                         u"Variable %s was used to calculate geometry." % v)
                     break
 
             if gj is None:  # Try the globals
                 gj = self.global_bounding_box(cd.nc)
-                messages.append(
+                self.messages.append(
                     u"Bounding Box calculated using global attributes")
             if gj is None:
-                messages.append(
+                self.messages.append(
                     u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
-                messages.append(
+                self.messages.append(
                     u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
-                messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(
-                    itertools.chain(std_variables, non_std_variables)))
+                self.messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(
+                    itertools.chain(self.std_variables, self.non_std_variables)))
 
         # TODO: compute bounding box using global attributes
 
@@ -459,14 +379,14 @@ class DapHarvester(Harvester):
 
         final_var_names = []
         if prefix == "":
-            messages.append(u"Could not find a standard name vocabulary.  No "
-                            "global attribute named 'standard_name_vocabulary"
-                            "'.  Variable list may be incorrect or contain "
-                            "non-measured quantities.")
-            final_var_names = non_std_variables + std_variables
+            self.messages.append(u"Could not find a standard name vocabulary.  No "
+                                 u"global attribute named 'standard_name_vocabulary"
+                                 u"'.  Variable list may be incorrect or contain "
+                                 u"non-measured quantities.")
+            final_var_names = self.non_std_variables + self.std_variables
         else:
-            final_var_names = non_std_variables + list(map(unicode, ["%s%s" % (
-                prefix, cd.nc.variables[x].getncattr("standard_name")) for x in std_variables]))
+            final_var_names = self.non_std_variables + list(map(unicode, ["%s%s" % (
+                prefix, cd.nc.variables[x].getncattr("standard_name")) for x in self.std_variables]))
 
         deferred_exception = None
         try:
@@ -485,7 +405,7 @@ class DapHarvester(Harvester):
             'metadata_value': ncml_value,
             'time_min': tmin,
             'time_max': tmax,
-            'messages': map(unicode, messages),
+            'messages': map(unicode, self.messages),
             'keywords': keywords,
             'variables': map(unicode, final_var_names),
             'asset_type': get_common_name(DapHarvester.get_asset_type(cd)),
@@ -510,6 +430,103 @@ class DapHarvester(Harvester):
         if deferred_exception is not None:
             raise deferred_exception
         return "Harvested"
+
+    def parse_trajectory(self):
+        coord_names = {}
+        # try to get info for x, y, z, t axes
+        for v in itertools.chain(self.std_variables, self.non_std_variables):
+            try:
+                coord_names = self.cd.get_coord_names(v, **self.axis_names)
+
+                if coord_names['xname'] is not None and \
+                   coord_names['yname'] is not None:
+                    break
+            except (AssertionError, AttributeError, ValueError, KeyError):
+                pass
+        else:
+            self.messages.append(
+                u"Trajectory discovered but could not detect coordinate variables using the underlying 'Paegan' data access library.")
+
+        if 'xname' in coord_names:
+            try:
+                return self.parse_trajectory_geometry(v, coord_names)
+            except (AssertionError, AttributeError,
+                    ValueError, KeyError, IndexError,
+                    DapGeometryError) as e:
+                app.logger.warn("Trajectory error occured: %s", e)
+                self.messages.append(
+                    u"Trajectory discovered but could not create a geometry.")
+        return None
+
+    def parse_trajectory_geometry(self, variable, coord_names):
+        xvar = self.cd.nc.variables[coord_names['xname']]
+        yvar = self.cd.nc.variables[coord_names['yname']]
+
+        # one less order of magnitude eg 390000 -> 10000
+        slice_factor = 10 ** (int(math.log10(xvar.size)) - 1)
+        if slice_factor < 1:
+            slice_factor = 1
+
+        # TODO: don't split x/y as separate arrays.  Refactor to
+        # use single numpy array instead with both lon/lat
+
+        # tabledap datasets must be treated differently than
+        # standard DAP endpoints.  Retrieve geojson instead of
+        # trying to access as a DAP endpoint
+        if 'erddap/tabledap' in self.service.get('url'):
+            # take off 's.' from erddap
+            gj = self.erddap_geojson_url(coord_names)
+            # type defaults to MultiPoint, change to LineString
+            coords = np.array(gj['coordinates'][::slice_factor] +
+                              gj['coordinates'][-1:])
+            xs = coords[:, 0]
+            ys = coords[:, 1]
+        else:
+            xs = np.concatenate((xvar[::slice_factor], xvar[-1:]))
+            ys = np.concatenate((yvar[::slice_factor], yvar[-1:]))
+        # both coords must be valid to have a valid vertex
+        # get rid of any nans and unreasonable lon/lats
+        valid_idx = ((~np.isnan(xs)) & (np.absolute(xs) <= 180) &
+                     (~np.isnan(ys)) & (np.absolute(ys) <= 90))
+
+        xs = xs[valid_idx]
+        ys = ys[valid_idx]
+        # Shapely seems to require float64 values or incorrect
+        # values will propagate for the generated lineString
+        # if the array is not numpy's float64 dtype
+        lineCoords = np.array([xs, ys]).T.astype('float64')
+
+        gj = mapping(asLineString(lineCoords))
+
+        self.messages.append(u"Variable %s was used to calculate "
+                             u"trajectory geometry, and is a "
+                             u"naive sampling." % variable)
+        return gj
+
+    def get_standards(self, cd):
+        '''
+        Initializes the instance variables std_variables and non_std_variables from the common dataset
+
+        :param cd CommonDataset: The loaded dataset
+        '''
+        # Get variables with a standard_name
+        if self.std_variables is not None and self.non_std_variables is not None:
+            return (self.std_variables, self.non_std_variables)
+        self.std_variables = []
+        self.non_std_variables = []
+        for var in self.get_standard_variables(cd.nc):
+            if var not in self.STD_AXIS_NAMES and \
+                    len(cd.nc.variables[cd.get_varname_from_stdname(var)[0]].shape) > 0:
+                self.std_variables.append(var)
+            elif var not in itertools.chain(_possibley,
+                                            _possiblex,
+                                            _possiblez,
+                                            _possiblet,
+                                            self.METADATA_VAR_NAMES,
+                                            self.COMMON_AXIS_NAMES) and \
+                    len(cd.nc.variables[var].shape) > 0:
+                self.non_std_variables.append(var)
+        return self.std_variables, self.non_std_variables
 
     def ccheck_dataset(self, ncdataset):
         with app.app_context():
