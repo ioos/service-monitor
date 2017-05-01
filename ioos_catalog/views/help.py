@@ -63,7 +63,7 @@ def feedback_post():
 
 def prepare_email(name, email, comments):
     email_address = app.config.get('MAIL_COMMENTS_TO')
-    subject = 'IOOS Catalog Comments'
+    subject = 'IOOS Service Monitor Feedback'
     text_body = render_template('feedback_email.txt', name=name, email=email, comments=comments)
     html_body = None
     

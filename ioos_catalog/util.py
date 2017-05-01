@@ -7,6 +7,9 @@ A python module containing useful methods
 from urllib import urlencode
 from flask import request
 from math import ceil
+from numbers import Number
+from collections import Set, Mapping, deque
+import sys
 
 def build_links(item_count, current_page, page_limit, query=None):
     '''
@@ -56,3 +59,34 @@ def build_url(url, query):
     if query:
         url += '?' + urlencode(query)
     return url
+
+
+zero_depth_bases = (basestring, Number, xrange, bytearray)
+iteritems = 'iteritems'
+
+
+def getsize(obj_0):
+    """
+    Recursively iterate to sum size of object & members.
+
+    From https://stackoverflow.com/questions/449560/how-do-i-determine-the-size-of-an-object-in-python
+    """
+    def inner(obj, _seen_ids=set()):
+        obj_id = id(obj)
+        if obj_id in _seen_ids:
+            return 0
+        _seen_ids.add(obj_id)
+        size = sys.getsizeof(obj)
+        if isinstance(obj, zero_depth_bases):
+            pass  # bypass remaining control flow and return
+        elif isinstance(obj, (tuple, list, Set, deque)):
+            size += sum(inner(i) for i in obj)
+        elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
+            size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
+        # Check for custom object instances - may subclass above too
+        if hasattr(obj, '__dict__'):
+            size += inner(vars(obj))
+        if hasattr(obj, '__slots__'):  # can have __slots__ with __dict__
+            size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
+        return size
+    return inner(obj_0)

@@ -52,6 +52,10 @@ class DescribeSensorError(SosHarvestError):
     pass
 
 
+class SosFormatError(SosHarvestError):
+    pass
+
+
 class SosHarvester(Harvester):
 
     def __init__(self, service):
@@ -75,7 +79,9 @@ class SosHarvester(Harvester):
                 e.msg = e.msg + '\n' + self.format_url(kwargs['procedure'])
                 raise e
         else:
-            raise SosHarvestError('No valid outputFormat found for DescribeSensor')
+
+            raise SosFormatError('No valid outputFormat found for DescribeSensor\n' +
+                                 self.service.url)
 
     def _describe_sensor(self, uid, timeout=120):
         """
@@ -234,7 +240,20 @@ class SosHarvester(Harvester):
                 # Station Offering, or malformed urn - try it anyway as if it
                 # is a station
                 if uid not in processed:
-                    self.process_station(uid, offering)
+                    try:
+                        self.process_station(uid, offering)
+                    except SosHarvestError as e:
+                        message = '\n'.join(['DescribeSensor failed for {}'.format(uid), e.message])
+                        if exception is None:
+                            exception = e
+                        exception.append(message)
+                    except Exception as e:
+                        message = '\n'.join(['DescribeSensor failed for {}'.format(uid), e.message])
+                        if exception is None:
+                            exception = DescribeSensorError(message)
+                        else:
+                            exception.append(message)
+
                 processed.append(uid)
 
             if exception is not None:

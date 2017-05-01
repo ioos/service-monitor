@@ -8,10 +8,11 @@ Mongo definition for Harvest
 from bson import ObjectId
 from ioos_catalog import app, db
 from ioos_catalog.models.base_document import BaseDocument
-from ioos_catalog.harvesters.dap_harvester import DapHarvester
-from ioos_catalog.harvesters.sos_harvester import SosHarvester, DescribeSensorError
+from ioos_catalog.harvesters.dap_harvester import DapHarvester, DapUnicodeError
+from ioos_catalog.harvesters.sos_harvester import SosHarvester, DescribeSensorError, SosFormatError
 from ioos_catalog.harvesters.wms_harvester import WmsHarvester
 from ioos_catalog.harvesters.wcs_harvester import WcsHarvester
+from ioos_catalog.timeout import Timeout, TimeoutError
 from lxml.etree import XMLSyntaxError
 from datetime import datetime
 from traceback import format_exc
@@ -82,13 +83,19 @@ class Harvest(BaseDocument):
 
         # ping it first to see if alive
         try:
-            _, response_code = service.ping(timeout=60)
+            with Timeout(seconds=120):
+                _, response_code = service.ping(timeout=60)
             operational_status = True if response_code in [200, 400] else False
         except (requests.ConnectionError, requests.HTTPError):
             operational_status = False
             response_code = 0
         except requests.Timeout as e:
             self.new_message("Service Ping Timeout: %s" % e.message, False)
+            self.set_status("Timed Out")
+            self.harvest_successful = HarvestStatus.SERVICE_UNAVAILABLE
+            return
+        except TimeoutError:
+            self.new_message("Service Ping Timeout: 120s", False)
             self.set_status("Timed Out")
             self.harvest_successful = HarvestStatus.SERVICE_UNAVAILABLE
             return
@@ -177,6 +184,26 @@ class Harvest(BaseDocument):
             self.new_message(repr(e), False)
             self.set_status("Some Failures")
             self.harvest_successful = HarvestStatus.PARTIAL_SUCCESS
+            return
+
+        except SosFormatError as e:
+            app.logger.exception("Failed harvesting service %s", service)
+            self.new_message(repr(e), False)
+            self.set_status("Some Failures")
+            self.harvest_successful = HarvestStatus.PARTIAL_SUCCESS
+            return
+
+        except DapUnicodeError as e:
+            self.new_message(repr(e), False)
+            self.set_status("Some Failures")
+            self.harvest_successful = HarvestStatus.PARTIAL_SUCCESS
+            return
+
+        except requests.ReadTimeout as e:
+            app.logger.exception("Failed to harvest service due to timeout")
+            self.new_message("Service Timeout: %s" % e.message, False)
+            self.set_status("Timed Out")
+            self.harvest_successful = HarvestStatus.TIMEOUT
             return
 
     def new_message(self, message, successful):
