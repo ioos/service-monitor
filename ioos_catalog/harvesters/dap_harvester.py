@@ -334,42 +334,7 @@ class DapHarvester(Harvester):
         elif is_trajectory:
             gj = self.parse_trajectory()
         else:
-            for v in itertools.chain(self.std_variables, self.non_std_variables):
-                try:
-                    gj = mapping(cd.getboundingpolygon(var=v, **self.axis_names).simplify(0.5))
-                except (AttributeError, AssertionError, ValueError,
-                        KeyError, IndexError):
-                    try:
-                        # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
-                        # Asterik magic to expland the tuple into positional
-                        # arguments
-                        app.logger.exception("Error calculating bounding box")
-
-                        # handles "points" aka single position NCELLs
-                        bbox = cd.getbbox(var=v, **self.axis_names)
-                        gj = self.get_bbox_or_point(bbox)
-
-                    except (AttributeError, AssertionError, ValueError,
-                            KeyError, IndexError):
-                        pass
-
-                if gj is not None:
-                    # We computed something, break out of loop.
-                    self.messages.append(
-                        u"Variable %s was used to calculate geometry." % v)
-                    break
-
-            if gj is None:  # Try the globals
-                gj = self.global_bounding_box(cd.nc)
-                self.messages.append(
-                    u"Bounding Box calculated using global attributes")
-            if gj is None:
-                self.messages.append(
-                    u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
-                self.messages.append(
-                    u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
-                self.messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(
-                    itertools.chain(self.std_variables, self.non_std_variables)))
+            gj = self.parse_geometry()
 
         # TODO: compute bounding box using global attributes
 
@@ -430,6 +395,45 @@ class DapHarvester(Harvester):
         if deferred_exception is not None:
             raise deferred_exception
         return "Harvested"
+
+    def parse_geometry(self):
+        for v in itertools.chain(self.std_variables, self.non_std_variables):
+            try:
+                gj = mapping(self.cd.getboundingpolygon(var=v, **self.axis_names).simplify(0.5))
+            except (AttributeError, AssertionError, ValueError,
+                    KeyError, IndexError):
+                try:
+                    # Returns a tuple of four coordinates, but box takes in four seperate positional argouments
+                    # Asterik magic to expland the tuple into positional
+                    # arguments
+                    app.logger.exception("Error calculating bounding box")
+
+                    # handles "points" aka single position NCELLs
+                    bbox = self.cd.getbbox(var=v, **self.axis_names)
+                    gj = self.get_bbox_or_point(bbox)
+
+                except (AttributeError, AssertionError, ValueError,
+                        KeyError, IndexError):
+                    pass
+
+            if gj is not None:
+                # We computed something, break out of loop.
+                self.messages.append(
+                    u"Variable %s was used to calculate geometry." % v)
+                break
+
+        if gj is None:  # Try the globals
+            gj = self.global_bounding_box(self.cd.nc)
+            self.messages.append(
+                u"Bounding Box calculated using global attributes")
+        if gj is None:
+            self.messages.append(
+                u"The underlying 'Paegan' data access library could not determine a bounding BOX for this dataset.")
+            self.messages.append(
+                u"The underlying 'Paegan' data access library could not determine a bounding POLYGON for this dataset.")
+            self.messages.append(u"Failed to calculate geometry using all of the following variables: %s" % ", ".join(
+                itertools.chain(self.std_variables, self.non_std_variables)))
+        return gj
 
     def parse_trajectory(self):
         coord_names = {}
@@ -510,14 +514,12 @@ class DapHarvester(Harvester):
         :param cd CommonDataset: The loaded dataset
         '''
         # Get variables with a standard_name
-        if self.std_variables is not None and self.non_std_variables is not None:
-            return (self.std_variables, self.non_std_variables)
         self.std_variables = []
         self.non_std_variables = []
         for var in self.get_standard_variables(cd.nc):
             if var not in self.STD_AXIS_NAMES and \
                     len(cd.nc.variables[cd.get_varname_from_stdname(var)[0]].shape) > 0:
-                self.std_variables.append(var)
+                self.std_variables.append(cd.get_varname_from_stdname(var)[0])
             elif var not in itertools.chain(_possibley,
                                             _possiblex,
                                             _possiblez,
@@ -525,7 +527,7 @@ class DapHarvester(Harvester):
                                             self.METADATA_VAR_NAMES,
                                             self.COMMON_AXIS_NAMES) and \
                     len(cd.nc.variables[var].shape) > 0:
-                self.non_std_variables.append(var)
+                self.non_std_variables.append(cd.get_varname_from_stdname(var)[0])
         return self.std_variables, self.non_std_variables
 
     def ccheck_dataset(self, ncdataset):
