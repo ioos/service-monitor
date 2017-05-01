@@ -3,7 +3,7 @@
 set -eu
 
 : ${DEBUG:="false"}
-: ${LOG_FILE:="true"}
+: ${LOG_FILE:="logs/ioos_catalog.txt"}
 : ${WEB_PASSWORD:="i00s"}
 : ${SECRET_KEY:=}
 : ${MONGODB_HOST:="mongo"}
