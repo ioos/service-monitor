@@ -7,12 +7,14 @@ Harvester for OPeNDAP
 '''
 from ioos_catalog.harvesters.harvester import Harvester
 from ioos_catalog.harvesters import get_common_name, unicode_or_none
+from ioos_catalog.util import getsize
 from bson import ObjectId
 from datetime import datetime
 from paegan.cdm.dataset import CommonDataset, _possiblet, _possiblez, _possiblex, _possibley
 from petulantbear import netcdf2ncml
 from petulantbear.netcdf_etree import namespaces as pb_namespaces
 from netCDF4 import Dataset
+from traceback import format_exc
 
 from compliance_checker.ioos import IOOSNCCheck
 from compliance_checker.runner import ComplianceCheckerCheckSuite
@@ -27,12 +29,33 @@ from netCDF4 import num2date
 # py2/3 compat
 from six.moves.urllib.request import urlopen
 
+import requests
 import itertools
 import re
 import math
 import numpy as np
 
 import json
+
+
+class DapHarvestError(Exception):
+    def __init__(self, message):
+        self.message = message
+        self.messages = [message]
+
+    def append(self, message):
+        self.messages.append(message)
+
+    def __repr__(self):
+        return '\n'.join(['SosHarvestError'] + self.messages)
+
+
+class DapUnicodeError(DapHarvestError):
+    pass
+
+
+class DapGeometryError(DapHarvestError):
+    pass
 
 
 class DapHarvester(Harvester):
@@ -129,10 +152,11 @@ class DapHarvester(Harvester):
         y_name_trunc = coord_names['yname'][2:]
         gj_url = (self.service.get('url') + '.geoJson?' +
                   x_name_trunc + ',' + y_name_trunc)
-        url_res = urlopen(gj_url)
-        gj = json.load(url_res)
-        url_res.close()
-        return gj
+        response = requests.get(gj_url)
+        if response.status_code != 200:
+            raise DapGeometryError('Failed to get Geometry from ERDDAP {}'
+                                   ''.format(response.url))
+        return response.json()
 
     @classmethod
     def get_time_from_dim(cls, time_var):
@@ -429,6 +453,10 @@ class DapHarvester(Harvester):
 
         # TODO: compute bounding box using global attributes
 
+        if getsize(gj) > 2 * 1024 ** 2:
+            gj = None
+            self.messages.append(u"Geometry is too complex and large to store")
+
         final_var_names = []
         if prefix == "":
             messages.append(u"Could not find a standard name vocabulary.  No "
@@ -440,6 +468,13 @@ class DapHarvester(Harvester):
             final_var_names = non_std_variables + list(map(unicode, ["%s%s" % (
                 prefix, cd.nc.variables[x].getncattr("standard_name")) for x in std_variables]))
 
+        deferred_exception = None
+        try:
+            ncml_value = unicode(netcdf2ncml.dataset2ncml(cd.nc, url=self.service.get('url')))
+        except UnicodeEncodeError as e:
+            deferred_exception = DapUnicodeError('Unable to encode NcML due to non-ascii characters')
+            deferred_exception.append(format_exc())
+            ncml_value = 'Error parsing NcML'
         service = {
             'name': name,
             'description': description,
@@ -447,7 +482,7 @@ class DapHarvester(Harvester):
             'service_id': ObjectId(self.service.get('_id')),
             'data_provider': self.service.get('data_provider'),
             'metadata_type': u'ncml',
-            'metadata_value': unicode(netcdf2ncml.dataset2ncml(cd.nc, url=self.service.get('url'))),
+            'metadata_value': ncml_value,
             'time_min': tmin,
             'time_max': tmax,
             'messages': map(unicode, messages),
@@ -472,6 +507,8 @@ class DapHarvester(Harvester):
             app.logger.error(
                 "could not save compliancecheck/metamap information", exc_info=True)
 
+        if deferred_exception is not None:
+            raise deferred_exception
         return "Harvested"
 
     def ccheck_dataset(self, ncdataset):

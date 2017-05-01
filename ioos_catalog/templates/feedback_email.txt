@@ -1,4 +1,4 @@
-A user has left a comment on the IOOS Catalog feedback section.
+A user has left a comment on the IOOS Service Monitor feedback section.
 
 Name: {{name}}
 Email: {{email}}
