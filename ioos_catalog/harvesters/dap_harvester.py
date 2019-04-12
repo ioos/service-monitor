@@ -397,6 +397,10 @@ class DapHarvester(Harvester):
         return "Harvested"
 
     def parse_geometry(self):
+        # badams: Start with gj object set to None so we don't get
+        #         uncaught UnboundLocalError exceptions when we try to run
+        #         conditionals on gj
+        gj = None
         for v in itertools.chain(self.std_variables, self.non_std_variables):
             try:
                 gj = mapping(self.cd.getboundingpolygon(var=v, **self.axis_names).simplify(0.5))
